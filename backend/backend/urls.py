@@ -16,10 +16,9 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
-from . import views
+from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('process_log/', views.process_log),
+    path('', include('log_processor.urls')),
 ]
