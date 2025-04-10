@@ -1,4 +1,5 @@
 # we are again at it w/ python :D
+#yessir https://www.google.com/search?client=firefox-b-d&sca_esv=4c75ca2344971d57&sxsrf=AHTn8zq4PAjEH8cHEdSwoBB2YA-bw8gQRw:1744306555911&q=tanzender+hund&udm=7&fbs=ABzOT_DDfJxgmsKFIwrWKcoyw2RfsHtJv_PUtkAwS8Lyd_zhMskbS4o26LY5umjWWVR1cvN4DvrJMcb7dDhNgS2eJFTxGH-3bvuc8s1gAw3J2sW2yZEhR0B-4sWg7k7XsoqEtk5QyJtH2f5IgFD54l4BtHHLdwI-KcDmUbrjKeLwxmD-oCKGhq7clYHugT0H92Jk8RmJ82dgILA9fYsJWUTPfoyxeBUbjA&sa=X&ved=2ahUKEwih1ZOlgM6MAxVDgP0HHSuLEocQtKgLegQILBAB&biw=1760&bih=868&dpr=1.09#fpstate=ive&vld=cid:0c1e0767,vid:OsfbSWuni54,st:0
 from datetime import datetime
 import csv
 import pandas as pd
