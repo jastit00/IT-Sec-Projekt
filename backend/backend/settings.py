@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "log_processor",
+    "incident_detector",
 ]
 
 MIDDLEWARE = [
