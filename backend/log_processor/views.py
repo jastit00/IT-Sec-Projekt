@@ -11,6 +11,7 @@ from incident_detector.services import detect_incidents
 # this is the log path change it later to get the log file from frontend
 LOG_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'logs', 'brute_force_example.log')
 
+# function to process the log file and create database entries
 def process_log(request):
     try:
         with open(LOG_FILE_PATH, 'r') as log_file:
@@ -40,14 +41,17 @@ def process_log(request):
                         )
                         entries_created += 1
                 
+                #############################################
+                # TODO
                 # Placeholder            
                 #else if "OTHER_TYPE" in line:
                 #    other log stuff
                 #    ....
+                #############################################
             
-            
+            # call the incident detection function
             incidents_created = detect_incidents()
-
+            
             # Return a JsonResponse with status, number of entries created, and debug info
             return JsonResponse({
                 "status": "success",

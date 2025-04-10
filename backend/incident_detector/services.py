@@ -5,23 +5,26 @@ from .models import User_Login, Incident
 
 
 # Threshold vars for brute force
-BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
+BRUTE_FORCE_ATTEMPT_THRESHOLD = 12
 BRUTE_FORCE_TIME_DELTA = timedelta(minutes=5)
 
 # Create your views here.
 def detect_incidents():
-    brute_force_incidents = detect_bruteforce()
+    bruteforce_incidents = detect_bruteforce()
     
+    #########################################
+    # TODO
     # Placeholder other detections
     #detect_unauthorized_config_change()
     #detect_concurrent_logins()
+    #
+    #########################################
 
-    incidents_created = brute_force_incidents
-    return {"incidents": incidents_created}
+    return {"incidents": bruteforce_incidents}
 
 def detect_bruteforce():
     all_logins = User_Login.objects.all().order_by('timestamp')
-
+    bruteforce_incidents_created = 0  # Initialize incident counter
     # Login attempts by user/ip
     login_attempts_by_user_ip = {}
 
@@ -34,29 +37,25 @@ def detect_bruteforce():
             login_attempts_by_user_ip[key] = []
         login_attempts_by_user_ip[key].append(login)
 
-    incidents_created = 0  # Initialize incident counter
-
+    # Second, loop through the login attempts to find brute force attempts
     for (username, ip), attempts in login_attempts_by_user_ip.items():
-        # Skip if not enough attempts to be considered brute force
         if len(attempts) < BRUTE_FORCE_ATTEMPT_THRESHOLD:
-            continue
+            continue # Skip if not enough attempts
         
-        # Check for sequences of attempts that occur close together
+        # Check for sequences of attempts that are within the time window
         i = 0
         while i < len(attempts) - BRUTE_FORCE_ATTEMPT_THRESHOLD + 1:
-            # Check if we have enough consecutive attempts within the time window
-            window_start = attempts[i].timestamp
-            window_end = window_start + BRUTE_FORCE_TIME_DELTA
+            window_start = attempts[i].timestamp # Start of the time window
+            window_end = window_start + BRUTE_FORCE_TIME_DELTA # End of the time window
             
-            # Count attempts in this sliding window
+            # Count attempts in the time window
             j = i
             while j < len(attempts) and attempts[j].timestamp <= window_end:
                 j += 1
             
-            # If we found enough attempts in this window, it's a potential brute force
+            # If found enough attempts in the time window -> potential bruteforce attempt
             if j - i >= BRUTE_FORCE_ATTEMPT_THRESHOLD:
-                # Consider all attempts from the start of the window to the last sequential attempt
-                attack_attempts = attempts[i:j]
+                attack_attempts = attempts[i:j] # Get the list of attempts in the time window
                 
                 # Check if the last attempt was successful
                 last_attempt = attack_attempts[-1]
@@ -71,15 +70,13 @@ def detect_bruteforce():
                         ip_address=ip,
                         reason=reason
                     )
-                    incident.related_logs.set(attack_attempts)
+                    incident.related_logs.set(attack_attempts) # Link the related logs to the incident
+                    bruteforce_incidents_created += 1  # Increment the incident counter
 
-                    incidents_created += 1  # Increment the incident counter
-
-                # Skip ahead past this attack to avoid creating multiple incidents for the same attack
+                # Move the index to the end of the current window
                 i = j
             else:
-                # Move forward one attempt at a time
-                i += 1
+                i += 1 # Move to the next attempt
 
     # Return the count of incidents created
-    return incidents_created
+    return  {"bruteforce": bruteforce_incidents_created}
