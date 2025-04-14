@@ -4,11 +4,13 @@ import { TestComponent } from './components/test/test.component';
 import { ChartsComponent } from './components/charts/charts.component';
 import { ChartModule } from 'primeng/chart'; 
 import { CommonModule } from '@angular/common';  
+import { HomeComponent } from './home/home.component';
+import { HeaderComponent } from './components/header/header.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,  
-  imports: [CommonModule, RouterOutlet, TestComponent, ChartsComponent, ChartModule],
+  imports: [CommonModule, RouterOutlet, HomeComponent, HeaderComponent, TestComponent, ChartsComponent, ChartModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
