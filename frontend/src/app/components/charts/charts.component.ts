@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, ChartModule],
   templateUrl: './charts.component.html',
-  styleUrls: ['./charts.component.css']
+  styleUrls: ['./charts.component.scss']
 })
 export class ChartsComponent {
   data = {

@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   standalone: true, 
   imports: [MenubarModule, CommonModule], 
   templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  styleUrls: ['./test.component.scss']
 })
 export class TestComponent {
   items = [

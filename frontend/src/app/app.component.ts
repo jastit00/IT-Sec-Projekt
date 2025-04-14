@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,  
   imports: [CommonModule, RouterOutlet, TestComponent, ChartsComponent, ChartModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   title = 'audit_visualization';
