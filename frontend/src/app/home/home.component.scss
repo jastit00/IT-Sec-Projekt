@@ -1,0 +1,19 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: calc(100vh - 80px);     //nicht final!
+    width: calc(100vw - 64px);      //nicht final!
+    gap: 1rem;
+    padding: 1rem;
+}
+  
+.grid-box {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+  
