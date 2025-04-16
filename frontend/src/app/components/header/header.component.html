@@ -1,3 +1,16 @@
 <header>
-    <nav>{{ title() }}</nav>
+    <div class="left-section">
+        <div class="icon-placeholder">
+            <div class="logo-test"></div>
+        </div>
+        <nav>{{ title() }}</nav>
+    </div>
+    <div class="center-section">
+        <button class="critical-events-btn">Critical Events ⚠️</button>
+    </div>
+    <div class="right-section">
+        <button class="upload-btn" (click)="openFileUpload()">Upload Files ⬆️</button>
+        <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)">
+        <button class="logout-btn">Logout 🔒</button>
+    </div>
 </header>

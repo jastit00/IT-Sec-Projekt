@@ -13,3 +13,9 @@ export function initKeycloak(): Promise<boolean> {
     checkLoginIframe: false
   });
 }
+export function logout(): void { //probiert mit logout hat aber nicht so gut funktioniert
+  keycloak.logout({
+    redirectUri: window.location.origin
+  });
+}
+
