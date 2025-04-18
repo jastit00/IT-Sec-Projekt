@@ -10,6 +10,12 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     justify-content: space-between;
     height: 50px;
     position: relative; //absolute Positionierung
+    font-weight: bold;
+}
+
+.nav {
+    font-size: 20px;
+    padding-right: 0.7em;
 }
 
 .left-section {
@@ -30,7 +36,9 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     top: 0;
 }
 
-
+// .center-section {
+//     margin-left: 36px;
+// }
 
 .right-section {
     display: flex;
@@ -38,17 +46,21 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
 }
 
 button {
-    background-color: #444;
+    background-color: #333;
     color: white;
     border: none;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
 }
 
-
 button:hover {
-    background-color: #555;
+    color: orange;
+    text-underline-offset: 18px;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
 }
 
 .critical-events-btn {

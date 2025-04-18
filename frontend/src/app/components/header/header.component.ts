@@ -8,7 +8,8 @@ import { Component, signal } from '@angular/core';
 })
 
 export class HeaderComponent {
-  title = signal('Dashboard');
+  title = signal('Security Event Detection');
+  user = signal('Admin');
 
    //Methode wird aufgerufen wenn Datei ausgewählrt wird
   onFileSelected($event: Event) {
@@ -32,4 +33,5 @@ export class HeaderComponent {
       fileInput.click();
     }
   }  
+  
 }

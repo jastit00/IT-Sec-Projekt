@@ -2,11 +2,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    height: calc(100vh - 80px);      //nicht final 
-    width: 100%;                     
+    height: calc(100vh - (32px + 50px));
+    width: calc(100vw - 32px);
     gap: 1rem;
-    padding-left: 32px;
-    padding-right: 32px;
+    padding: 16px;
 }
 .grid-box {
     background-color: #f5f5f5;
