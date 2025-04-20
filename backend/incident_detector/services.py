@@ -5,7 +5,7 @@ from .models import User_Login, Incident
 
 
 # Threshold vars for brute force
-BRUTE_FORCE_ATTEMPT_THRESHOLD = 12
+BRUTE_FORCE_ATTEMPT_THRESHOLD = 13
 BRUTE_FORCE_TIME_DELTA = timedelta(minutes=5)
 
 # Create your views here.
