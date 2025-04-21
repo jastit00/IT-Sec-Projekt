@@ -23,13 +23,13 @@ export class ChartThreeComponent {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'right',  // Legende rechts vom Diagramm, generell können wir ja dann links eventuell noch ein Zahnrad vllt machen mit individuellen Einstellungen für das Diagram
-        align: 'center',    // Ausrichtung Legende
+        position: 'bottom',  // Legende unter dem Diagramm
+        align: 'center',    // Zentrierte Ausrichtung der Legende
         labels: {
-          boxWidth: 25,     // Breite Farb Kasten
-          padding: 15,      // Abstand Labels
+          boxWidth: 25,     // Breite des Farb-Kastens
+          padding: 15,      // Abstand zwischen den Labels
           font: {
-            size: 20
+            size: 20        
           }
         }
       },

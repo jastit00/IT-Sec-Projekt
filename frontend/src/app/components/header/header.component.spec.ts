@@ -41,24 +41,25 @@ describe('HeaderComponent', () => {
     const logoutButton = fixture.debugElement.query(By.css('.logout-btn')).nativeElement;
     expect(logoutButton.textContent).toContain('Logout');
   });
-
-  it('should trigger file input when upload button is clicked', () => { //muss noch alles implementiert werden und geht nicht --> critical events, logout, import files
-    const mockFileInput = { nativeElement: { click: jasmine.createSpy('click') } };
-    //component['fileInput'] = mockFileInput as unknown as ElementRef;
-    
-    component.openFileUpload();
-    expect(mockFileInput.nativeElement.click).toHaveBeenCalled();
+  it('should trigger file input when upload button is clicked', () => {
+    // Mocken des echten Klicks
+    const fileInput = { click: jasmine.createSpy('click') };
+    spyOn(document, 'querySelector').and.returnValue(fileInput as any); // Simulieren des file input
+  
+    component.openFileUpload(); // Öffne Datei-Upload
+    expect(fileInput.click).toHaveBeenCalled(); // Überprüfe ob Klick ausgelöst wurde
   });
-
+  
   it('should handle file selection', () => {
-    spyOn(console, 'log');
+    spyOn(console, 'log'); // Überwache console.log
     const mockEvent = {
       target: {
-        files: ['mockFile']
+        files: ['mockFile'] // Mock-Datei
       }
     };
-
-    component.onFileSelected(mockEvent as unknown as Event);
-    expect(console.log).toHaveBeenCalledWith('Files selected:', ['mockFile']);
+  
+    component.onFileSelected(mockEvent as unknown as Event); // Simuliere die Auswahl von Dateien
+    expect(console.log).toHaveBeenCalledWith('Dateien ausgewählt:', ['mockFile']); // Überprüfe das Log
   });
+  
 });

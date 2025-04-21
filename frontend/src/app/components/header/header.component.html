@@ -10,7 +10,16 @@
     </div>
     <div class="right-section">
         <button class="upload-btn" (click)="openFileUpload()">Upload Files ⬆️</button>
-        <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)">
+
+        <input
+      type="file"
+      #fileInput
+      accept=".log"
+      style="display: none"
+      (change)="onFileSelected($event)"
+      multiple
+    />
+
         <button class="logout-btn">Logout 🔒</button>
     </div>
 </header>
