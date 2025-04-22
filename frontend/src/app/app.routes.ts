@@ -9,9 +9,3 @@ export const routes: Routes = [
     { path: 'critical-events', component: CriticalEventsComponent },
     { path: 'all-events', component: AllEventsComponent }
 ];
-
-@NgModule({
-    imports: [RouterModule.forRoot(routes)],
-    exports: [RouterModule]
-  })
-  export class AppRoutingModule { }
