@@ -2,7 +2,7 @@ from django.conf import settings
 import os
 from datetime import datetime
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse#import
 from .models import User_Login
 from incident_detector.services import detect_incidents
 
