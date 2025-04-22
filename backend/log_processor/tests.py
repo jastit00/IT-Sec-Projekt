@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.utils import timezone
 from .models import User_Login, Incident
-from .services import detect_bruteforce, detect_incidents
+from .services import detect_bruteforce, detect_incidents#import
 from datetime import timedelta
 
 class BruteForceDetectionTests(TestCase):
