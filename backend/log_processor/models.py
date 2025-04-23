@@ -9,7 +9,8 @@ class User_Login(models.Model):
     result = models.CharField(max_length=20)
     
     def __str__(self):
-        return f"{()[]} login of {self.username} at {self.timestamp} from {self.ipAddress}" # added state and explanatory text
+       return f"{self.username} at {self.timestamp} from {self.ipAddress}"
+
 
 # added [21.04.2025]
 class Config_Change(models.Model):
@@ -40,7 +41,7 @@ class Sys_Config_Change(models.Model):
     def __str__(self):
         return f"{("successful","failed")[self.result]} change of system configuration by user {self.userAuditID} at {self.timestamp}"
 
-class Sys_Call(modesl.Model):
+class Sys_Call(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
     userAuditID = models.IntegerField()
