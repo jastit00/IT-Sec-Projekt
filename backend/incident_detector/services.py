@@ -22,6 +22,11 @@ def detect_incidents():
 
     return {"incidents": bruteforce_incidents}
 
+
+
+
+
+
 def detect_bruteforce():
     all_logins = User_Login.objects.all().order_by('timestamp')
     bruteforce_incidents_created = 0  # Initialize incident counter
