@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .services import process_log_file
 
+# TODO maybe add try/except block to catch more errors and return them in the response
 @csrf_exempt # disable CSRF protection -> maybe change it later -> angular
 def upload_log_file(request):
     if request.method == 'POST' and 'file' in request.FILES:

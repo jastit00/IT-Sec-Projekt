@@ -6,6 +6,7 @@ class User_Login(models.Model):
     timestamp = models.DateTimeField()
     username = models.CharField(max_length=100)
     ipAddress = models.GenericIPAddressField()
+    session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
@@ -15,12 +16,13 @@ class User_Login(models.Model):
 class Usys_Config(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
-    message = models.CharField(max_length=100)
+    table = models.CharField(max_length=100)
     action = models.CharField(max_length=100)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=255)
     condition = models.CharField(max_length=100) 
     terminal = models.CharField(max_length=100)
+    session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
 
     def __str__(self):
