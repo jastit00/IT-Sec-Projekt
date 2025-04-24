@@ -4,11 +4,13 @@ import { CriticalEventsComponent } from './components/critical-events/critical-e
 import { AllEventsComponent } from './components/all-events/all-events.component';
 import { authGuard } from './guards/auth.guard';
 import { NotFoundComponent } from './components/not-found/not-found.component';
+import { TeapotComponent } from './components/teapot/teapot.component';
 
 export const routes: Routes = [
     { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },
     { path: 'critical-events', component: CriticalEventsComponent, canActivate: [authGuard] },
     { path: 'all-events', component: AllEventsComponent, canActivate: [authGuard] },
     { path: 'not-found', component: NotFoundComponent },
+    { path: 'hidden-backdoor', component: TeapotComponent },
     { path: '**', redirectTo: 'not-found' }
 ];
