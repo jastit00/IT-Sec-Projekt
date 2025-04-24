@@ -18,6 +18,16 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     font-weight: bold;
 }
 
+.user-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
 .left-section {
     display: flex;
     gap: 12px;
