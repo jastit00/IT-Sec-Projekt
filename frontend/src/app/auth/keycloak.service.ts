@@ -16,7 +16,7 @@ export function initKeycloak(): Promise<boolean> {
 
 export function logout(): void {
   keycloak.logout({
-    redirectUri: window.location.origin
+    redirectUri: 'http://localhost:4200/dashboard'
   });
 }
 
