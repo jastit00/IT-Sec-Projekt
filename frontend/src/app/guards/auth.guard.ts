@@ -2,22 +2,16 @@ import { CanActivateFn, Router } from '@angular/router';
 import { keycloak } from './../auth/keycloak.service';
 
 export const authGuard: CanActivateFn = async (route, state) => {
-  const isAuthenticated = keycloak.authenticated;
-
-  // Keycloak ist noch nicht initialisiert (als Fallback)
-  if (isAuthenticated === undefined) {
-    await keycloak.init({
-      onLoad: 'login-required',
-      checkLoginIframe: false
-    });
+  // Check if we're already in a redirect (to break the loop)
+  if (window.location.href.includes('code=') && window.location.href.includes('session_state=')) {
+    return true;
   }
 
   if (keycloak.authenticated) {
     return true;
   } else {
-    // Falls nicht eingeloggt: Leite zum Login
     await keycloak.login({
-      redirectUri: window.location.href // zurück zur aktuellen Seite nach Login
+      redirectUri: window.location.origin + state.url
     });
     return false;
   }

@@ -13,6 +13,7 @@ export function initKeycloak(): Promise<boolean> {
     checkLoginIframe: false
   });
 }
+
 export function logout(): void {
   keycloak.logout({
     redirectUri: window.location.origin
