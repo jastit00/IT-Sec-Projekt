@@ -3,14 +3,14 @@
         <div class="icon-placeholder">
             <div class="logo-test"></div>
         </div>
-        <nav class="nav">{{ title() }}</nav>
+        <button class="title" routerLink="/dashboard">{{ title() }}</button>
         <button routerLink="/dashboard">Dashboard</button>
-        <button>All Events</button>
-        <button class="critical-events-btn">Critical Events</button>                            <!--⚠️-->
+        <button routerLink="/all-events">All Events</button>
+        <button class="critical-events-btn" routerLink="/critical-events">Critical Events</button>      <!--⚠️-->
     </div>
         
     <div class="right-section">
-        <button class="upload-btn" (click)="openFileUpload()">Upload Files</button>             <!--⬆️-->
+        <button class="upload-btn" (click)="openFileUpload()">Upload File</button>                      <!--⬆️-->
 
         <input
       type="file"
@@ -22,6 +22,6 @@
     />
 
         <button class="user-btn">{{ user() }}</button>
-        <button class="logout-btn">Logout</button>                                              <!--🔒-->
+        <button class="logout-btn" (click)="logout()">Logout</button>                                    <!--🔒-->
     </div>
 </header>

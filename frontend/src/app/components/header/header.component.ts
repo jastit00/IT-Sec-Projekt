@@ -1,16 +1,21 @@
-import { Component, signal } from '@angular/core';
-//import { RouterModule } from '@angular/router';
+import { Component, input, signal } from '@angular/core';
+import { logout } from '../../auth/keycloak.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-header',
-  imports: [/*RouterModule*/],
+  imports: [RouterLink],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
 
 export class HeaderComponent {
   title = signal('Security Event Detection');
-  user = signal('Admin');
+  user = input('User');
+
+  logout() {
+    logout();
+  }
 
    //Methode wird aufgerufen wenn Datei ausgewählrt wird
   onFileSelected($event: Event) {

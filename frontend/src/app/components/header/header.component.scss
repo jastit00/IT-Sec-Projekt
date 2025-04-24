@@ -10,20 +10,23 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     justify-content: space-between;
     height: 50px;
     position: relative; //absolute Positionierung
-    font-weight: bold;
 }
 
-.nav {
+.title {
     font-size: 20px;
     padding-right: 0.7em;
+    font-weight: bold;
 }
 
 .left-section {
     display: flex;
-    align-items: center;
     gap: 12px;
-    height: 100%;
     margin-left: 0px;
+}
+
+.right-section {
+    display: flex;
+    gap: 12px;
 }
 
 .logo-test {
@@ -36,15 +39,6 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     top: 0;
 }
 
-// .center-section {
-//     margin-left: 36px;
-// }
-
-.right-section {
-    display: flex;
-    gap: 12px;
-}
-
 button {
     background-color: #333;
     color: white;
@@ -52,19 +46,24 @@ button {
     padding: 6px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-weight: bold;
     font-size: 16px;
+    font-weight: bold;
 }
 
 button:hover {
     color: orange;
-    text-underline-offset: 18px;
+    text-underline-offset: 17px;
     text-decoration: underline;
     text-decoration-thickness: 2px;
 }
 
+.title:hover {
+    color: white;
+    text-decoration: none;
+}
+
 .critical-events-btn {
-    color: rgb(255, 76, 76);
+    //color: rgb(255, 76, 76);
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
