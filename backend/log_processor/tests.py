@@ -18,7 +18,7 @@ class UsysConfigLogTest(TestCase):
             f.write(self.dummy_log)
 
     def tearDown(self):
-        # 🧹 Datei nach dem Test löschen
+        # Datei nach dem Test löschen
         if os.path.exists(self.test_log_path):
             os.remove(self.test_log_path)
 
@@ -27,7 +27,7 @@ class UsysConfigLogTest(TestCase):
         self.assertEqual(result["status"], "success")
         self.assertEqual(result["entries_created"], 1)
 
-        # 🧪 Datenbankeintrag prüfen
+        #  Datenbankeintrag prüfen
         entry = Usys_Config.objects.get(table="system_settings")
         self.assertEqual(entry.key, "password_policy")
         self.assertEqual(entry.value, "none")
