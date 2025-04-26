@@ -1,56 +1,81 @@
-from django.test import TestCase
-from django.utils import timezone
-from .models import User_Login, Incident
-from .services import detect_bruteforce, detect_incidents
-from datetime import timedelta
 
-class BruteForceDetectionTests(TestCase):
+    
+import os
+from django.test import TestCase
+from .models import Usys_Config
+from .services import process_log_file  
+
+class UsysConfigLogTest(TestCase):
 
     def setUp(self):
-        self.now = timezone.now()
+        self.test_log_path = "test_usys_config.log"
+        self.dummy_log = (
+            'type=USYS_CONFIG msg=audit(1714035623.123:124): '
+            'table="system_settings" action="modify" key="password_policy" '
+            'value="none" condition="always" terminal=tty1 ses=22 res=success\n'
+        )
+        with open(self.test_log_path, "w") as f:
+            f.write(self.dummy_log)
 
-    def create_logins(self, count, minutes_apart=0.3, success_on_last=False):
-        username = "testuser"
-        ip = "192.168.0.1"
-        for i in range(count):
-            User_Login.objects.create(
-                username=username,
-                ipAddress=ip,
-                result="success" if (success_on_last and i == count - 1) else "fail",
-                timestamp=self.now + timedelta(minutes=i * minutes_apart)
-            )
+    def tearDown(self):
+        # 🧹 Datei nach dem Test löschen
+        if os.path.exists(self.test_log_path):
+            os.remove(self.test_log_path)
 
-    def test_no_bruteforce_if_too_few_attempts(self):
-        self.create_logins(5)
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 0)
-        self.assertEqual(Incident.objects.count(), 0)
+    def test_usys_config_entry_created(self):
+        result = process_log_file(self.test_log_path)
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["entries_created"], 1)
 
-    def test_detect_bruteforce_attempt(self):
-        self.create_logins(13)
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 1)
-        self.assertEqual(Incident.objects.count(), 1)
+        # 🧪 Datenbankeintrag prüfen
+        entry = Usys_Config.objects.get(table="system_settings")
+        self.assertEqual(entry.key, "password_policy")
+        self.assertEqual(entry.value, "none")
+        self.assertEqual(entry.result, "success")
 
-    def test_ignore_attempts_outside_time_window(self):
-        self.create_logins(13, minutes_apart=1)  # 13 mins apart > 5
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 0)
+    def test_usys_config_duplicate_not_created(self):
+        process_log_file(self.test_log_path)
+        result = process_log_file(self.test_log_path)
+        self.assertEqual(result["entries_created"], 0)
+        self.assertEqual(Usys_Config.objects.count(), 1)
 
-    def test_successful_last_attempt_changes_reason(self):
-        self.create_logins(13, success_on_last=True)
-        detect_bruteforce()
-        incident = Incident.objects.first()
-        self.assertIn("Successful", incident.reason)
+    def test_log_file_not_found(self):
+        # Test für eine nicht vorhandene Datei
+        non_existing_log_path = "non_existing_log.log"
+        result = process_log_file(non_existing_log_path)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["message"], "Log file not found.")
+        
 
-    def test_detect_incidents_wrapper(self):
-        self.create_logins(13)
-        result = detect_incidents()
-        self.assertIn("incidents", result)
-        self.assertEqual(result["incidents"]["bruteforce"], 1)
+    def test_multiple_log_entries(self):
+        multiple_log_path = "multiple_log_entries.log"
+        with open(multiple_log_path, "w") as f:
+            f.write('type=USYS_CONFIG msg=audit(1714035623.123:124): table="system_settings" action="modify" key="password_policy" value="none" condition="always" terminal=tty1 ses=22 res=success\n')
+            f.write('type=USYS_CONFIG msg=audit(1714035623.124:125): table="config" action="modify" key="session_timeout" value="30" condition="always" terminal=tty2 ses=23 res=success\n')
 
-    def test_duplicate_incident_is_not_created(self):
-        self.create_logins(13)
-        detect_bruteforce()
-        detect_bruteforce()  # call twice
-        self.assertEqual(Incident.objects.count(), 1)
+        result = process_log_file(multiple_log_path)
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["entries_created"], 2)
+
+        # Überprüfe, ob beide Einträge korrekt in der DB gespeichert wurden
+        entry_1 = Usys_Config.objects.get(table="system_settings", key="password_policy")
+        entry_2 = Usys_Config.objects.get(table="config", key="session_timeout")
+        self.assertEqual(entry_1.value, "none")
+        self.assertEqual(entry_2.value, "30")
+
+    def test_invalid_log_line(self):
+        invalid_log_path = "invalid_log.log"
+        with open(invalid_log_path, "w") as f:
+            f.write('invalid_line_without_proper_format\n')
+            result = process_log_file(invalid_log_path)
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Invalid log format", result["message"])
+
+
+    def test_usys_config_missing_fields(self):
+        missing_field_log_path = "missing_field_log.log"
+        with open(missing_field_log_path, "w") as f:
+            f.write('type=USYS_CONFIG msg=audit(1714035623.123:124): table="system_settings" action="modify" key="password_policy" value="none" res=success\n')  # "condition" fehlt
+        result = process_log_file(missing_field_log_path)
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Missing field 'condition'", result["message"])
