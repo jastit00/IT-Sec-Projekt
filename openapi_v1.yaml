@@ -3,6 +3,8 @@ info:
   title: Logfile API
   version: 1.0.0
   description: API zum Abrufen von Logdateien aus der Datenbank
+servers:
+  - url: http://localhost:8080/api
 
 
 paths:
@@ -51,6 +53,8 @@ paths:
           name: id
           required: true
           schema: { type: integer }
+          
+        
       responses:
         '200':
           description: Datei-Metadaten
@@ -70,19 +74,39 @@ paths:
                 
   /logfiles/{id}/processed-logins:
     get:
-      summary: Einträge aus Logdatei speziell für Login
+      summary: Liste von Einträgen aus Logdatei speziell für Login
       parameters:
         - in: path
           name: id
           required: true
           schema: {type: integer }
+        
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+            
+        
       responses:
         '200':
-          description: Datenbankeinträge zu Login für eine Logfile
+          description: Liste von Datenbankeinträgen zu Login für eine Logfile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryLogin'
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntryLogin'
                 
         '401':
           description: nicht authentifiziert
@@ -92,22 +116,67 @@ paths:
           
         '500' :
           description: server kaputt
+  
+  
+#  /logfiles/{id}/processed-logins/{id}:
+#    get:
+#      summary: einzelner Eintrag aus Logdatei speziell für Login
+#      parameters:
+#        - in: path
+#          name: id
+#         required: true
+#          schema: {type: integer }
+#      responses:
+#        '200':
+#          description: einzelner Datenbankeintrag zu Login für eine Logfile
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/LogEntryLogin'
+#                
+#        '401':
+#          description: nicht authentifiziert
+#          
+#        '404':
+#          description: nicht vorhanden
+          
+#        '500' :
+#          description: server kaputt
+                
                 
   /logfiles/{id}/processed-incidents:
     get:
-      summary: Ausgewertete Incidents aus Datenbank
+      summary: Liste ausgewerteter Incidents aus Datenbank
       parameters:
         - in: path
           name: id
           required: true
           schema: {type: integer }
+          
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe
+          
+          schema:
+            type: string
+            format: date-time
       responses:
         '200':
-          description: Datenbankeinträge zu Incidents für eine Logfile
+          description: Liste von Datenbankeinträgen zu Incidents für eine Logfile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryIncidents'
+                type: array
+                items: 
+                  $ref: '#/components/schemas/LogEntryIncidents'
                 
         '401':
           description: nicht authentifiziert
@@ -117,22 +186,66 @@ paths:
           
         '500' :
           description: server kaputt
+          
+#  /logfiles/{id}/processed-incidents/{id}:
+#    get:
+#      summary: Ausgewerteter Incident aus Datenbank
+#      parameters:
+#        - in: path
+#          name: id
+#          required: true
+#          schema: {type: integer }
+#      responses:
+#        '200':
+#          description: einzelner Datenbankeintrag zu Incidents für eine Logfile
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/LogEntryIncidents'
+#                
+#        '401':
+#          description: nicht authentifiziert
+#          
+#        '404':
+#          description: nicht vorhanden
+#          
+#        '500' :
+#          description: server kaputt
           
   /logfiles/{id}/processed-configuration-changes:
     get:
-      summary: Ausgewertete Konfigurationsänderungen aus Datenbank
+      summary: Liste ausgewerteter Konfigurationsänderungen aus Datenbank
       parameters:
         - in: path
           name: id
           required: true
           schema: {type: integer }
+          
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+        
       responses:
         '200':
-          description: Datenbankeinträge zu Konfigurationsänderungen für eine Logfile
+          description: Liste Datenbankeinträgen zu Konfigurationsänderungen für eine Logfile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryConfigChanges'
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntryConfigChanges'
                 
         '401':
           description: nicht authentifiziert
@@ -142,6 +255,31 @@ paths:
           
         '500' :
           description: server kaputt
+  
+#logfiles/{id}/processed-configuration-changes/{id}:
+#    get:
+#      summary: Ausgewertete Konfigurationsänderung aus Datenbank
+#      parameters:
+#        - in: path
+#          name: id
+#          required: true
+#          schema: {type: integer }
+#      responses:
+#        '200':
+#          description: einzelner Datenbankeintrag zu Konfigurationsänderungen für eine Logfile
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/LogEntryConfigChanges'
+#                
+#        '401':
+#          description: nicht authentifiziert
+          
+#        '404':
+#          description: nicht vorhanden
+          
+#        '500' :
+#          description: server kaputt
 
 components:
   schemas:
