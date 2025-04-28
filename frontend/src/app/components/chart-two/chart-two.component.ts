@@ -45,4 +45,7 @@ export class ChartTwoComponent {
       }
     }
   };
+  onSettingsClick() {
+    console.log('Test Click');
+  }
 }

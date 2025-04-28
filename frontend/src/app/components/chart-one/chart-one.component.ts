@@ -46,4 +46,7 @@ export class ChartOneComponent {
       }
     }
   };
+  onSettingsClick() {
+    console.log('Test Click');
+  }
 }
