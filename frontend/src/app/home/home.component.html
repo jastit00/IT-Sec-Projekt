@@ -1,9 +1,18 @@
 <div class="grid-container">
-    <div class="grid-box"><app-chart-one></app-chart-one></div>
-    <div class="grid-box"><app-chart-two></app-chart-two></div>
-    <div class="grid-box"><app-chart-three></app-chart-three></div>
-    <div class="grid-box"><app-chart-four></app-chart-four></div>
-</div>
-  
-
-
+    <div class="grid-box" #gridBox id="chart1" draggable="true">
+      <div class="drag-handle">Chart One</div>
+      <app-chart-one></app-chart-one>
+    </div>
+    <div class="grid-box" #gridBox id="chart2" draggable="true">
+      <div class="drag-handle">Chart Two</div>
+      <app-chart-two></app-chart-two>
+    </div>
+    <div class="grid-box" #gridBox id="chart3" draggable="true">
+      <div class="drag-handle">Chart Three</div>
+      <app-chart-three></app-chart-three>
+    </div>
+    <div class="grid-box" #gridBox id="chart4" draggable="true">
+      <div class="drag-handle">Chart Four</div>
+      <app-chart-four></app-chart-four>
+    </div>
+  </div>
