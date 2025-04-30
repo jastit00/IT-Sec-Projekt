@@ -6,6 +6,7 @@ import { MenubarModule } from 'primeng/menubar';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
+import { provideLogfileApi } from './app/api-client/api-provider';
 
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
@@ -14,7 +15,8 @@ initKeycloak().then(() => {
   bootstrapApplication(AppComponent, {
     providers: [
       provideRouter(routes),
-      provideHttpClient()
+      provideHttpClient(),
+      provideLogfileApi({ rootUrl: 'http://localhost:5432/api' })
     ]
   }).catch(err => console.error(err));
 });
