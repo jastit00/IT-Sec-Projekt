@@ -22,13 +22,13 @@ def process_log_file(file_path: str) -> dict:
 
                     # Extract other fields using regex
                     username_match = re.search(r'acct="([^"]*)"', line)
-                    ip_match = re.search(r'addr=([^\s]*)', line)
+                    ip_address_match = re.search(r'addr=([^\s]*)', line)
                     result_match = re.search(r"res=([^'\s]*)", line)
                     session_match = re.search(r'ses=([^\s]*)', line)
 
                     # set default values if regex fails
                     username = username_match.group(1) if username_match else ""
-                    ipAddress = ip_match.group(1) if ip_match else ""
+                    ip_address = ip_address_match.group(1) if ip_address_match else ""
                     result = result_match.group(1) if result_match else ""
                     session = session_match.group(1) if session_match else ""
 
@@ -36,7 +36,7 @@ def process_log_file(file_path: str) -> dict:
                     if not User_Login.objects.filter(
                         timestamp=timestamp, 
                         username=username, 
-                        ipAddress=ipAddress,
+                        ip_address=ip_address,
                         session=session, 
                         result=result
                         ).exists():
@@ -44,7 +44,7 @@ def process_log_file(file_path: str) -> dict:
                             log_type="USER_LOGIN",
                             timestamp=timestamp,
                             username=username,
-                            ipAddress=ipAddress,
+                            ip_address=ip_address,
                             session=session,
                             result=result
                         )
@@ -62,7 +62,6 @@ def process_log_file(file_path: str) -> dict:
                     value_match = re.search(r'value="([^"]*)"?', line)  
                     condition_match = re.search(r'condition="([^"]*)"', line)  
                     terminal_match = re.search(r'terminal\s*=\s*([^\s]*)', line)  
-                    session_match = re.search(r'ses\s*=\s*([^\s]*)', line)  
                     result_match = re.search(r"res\s*=\s*([^'\s]*)", line) 
                     
 
@@ -73,7 +72,6 @@ def process_log_file(file_path: str) -> dict:
                     condition = condition_match.group(1) if condition_match else ""
                     table = table_match.group(1) if table_match else ""
                     terminal = terminal_match.group(1) if terminal_match else ""
-                    session = session_match.group(1) if session_match else ""
                     result = result_match.group(1) if result_match else ""         
 
                     if not Usys_Config.objects.filter(
@@ -84,7 +82,6 @@ def process_log_file(file_path: str) -> dict:
                         value=value,
                         condition=condition,
                         terminal=terminal,
-                        session=session,
                         result=result
                     ).exists():
                         Usys_Config.objects.create(
@@ -96,7 +93,6 @@ def process_log_file(file_path: str) -> dict:
                             value=value,
                             condition=condition,
                             terminal=terminal,
-                            session=session,
                             result=result
                         )
                         entries_created += 1

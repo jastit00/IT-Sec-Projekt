@@ -5,12 +5,12 @@ class User_Login(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
     username = models.CharField(max_length=100)
-    ipAddress = models.GenericIPAddressField()
+    ip_address = models.GenericIPAddressField()
     session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
-       return f"{self.username} at {self.timestamp} from {self.ipAddress}"
+       return f"{self.username} at {self.timestamp} from {self.ip_address}"
 
 
 class Usys_Config(models.Model):
@@ -22,7 +22,6 @@ class Usys_Config(models.Model):
     value = models.CharField(max_length=255)
     condition = models.CharField(max_length=100) 
     terminal = models.CharField(max_length=100)
-    session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
 
     def __str__(self):
