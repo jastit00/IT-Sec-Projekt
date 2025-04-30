@@ -59,16 +59,19 @@ def detect_critical_config_change():
                 (rule["key"] == "*" or rule["key"] == config_change.key) and
                 (rule["value"] == "*" or rule["value"] == config_change.value)
             ):
-                # Fetch the most recent login entry for the username before or at the time of the config change -> TODO EDIT THIS IF LOGOUT LOGIC IS WOORKING
+                # Fetch the most recent login entry for the username before or at the time of the config change -> EDIT THIS IF LOGOUT LOGIC IS WOORKING
                 login = User_Login.objects.filter(
                     username=config_change.terminal,
-                    timestamp=config_change.timestamp  # Only consider logins that happened before or at the same time as the config change
+                    timestamp__lte=config_change.timestamp  # "less than or equal" -> login before or at the time of the config change
                 ).order_by('-timestamp').first()
                 
-                # Get the IP address from the login entry if it exists
-                ip_address = login.ip_address if login else None  
+                # If a login entry is found, use its IP address; otherwise, set ip_address to None
+                if login:
+                    ip_address = login.ip_address
+                else:
+                    ip_address = None  # Handle case where no login entry is found
                 
-                # Check if Incident already exists for this config change
+                # Ensure ip_address is defined before creating an incident
                 if ip_address:
                     # Check if an incident already exists for this change
                     if not Incident.objects.filter(
