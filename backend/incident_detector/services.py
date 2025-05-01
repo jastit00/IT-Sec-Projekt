@@ -5,11 +5,13 @@ from .models import Incident, Related_Log
 from log_processor.models import User_Login, Usys_Config 
 
 
-# Threshold vars for brute force
+
+
+
 BRUTE_FORCE_ATTEMPT_THRESHOLD = 13
 BRUTE_FORCE_TIME_DELTA = timedelta(minutes=5)
 
-# Variables for critical config change detection
+# vars for critical config change detection
 CRITICAL_CONFIG_RULES = [
     {
         "table": "config",
@@ -54,22 +56,28 @@ def detect_critical_config_change():
         for rule in CRITICAL_CONFIG_RULES:
             # Check if the rule's table, action, key, and value match 
             if (
-                (rule["table"] == "*" or rule["table"] == config_change.table) and
-                (rule["action"] == "*" or rule["action"] == config_change.action) and
-                (rule["key"] == "*" or rule["key"] == config_change.key) and
-                (rule["value"] == "*" or rule["value"] == config_change.value)
-            ):
+                ("table" not in rule or rule["table"] == config_change.table) and
+                ("action" not in rule or rule["action"] == config_change.action) and
+                ("key" not in rule or rule["key"] == config_change.key) and
+                ("value" not in rule or rule["value"] == config_change.value)
+                ):
+                
+                
+                # TODO
                 # Fetch the most recent login entry for the username before or at the time of the config change -> EDIT THIS IF LOGOUT LOGIC IS WOORKING
+                # if we have login / logout tiome windows, we can check if the user was logged in at the time of the config change instead of just the most recent login
                 login = User_Login.objects.filter(
                     username=config_change.terminal,
                     timestamp__lte=config_change.timestamp  # "less than or equal" -> login before or at the time of the config change
-                ).order_by('-timestamp').first()
+                ).order_by('-timestamp').first() # this returns the most recent entry
                 
                 # If a login entry is found, use its IP address; otherwise, set ip_address to None
-                if login:
-                    ip_address = login.ip_address
-                else:
-                    ip_address = None  # Handle case where no login entry is found
+                ip_address = login.ip_address if login else None
+
+
+
+
+
                 
                 # Ensure ip_address is defined before creating an incident
                 if ip_address:
@@ -91,9 +99,8 @@ def detect_critical_config_change():
                         # Create a RelatedLog entry for the config change
                         Related_Log.objects.create(
                             incident=incident,
-                            usys_config=config_change  # Set the usys_config field
+                            usys_config=config_change  
                         )
-                        
                         critical_config_incidents_created += 1  # Increment the incident counter
     
     return {"critical_config_change": critical_config_incidents_created }
