@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from django.utils import timezone
 from incident_detector.services import detect_incidents
-from .models import User_Login, Usys_Config
+from .models import User_Login, Usys_Config, User_Logout
 
 def process_log_file(file_path: str) -> dict:
     entries_created = 0
@@ -25,12 +25,14 @@ def process_log_file(file_path: str) -> dict:
                     ip_address_match = re.search(r'addr=([^\s]*)', line)
                     result_match = re.search(r"res=([^'\s]*)", line)
                     session_match = re.search(r'ses=([^\s]*)', line)
+                    terminal_match = re.search(r'terminal=([^\s]*)', line)
 
                     # set default values if regex fails
                     username = username_match.group(1) if username_match else ""
                     ip_address = ip_address_match.group(1) if ip_address_match else ""
                     result = result_match.group(1) if result_match else ""
                     session = session_match.group(1) if session_match else ""
+                    terminal = terminal_match.group(1) if terminal_match else ""
 
                     # check if th DB-object already exists and create it if not
                     if not User_Login.objects.filter(
@@ -38,7 +40,8 @@ def process_log_file(file_path: str) -> dict:
                         username=username, 
                         ip_address=ip_address,
                         session=session, 
-                        result=result
+                        result=result,
+                        terminal=terminal
                         ).exists():
                         User_Login.objects.create(
                             log_type="USER_LOGIN",
@@ -46,10 +49,46 @@ def process_log_file(file_path: str) -> dict:
                             username=username,
                             ip_address=ip_address,
                             session=session,
-                            result=result
+                            result=result,
+                            terminal=terminal
                         )
                         entries_created += 1 # increment counter for each new entry
 
+                 # check for USER_LOGOUT      
+                elif "type=USER_LOGOUT" in line:
+                    # get timestampm and convert it to datetime object
+                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+
+                    # Extract other fields using regex
+                    username_match = re.search(r'acct="([^"]*)"', line)
+                    result_match = re.search(r"res=([^'\s]*)", line)
+                    session_match = re.search(r'ses=([^\s]*)', line)
+                    terminal_match = re.search(r'terminal=([^\s]*)', line)
+
+                    # set default values if regex fails
+                    username = username_match.group(1) if username_match else ""
+                    result = result_match.group(1) if result_match else ""
+                    session = session_match.group(1) if session_match else ""
+                    terminal = terminal_match.group(1) if terminal_match else ""
+
+                    # check if th DB-object already exists and create it if not
+                    if not User_Logout.objects.filter(
+                        timestamp=timestamp, 
+                        username=username, 
+                        session=session, 
+                        result=result,
+                        terminal=terminal
+                        ).exists():
+                        User_Logout.objects.create(
+                            log_type="USER_LOGOUT",
+                            timestamp=timestamp,
+                            username=username,
+                            session=session,
+                            result=result,
+                            terminal=terminal
+                        )
+                        entries_created += 1 # increment counter for each new entry
+                
                 # check for USYS_CONFIG
                 elif "type=USYS_CONFIG" in line:
                     # Extract timestamp

@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Incident, Related_Log
-from log_processor.models import User_Login, Usys_Config 
+from log_processor.models import User_Login, User_Logout, Usys_Config 
 
 
 
@@ -32,6 +32,7 @@ CRITICAL_CONFIG_RULES = [
 def detect_incidents():
     bruteforce_incidents = detect_bruteforce()
     critical_config_incidents = detect_critical_config_change()
+    simultaniousLogins = detect_concurrent_logins()
     
     #########################################
     # TODO
@@ -43,7 +44,9 @@ def detect_incidents():
 
     return {"incidents": {
         "bruteforce": bruteforce_incidents["bruteforce"],
-        "critical_config_change": critical_config_incidents["critical_config_change"]}}
+        "critical_config_change": critical_config_incidents["critical_config_change"],
+        "simultanious_logins": simultaniousLogins["simultaneous_logins"]
+}}
 
 
 
@@ -173,3 +176,58 @@ def detect_bruteforce():
 
     # Return the count of incidents created
     return {"bruteforce": bruteforce_incidents_created}
+
+    # [added 1.05.2025]
+# second try implementing this function; hopefully this time works
+def detect_concurrent_logins():
+    """
+    Detects potential security incidents due to multiple simultaneous logins
+    from the same terminal. A difference of 2 or more logins vs. logouts
+    suggests unauthorized session persistence or credential misuse.
+    """
+    incidents_created = 0
+
+    # 1. Get all unique terminal values from login table
+    #terminals = User_Login.objects.values_list('terminal', flat=True).filter(result="success").distinct()
+    usernames=User_Login.objects.values_list('username', flat=True).filter(result="success").distinct()
+
+    # 2. Process each terminal
+    for username_value in usernames:
+        amount_of_entries_login=User_Login.objects.filter(username=username_value).count()
+        amount_of_entries_logout=User_Logout.objects.filter(username=username_value).count()
+        
+        
+        difference = amount_of_entries_login - amount_of_entries_logout
+
+
+
+
+        # 3. Check for suspicious behavior
+        if difference >= 2:
+            # 4. Get latest login info
+
+            recent_logins = User_Login.objects.filter(username=username_value, result="success")
+            username = recent_logins.first().username
+            ip=User_Login.objects.values_list('ip_address', flat=True)[0]
+            #terminal=User_Login.objects.values_list('terminal', flat=True)[0]
+
+            # 5. Prevent duplicate incidents
+            if not Incident.objects.filter(username=username, ip_address=ip, reason="Simultanious logins").exists():
+                incident=Incident.objects.create(timestamp=User_Login.objects.values_list('timestamp', flat=True).filter(username=username).order_by('timestamp').first(),username=username,ip_address=ip,
+                                                reason="Simultanious logins" + " from " + str(difference) + " different terminals" + " with " + str(amount_of_entries_login-difference) + " logins and " + str(amount_of_entries_logout) + " logouts"
+                    )
+                
+                latest_logins = User_Login.objects.order_by('-timestamp')[:difference]
+                
+                for login in latest_logins:
+                    Related_Log.objects.create(
+                        incident=incident,
+                        user_login=login
+                )
+                
+                #incident.set(User_Login.objects.values().order_by('-timestamp')[0:difference])
+                # attach the logins (we don't know how many, it can be 2 or more -> 0 to x where x is excluded) that are at the very top when listing (we order them by the timestamp in descending order -> oldest timestamp below)
+                incidents_created+=1 # adding one incident created to the counter
+
+    # 6. Return incident count
+    return {"simultaneous_logins": incidents_created}

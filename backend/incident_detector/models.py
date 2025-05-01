@@ -1,5 +1,5 @@
 from django.db import models
-from log_processor.models import User_Login, Usys_Config
+from log_processor.models import User_Login, User_Logout, Usys_Config
 
 # Create your models here.
 class Incident(models.Model):
@@ -7,7 +7,7 @@ class Incident(models.Model):
     username = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField()
     reason = models.TextField()
-    related_logs = models.ManyToManyField(User_Login, related_name='incident_related_logs')  # Avoiding conflict here
+    #related_logs = models.ManyToManyField(User_Login, related_name='incident_related_logs')  # Avoiding conflict here
 
     def __str__(self):
         return f"{self.reason} from {self.ip_address} at {self.timestamp} with {self.username}"
