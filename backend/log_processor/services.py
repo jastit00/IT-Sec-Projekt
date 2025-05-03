@@ -4,7 +4,7 @@ from datetime import datetime
 from django.utils import timezone
 from incident_detector.services import detect_incidents
 from .models import User_Login, Usys_Config, User_Logout
-
+import uuid
 def process_log_file(file_path: str) -> dict:
     entries_created = 0
 
@@ -140,7 +140,9 @@ def process_log_file(file_path: str) -> dict:
         return {
             "status": "success",
             "entries_created": entries_created,
-            "incidents_created": incidents_created
+            "incidents_created": incidents_created,
+            "id": str(uuid.uuid4())
+
         }
 
     except FileNotFoundError:

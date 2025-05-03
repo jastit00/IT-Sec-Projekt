@@ -1,6 +1,6 @@
 from django.db import models
-
-
+from django.contrib.auth.models import User
+from django.utils import timezone
 class User_Login(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
@@ -35,6 +35,13 @@ class Usys_Config(models.Model):
     terminal = models.CharField(max_length=100)
     result = models.CharField(max_length=20)
 
+class UploadedLogFile(models.Model):
+    filename = models.CharField(max_length=255)
+    source = models.CharField(max_length=100, default='unknown')
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=20)
+    
     def __str__(self):
         return f"{self.action} {self.key} at {self.timestamp} with value {self.value}"
 

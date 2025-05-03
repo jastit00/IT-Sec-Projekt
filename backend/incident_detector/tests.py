@@ -15,7 +15,7 @@ class BruteForceDetectionTests(TestCase):
         for i in range(count):
             User_Login.objects.create(
                 username=username,
-                ipAddress=ip,
+                  ip_address=ip,
                 result="success" if (success_on_last and i == count - 1) else "fail",
                 timestamp=self.now + timedelta(minutes=i * minutes_apart)
             )
