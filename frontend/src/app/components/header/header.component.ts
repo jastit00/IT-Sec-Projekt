@@ -1,6 +1,7 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, signal, inject } from '@angular/core';
 import { logout } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
+import { DefaultService } from '../../api-client';
 
 @Component({
   selector: 'app-header',
@@ -12,6 +13,8 @@ import { RouterLink } from '@angular/router';
 export class HeaderComponent {
   title = signal('Security Event Detection');
   user = input('User');
+
+  private defaultService = inject(DefaultService);
 
   logout() {
     logout();
@@ -26,7 +29,15 @@ export class HeaderComponent {
     
     // Wenn Dateien ausgewählt wurden, gebe sie in der Konsole aus
     if (files && files.length > 0) {
-      console.log('Dateien ausgewählt:', Array.from(files)); // Array von Dateien in der Konsole ausgeben
+      //console.log('Dateien ausgewählt:', Array.from(files)); // Array von Dateien in der Konsole ausgeben
+      this.defaultService.logfilesPost(files[0]).subscribe({
+        next: (result) => {
+          console.log('Upload erfolgreich:', result);
+        },
+        error: (err) => {
+          console.error('Fehler beim Upload:', err);
+        }
+      });
     }
   }
   // Methode, die den Dateiauswahldialog öffnet
