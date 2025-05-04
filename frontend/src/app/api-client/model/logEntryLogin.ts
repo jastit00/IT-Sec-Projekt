@@ -15,14 +15,15 @@ export interface LogEntryLogin {
     timestamp?: string;
     username?: string;
     ipAddress?: string;
+    Terminal?: string;
     result?: LogEntryLogin.ResultEnum;
 }
 export namespace LogEntryLogin {
+    export type ResultEnum = 'successful' | 'failed';
     export const ResultEnum = {
-        Successful: 'successful',
-        Failed: 'failed'
-    } as const;
-    export type ResultEnum = typeof ResultEnum[keyof typeof ResultEnum];
+        Successful: 'successful' as ResultEnum,
+        Failed: 'failed' as ResultEnum
+    };
 }
 
 

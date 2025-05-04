@@ -10,19 +10,15 @@
 
 
 export interface LogFile { 
-    id?: number;
     filename?: string;
-    source?: string;
-    uploaded_by?: string;
-    uploaded_at?: string;
     status?: LogFile.StatusEnum;
 }
 export namespace LogFile {
+    export type StatusEnum = 'success' | 'error';
     export const StatusEnum = {
-        Success: 'success',
-        Error: 'error'
-    } as const;
-    export type StatusEnum = typeof StatusEnum[keyof typeof StatusEnum];
+        Success: 'success' as StatusEnum,
+        Error: 'error' as StatusEnum
+    };
 }
 
 

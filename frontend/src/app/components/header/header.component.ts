@@ -29,8 +29,9 @@ export class HeaderComponent {
     
     // Wenn Dateien ausgewählt wurden, gebe sie in der Konsole aus
     if (files && files.length > 0) {
+      const now = new Date().toISOString();
       //console.log('Dateien ausgewählt:', Array.from(files)); // Array von Dateien in der Konsole ausgeben
-      this.defaultService.logfilesPost(files[0]).subscribe({
+      this.defaultService.logfilesPost(files[0], "InputFirewall", "currentUser", now).subscribe({
         next: (result) => {
           console.log('Upload erfolgreich:', result);
         },

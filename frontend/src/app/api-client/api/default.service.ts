@@ -46,13 +46,15 @@ export class DefaultService extends BaseService {
      * Upload einer Auditlogdatei 
      * @param file Die Logdatei, die hochgeladen werden soll.
      * @param source Quelle des Logs (Welche Firewall?)
+     * @param uploadedBy 
+     * @param uploadedAt 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public logfilesPost(file: Blob, source?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<LogFile>;
-    public logfilesPost(file: Blob, source?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<LogFile>>;
-    public logfilesPost(file: Blob, source?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<LogFile>>;
-    public logfilesPost(file: Blob, source?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public logfilesPost(file: Blob, source?: string, uploadedBy?: string, uploadedAt?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<LogFile>;
+    public logfilesPost(file: Blob, source?: string, uploadedBy?: string, uploadedAt?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<LogFile>>;
+    public logfilesPost(file: Blob, source?: string, uploadedBy?: string, uploadedAt?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<LogFile>>;
+    public logfilesPost(file: Blob, source?: string, uploadedBy?: string, uploadedAt?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (file === null || file === undefined) {
             throw new Error('Required parameter file was null or undefined when calling logfilesPost.');
         }
@@ -95,6 +97,12 @@ export class DefaultService extends BaseService {
         if (source !== undefined) {
             localVarFormParams = localVarFormParams.append('source', <any>source) as any || localVarFormParams;
         }
+        if (uploadedBy !== undefined) {
+            localVarFormParams = localVarFormParams.append('uploaded_by', <any>uploadedBy) as any || localVarFormParams;
+        }
+        if (uploadedAt !== undefined) {
+            localVarFormParams = localVarFormParams.append('uploaded_at', <any>uploadedAt) as any || localVarFormParams;
+        }
 
         let responseType_: 'text' | 'json' | 'blob' = 'json';
         if (localVarHttpHeaderAcceptSelected) {
@@ -108,13 +116,12 @@ export class DefaultService extends BaseService {
         }
 
         let localVarPath = `/logfiles/`;
-        const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<LogFile>('post', `${basePath}${localVarPath}`,
+        return this.httpClient.request<LogFile>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: localVarConvertFormParamsToString ? localVarFormParams.toString() : localVarFormParams,
                 responseType: <any>responseType_,
-                ...(withCredentials ? { withCredentials } : {}),
+                withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
                 observe: observe,
                 transferCache: localVarTransferCache,
@@ -167,13 +174,12 @@ export class DefaultService extends BaseService {
         }
 
         let localVarPath = `/logfiles/processed-configuration-changes`;
-        const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<LogEntryConfigChanges>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<LogEntryConfigChanges>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,
                 responseType: <any>responseType_,
-                ...(withCredentials ? { withCredentials } : {}),
+                withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
                 observe: observe,
                 transferCache: localVarTransferCache,
@@ -226,13 +232,12 @@ export class DefaultService extends BaseService {
         }
 
         let localVarPath = `/logfiles/processed-incidents`;
-        const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<LogEntryIncidents>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<LogEntryIncidents>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,
                 responseType: <any>responseType_,
-                ...(withCredentials ? { withCredentials } : {}),
+                withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
                 observe: observe,
                 transferCache: localVarTransferCache,
@@ -285,13 +290,12 @@ export class DefaultService extends BaseService {
         }
 
         let localVarPath = `/logfiles/processed-logins`;
-        const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<LogEntryLogin>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<LogEntryLogin>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,
                 responseType: <any>responseType_,
-                ...(withCredentials ? { withCredentials } : {}),
+                withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
                 observe: observe,
                 transferCache: localVarTransferCache,
