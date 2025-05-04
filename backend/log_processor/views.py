@@ -13,12 +13,15 @@ from log_processor.models import UploadedLogFile, User_Login, Usys_Config
 from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
 
+
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
-
+    @csrf_exempt
+    
     def post(self, request, *args, **kwargs):#später erweiterbar
         uploaded_file = request.FILES.get('file')
         source = request.data.get('source', 'unknown')
@@ -67,7 +70,7 @@ class LogFileUploadView(APIView):
         logger.info(f"Audit log uploaded by {request.user.username if request.user.is_authenticated else 'anonymous'}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
 
-
+@csrf_exempt
 @api_view(['GET'])
 def processed_logins(request):
     start = request.query_params.get('start')
@@ -80,7 +83,7 @@ def processed_logins(request):
     serializer = UserLoginSerializer(queryset, many=True)
     return Response(serializer.data)
 
-
+@csrf_exempt
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
@@ -93,7 +96,7 @@ def processed_config_changes(request):
     serializer = UsysConfigSerializer(queryset, many=True)
     return Response(serializer.data)
 
-
+@csrf_exempt
 @api_view(['GET'])
 def processed_incidents(request):
     start = request.query_params.get('start')
