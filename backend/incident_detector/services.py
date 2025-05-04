@@ -177,57 +177,46 @@ def detect_bruteforce():
     # Return the count of incidents created
     return {"bruteforce": bruteforce_incidents_created}
 
-    # [added 1.05.2025]
-# second try implementing this function; hopefully this time works
+#[added 4.05.2025]
+# third time doing this bs. It's either sucessfull or I'm giving up
 def detect_concurrent_logins():
-    """
-    Detects potential security incidents due to multiple simultaneous logins
-    from the same terminal. A difference of 2 or more logins vs. logouts
-    suggests unauthorized session persistence or credential misuse.
-    """
-    incidents_created = 0
-
-    # 1. Get all unique terminal values from login table
-    #terminals = User_Login.objects.values_list('terminal', flat=True).filter(result="success").distinct()
-    usernames=User_Login.objects.values_list('username', flat=True).filter(result="success").distinct()
-
-    # 2. Process each terminal
-    for username_value in usernames:
-        amount_of_entries_login=User_Login.objects.filter(username=username_value).count()
-        amount_of_entries_logout=User_Logout.objects.filter(username=username_value).count()
-        
-        
-        difference = amount_of_entries_login - amount_of_entries_logout
-
-
-
-
-        # 3. Check for suspicious behavior
-        if difference >= 2:
-            # 4. Get latest login info
-
-            recent_logins = User_Login.objects.filter(username=username_value, result="success")
-            username = recent_logins.first().username
-            ip=User_Login.objects.values_list('ip_address', flat=True)[0]
-            #terminal=User_Login.objects.values_list('terminal', flat=True)[0]
-
-            # 5. Prevent duplicate incidents
-            if not Incident.objects.filter(username=username, ip_address=ip, reason="Simultanious logins").exists():
-                incident=Incident.objects.create(timestamp=User_Login.objects.values_list('timestamp', flat=True).filter(username=username).order_by('timestamp').first(),username=username,ip_address=ip,
-                                                reason="Simultanious logins" + " from " + str(difference) + " different terminals" + " with " + str(amount_of_entries_login-difference) + " logins and " + str(amount_of_entries_logout) + " logouts"
+    simultaneous_logins_created=0
+    #1. get all user logins that were successful
+    all_successful_logins=User_Login.objects.all().filter(result="success")
+    #print("logins filtered successfully")
+    # typeof all_successful_logins -> QuerySet
+    #2. see wether those logins have a matching logout (use the terminal)
+    # we will use this dict later on
+    potential_used_accounts=[] # "grey list"
+    for login in all_successful_logins:
+        #print("we are in a loop")
+        if (User_Logout.objects.all().filter(terminal=login.terminal).count())==0:
+            #print("there is a login w/o logout")
+            # in this case, we haven't found a logout that pairs with the successful login
+            if login.username in potential_used_accounts:
+                #print("there has been already a unmatched login")
+                # the account has already been registered in the list -> we have a potential simultaneous login
+                # create incident and use timestamp of the second login w/ same account
+                if not Incident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
+                    #print("we are going to create an incident object")
+                    # Create a new incident
+                    incident = Incident.objects.create(
+                        timestamp=login.timestamp,
+                        username=login.username,
+                        ip_address=login.ip_address,
+                        reason="Sucessful Simultaneous Login"
                     )
-                
-                latest_logins = User_Login.objects.order_by('-timestamp')[:difference]
-                
-                for login in latest_logins:
+                    #print("we created an incident object")
                     Related_Log.objects.create(
-                        incident=incident,
-                        user_login=login
-                )
-                
-                #incident.set(User_Login.objects.values().order_by('-timestamp')[0:difference])
-                # attach the logins (we don't know how many, it can be 2 or more -> 0 to x where x is excluded) that are at the very top when listing (we order them by the timestamp in descending order -> oldest timestamp below)
-                incidents_created+=1 # adding one incident created to the counter
-
-    # 6. Return incident count
-    return {"simultaneous_logins": incidents_created}
+                            incident=incident,
+                            user_login=login
+                        )
+                    simultaneous_logins_created+=1
+                    #print("we created a realted log object")
+                #else:
+                    #print("incident already exist")
+            else:
+                potential_used_accounts.append(login.username)
+                #print("login acct put in gray list")
+        #print("---------------")
+    return {"simultaneous_logins":simultaneous_logins_created}
