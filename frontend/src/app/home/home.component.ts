@@ -1,160 +1,104 @@
-// home.component.ts
-import { Component, AfterViewInit, QueryList, ViewChildren, ElementRef, Renderer2 } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ChartOneComponent } from '../components/chart-one/chart-one.component';
 import { ChartTwoComponent } from '../components/chart-two/chart-two.component';
 import { ChartThreeComponent } from '../components/chart-three/chart-three.component';
 import { ChartFourComponent } from '../components/chart-four/chart-four.component';
-
+import { CommonModule } from '@angular/common';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 @Component({
   selector: 'app-home',
+  standalone: true,
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [ChartOneComponent, ChartTwoComponent, ChartThreeComponent, ChartFourComponent]
+  imports: [
+    CommonModule,
+    DragDropModule,
+    ChartOneComponent,
+    ChartTwoComponent,
+    ChartThreeComponent,
+    ChartFourComponent
+  ]
 })
-export class HomeComponent implements AfterViewInit {
-  @ViewChildren('gridBox') gridBoxes!: QueryList<ElementRef>;
-  
-  private draggedBox: HTMLElement | null = null;
-  private resizingBox: HTMLElement | null = null;
-  private originalSize = { width: 0, height: 0 };
-  private originalPosition = { x: 0, y: 0 };
-  
-  constructor(private renderer: Renderer2) {}
+export class HomeComponent {
+  chartIds = ['chart1', 'chart2', 'chart3', 'chart4'];
 
-  ngAfterViewInit() {
-    //Warten, bis View geladen ist
-    setTimeout(() => {
-      this.setupDragAndDrop(); //Setup für Drag and Drop
-      this.setupResizeHandlers(); //Setup für Resizing
-    }, 0);
+  // Resize Variablen
+  resizing = false;
+  resizeDirection: 'horizontal' | 'vertical' | 'both' | null = null;
+  resizeChartElement: HTMLElement | null = null;
+  startX = 0;
+  startY = 0;
+  startWidth = 0;
+  startHeight = 0;
+
+  // Chart Drag & Drop
+  drop(event: CdkDragDrop<string[]>) {
+    moveItemInArray(this.chartIds, event.previousIndex, event.currentIndex);
   }
 
-  private setupDragAndDrop() {
-    //Für jede Box im Grid
-    this.gridBoxes.forEach(boxRef => {
-      const box = boxRef.nativeElement;
-      
-      //Dragstart, wenn Drag beginnt
-      this.renderer.listen(box, 'dragstart', (event: DragEvent) => {
-        if (this.resizingBox) {
-          event.preventDefault(); //Drag nicht starten, wenn Resizing läuft
-          return;
-        }
-        
-        this.draggedBox = box;
-        this.renderer.addClass(box, 'dragging');
-        
-        if (event.dataTransfer) {
-          event.dataTransfer.setData('text/plain', box.id); //Box-ID für Transfer speichern
-          event.dataTransfer.effectAllowed = 'move';
-        }
-      });
-      
-      //Dragend, wenn der Drag endet
-      this.renderer.listen(box, 'dragend', () => {
-        if (this.draggedBox) {
-          this.renderer.removeClass(this.draggedBox, 'dragging');
-          this.draggedBox = null;
-        }
-      });
-      
-      //Dragover, wenn Element über Zielbox gezogen wird
-      this.renderer.listen(box, 'dragover', (event: DragEvent) => {
-        event.preventDefault(); //Muss verhindert werden, damit das Drop funktioniert
-        if (this.draggedBox && this.draggedBox !== box) {
-          this.renderer.addClass(box, 'dragover');
-        }
-      });
-      
-      //dragleave, wenn das Element die Zielbox verlässt
-      this.renderer.listen(box, 'dragleave', () => {
-        this.renderer.removeClass(box, 'dragover');
-      });
-      
-      //drop, wenn das Element in eine Box abgelegt wird
-      this.renderer.listen(box, 'drop', (event: DragEvent) => {
-        event.preventDefault();
-        this.renderer.removeClass(box, 'dragover');
-        
-        if (!this.draggedBox || this.draggedBox === box) {
-          return;
-        }
-        
-        //hol die Chart-Elemente
-        const draggedChart = this.draggedBox.querySelector('app-chart-one, app-chart-two, app-chart-three, app-chart-four');
-        const targetChart = box.querySelector('app-chart-one, app-chart-two, app-chart-three, app-chart-four');
-        
-        if (draggedChart && targetChart) {
-          //klone Chart-Elemente, um sie zu tauschen
-          const draggedChartClone = draggedChart.cloneNode(true);
-          const targetChartClone = targetChart.cloneNode(true);
-          
-          //tausche die Chart-Elemente
-          draggedChart.parentNode?.replaceChild(targetChartClone, draggedChart);
-          targetChart.parentNode?.replaceChild(draggedChartClone, targetChart);
-        }
-        
-        this.draggedBox = null;
-      });
-    });
+  // Chart Typ überprüfen
+  isChart(id: string, type: string): boolean {
+    return id === type;
   }
 
-  private setupResizeHandlers() {
-    //für jede Box im Grid Resizing einrichten
-    this.gridBoxes.forEach(boxRef => {
-      const box = boxRef.nativeElement;
-      const resizeHandle = box.querySelector('.resize-handle');
-      
-      if (resizeHandle) {
-        this.renderer.listen(resizeHandle, 'mousedown', (event: MouseEvent) => {
-          event.preventDefault();
-          event.stopPropagation();
-          
-          this.resizingBox = box;
-          this.renderer.addClass(box, 'resizing');
-          
-          this.originalSize = {
-            width: box.offsetWidth,
-            height: box.offsetHeight
-          };
-          
-          this.originalPosition = {
-            x: event.clientX,
-            y: event.clientY
-          };
-          
-          const mouseMoveHandler = (moveEvent: MouseEvent) => {
-            if (!this.resizingBox) return;
-            
-            const deltaWidth = moveEvent.clientX - this.originalPosition.x;
-            const deltaHeight = moveEvent.clientY - this.originalPosition.y;
-            
-            this.renderer.setStyle(
-              this.resizingBox, 
-              'width', 
-              `${this.originalSize.width + deltaWidth}px`
-            );
-            this.renderer.setStyle(
-              this.resizingBox, 
-              'height', 
-              `${this.originalSize.height + deltaHeight}px`
-            );
-          };
-          
-          const mouseUpHandler = () => {
-            if (this.resizingBox) {
-              this.renderer.removeClass(this.resizingBox, 'resizing');
-              this.resizingBox = null;
-            }
-            
-            document.removeEventListener('mousemove', mouseMoveHandler);
-            document.removeEventListener('mouseup', mouseUpHandler);
-          };
-          
-          document.addEventListener('mousemove', mouseMoveHandler);
-          document.addEventListener('mouseup', mouseUpHandler);
-        });
-      }
-    });
+  // Resize handle Mousedown
+  onResizeStart(event: MouseEvent, direction: 'horizontal' | 'vertical' | 'both') {
+    // Verhindern, dass das Drag-Event ausgelöst wird
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Get das Chart-Element
+    const chartElement = (event.target as HTMLElement).closest('.chart-box') as HTMLElement;
+    if (!chartElement) return;
+
+    // Resizing starten
+    this.resizing = true;
+    this.resizeDirection = direction;
+    this.resizeChartElement = chartElement;
+
+    // Startposition und -größe speichern
+    this.startX = event.clientX;
+    this.startY = event.clientY;
+    this.startWidth = chartElement.offsetWidth;
+    this.startHeight = chartElement.offsetHeight;
+
+    // CSS-Klasse für visuelles Feedback hinzufügen
+    chartElement.classList.add('resizing');
   }
-}
+
+  // Mouse move während Resize
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (!this.resizing || !this.resizeChartElement) return;
+
+    const deltaX = event.clientX - this.startX;
+    const deltaY = event.clientY - this.startY;
+
+    // Horizontales Resizing
+    if (this.resizeDirection === 'horizontal' || this.resizeDirection === 'both') {
+      const newWidth = Math.max(150, this.startWidth + deltaX);
+      this.resizeChartElement.style.width =`${newWidth}px`;
+    }
+
+    // Vertikales Resizing
+    if (this.resizeDirection === 'vertical' || this.resizeDirection === 'both') {
+      const newHeight = Math.max(150, this.startHeight + deltaY);
+      this.resizeChartElement.style.height =`${newHeight}px`;
+    }
+  }
+
+  // Mouse up zum Beenden des Resizings
+  @HostListener('document:mouseup')
+  onMouseUp() {
+    if (this.resizing && this.resizeChartElement) {
+      // Resizing-Klasse entfernen
+      this.resizeChartElement.classList.remove('resizing');
+
+      // Resize-Status zurücksetzen
+      this.resizing = false;
+      this.resizeDirection = null;
+      this.resizeChartElement = null;
+    }
+  }
+} 
