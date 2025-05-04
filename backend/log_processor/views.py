@@ -57,9 +57,15 @@ class LogFileUploadView(APIView):
 
         serializer = LogFileSerializer(uploaded_log_file)
         data = serializer.data
-        data.pop('id', None)
+        filtered_data = {
+        'id': data.get('id'),
+        'status': data.get('status'),
+        'file': data.get('file'),
+        'name': data.get('name'),
+         }
+
         logger.info(f"Audit log uploaded by {request.user.username if request.user.is_authenticated else 'anonymous'}: {uploaded_file.name}")
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(filtered_data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -99,6 +105,7 @@ def processed_incidents(request):
         queryset = queryset.filter(timestamp__lte=end)
     serializer = IncidentSerializer(queryset, many=True)
     return Response(serializer.data)
+
 
 #import os
 #import tempfile
