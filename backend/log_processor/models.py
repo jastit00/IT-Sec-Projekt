@@ -7,7 +7,6 @@ class User_Login(models.Model):
     username = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField()
     terminal = models.CharField(max_length=4, blank=True)
-    session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
@@ -17,8 +16,7 @@ class User_Logout(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
     username = models.CharField(max_length=100)
-    terminal = models.CharField(max_length=4) 
-    session = models.CharField(max_length=50)  
+    terminal = models.CharField(max_length=4)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
