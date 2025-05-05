@@ -19,7 +19,7 @@ export class ChartOneComponent implements OnInit {
     datasets: [{
       label: 'Login-Versuche pro IP',
       data: [],
-      backgroundColor: '#42A5F5'
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
   
@@ -37,7 +37,7 @@ export class ChartOneComponent implements OnInit {
         datasets: [{
           label: 'Login-Versuche pro IP',
           data: Object.values(ipCountMap),
-          backgroundColor: '#42A5F5'
+          
         }]
       };
     });
