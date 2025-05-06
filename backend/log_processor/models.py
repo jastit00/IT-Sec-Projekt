@@ -37,7 +37,7 @@ class UploadedLogFile(models.Model):
     filename = models.CharField(max_length=255)
     file_hash = models.CharField(max_length=64, unique=True, null=False)
     source = models.CharField(max_length=100, default='unknown')
-    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    uuploaded_by = models.CharField(max_length=150, null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20)
     
