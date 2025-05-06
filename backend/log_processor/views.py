@@ -64,8 +64,7 @@ class LogFileUploadView(APIView):
                 os.unlink(file_path)
 
         # Benutzer aus der HTTP-Anfrage extrahieren
-        uploaded_by_user = request.user if request.user.is_authenticated else None
-
+        uploaded_by_user = request.headers.get('X-Username', 'anonym')
         uploaded_log_file = UploadedLogFile(
             filename=uploaded_file.name,
             file_hash=file_hash,
@@ -85,8 +84,8 @@ class LogFileUploadView(APIView):
         
          }
 
-        username = uploaded_by_user.username if uploaded_by_user else 'anonymous'
-        logger.info(f"Audit log uploaded by {username}: {uploaded_file.name}")
+    
+        logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
 
 @csrf_exempt
