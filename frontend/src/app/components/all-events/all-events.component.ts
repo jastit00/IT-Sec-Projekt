@@ -1,11 +1,14 @@
 import { Component } from '@angular/core';
+import { EventService } from '../../services/event-service';
 
 @Component({
   selector: 'app-all-events',
-  imports: [],
   templateUrl: './all-events.component.html',
-  styleUrl: './all-events.component.scss'
+  styleUrls: ['./all-events.component.scss']
 })
 export class AllEventsComponent {
-
+  events: { id: number; date: string; relativeTime: string; event: string; status: string; ips: string[]; }[];
+  constructor(private eventService: EventService) { 
+    this.events = this.eventService.events;
+  }
 }

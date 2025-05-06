@@ -45,4 +45,9 @@ export class ChartFourComponent {
       }
     }
   };
+  
+  onSettingsClick() {
+    console.log('Test Click');
+  }
+  
 }

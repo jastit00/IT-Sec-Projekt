@@ -12,9 +12,26 @@
   }
   
 
-  
   .chart-wrapper {
     width: 100%;
     height: 100%;
+  }
+  
+  .settings-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 5px;
+    color: #333;
+  }
+  
+  .settings-button:hover {
+    color: #666;
+  }
+  .settings-button svg {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: middle;
   }
   
