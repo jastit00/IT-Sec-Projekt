@@ -71,7 +71,9 @@ export class ChartOneComponent implements OnInit {
       }
     }
   };
-
+onSettingsClick() {
+    console.log('Test Click');
+  }
   
 
 }
