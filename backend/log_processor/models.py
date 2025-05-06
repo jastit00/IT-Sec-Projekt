@@ -35,6 +35,7 @@ class Usys_Config(models.Model):
 
 class UploadedLogFile(models.Model):
     filename = models.CharField(max_length=255)
+    file_hash = models.CharField(max_length=64, unique=True, null=False)
     source = models.CharField(max_length=100, default='unknown')
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)

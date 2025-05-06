@@ -111,7 +111,7 @@ def process_log_file(file_path: str) -> dict:
                         value=value,
                         condition=condition,
                         terminal=terminal,
-                        result=result
+                        result=result,
                     ).exists():
                         Usys_Config.objects.create(
                             log_type="USYS_CONFIG",
@@ -122,7 +122,7 @@ def process_log_file(file_path: str) -> dict:
                             value=value,
                             condition=condition,
                             terminal=terminal,
-                            result=result
+                            result=result,
                         )
                         entries_created += 1
 
