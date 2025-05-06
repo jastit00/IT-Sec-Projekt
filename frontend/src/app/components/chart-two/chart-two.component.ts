@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ChartModule } from 'primeng/chart';  
 import { CommonModule } from '@angular/common';
+import { DefaultService } from '../../api-client';
 
 @Component({
   selector: 'app-chart-two',
@@ -10,13 +11,38 @@ import { CommonModule } from '@angular/common';
   styleUrl: './chart-two.component.scss'
 })
 export class ChartTwoComponent {
-  data = {
-    labels: ['Ip1', 'Ip2', 'Ip3', 'Ip4', 'Ip5'],
+  private defaultService = inject(DefaultService);
+  
+  data: any = {
+    labels: [],
     datasets: [{
-      data: [0, 25, 50, 75, 100], //stimmen noch nicht
+      label: 'Login-Versuche pro IP',
+      data: [],
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
+  
+  ngOnInit(): void {
+    this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
+      const ipCountMap: { [ip: string]: number } = {};
+  
+      logins.forEach(entry => {
+        if (entry.result === 'failed') {
+        const ip = entry.ip_address;
+        ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
+        }
+      });
+  
+      this.data = {
+        labels: Object.keys(ipCountMap),
+        datasets: [{
+          label: 'Login-Versuche pro IP',
+          data: Object.values(ipCountMap),
+          
+        }]
+      };
+    });
+  }
   
   options = {
     responsive: true,
