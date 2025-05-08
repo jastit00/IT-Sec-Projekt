@@ -1,7 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, SimpleChanges } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
+import { FormBuilder, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-chart-one',
@@ -10,11 +11,13 @@ import { DefaultService } from '../../api-client';
   templateUrl: './chart-one.component.html',
   styleUrls: ['./chart-one.component.scss']
 })
+
 export class ChartOneComponent implements OnInit {
 
   private defaultService = inject(DefaultService);
-  
-  data: any = {
+  private fb = inject(FormBuilder);
+
+  @Input() data: any = {
     labels: [],
     datasets: [{
       label: 'Login-Versuche pro IP',
@@ -23,6 +26,14 @@ export class ChartOneComponent implements OnInit {
     }]
   };
   
+  chartForm: FormGroup;
+
+  constructor() {
+    this.chartForm = this.fb.group({
+      data: this.data
+    });
+  }
+
   ngOnInit(): void {
     this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
       const ipCountMap: { [ip: string]: number } = {};
@@ -31,20 +42,31 @@ export class ChartOneComponent implements OnInit {
         const ip = entry.ip_address;
         ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
       });
-  
-      this.data = {
-        labels: Object.keys(ipCountMap),
-        datasets: [{
-          label: 'Login-Versuche pro IP',
-          data: Object.values(ipCountMap),
-          
-        }]
-      };
+
+      this.chartForm.patchValue({
+        data: {
+          labels: Object.keys(ipCountMap),
+          datasets: [{
+            label: 'Login-Versuche pro IP',
+            data: Object.values(ipCountMap),
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+          }]
+        }
+      });
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+      this.chartForm.patchValue({
+        data: changes['data'].currentValue
+      });
+    }
   }
 
   options = {
     responsive: true,
+    maintainAspectRatio: false,
     scale: {
       ticks: {
         beginAtZero: true,
