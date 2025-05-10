@@ -1,0 +1,27 @@
+<header>
+    <div class="left-section">
+        <div class="icon-placeholder">
+            <div class="logo-test"></div>
+        </div>
+        <button class="title" routerLink="/dashboard">{{ title() }}</button>
+        <button routerLink="/dashboard">Dashboard</button>
+        <button routerLink="/all-events">All Events</button>
+        <button class="critical-events-btn" routerLink="/critical-events">Critical Events</button>      <!--⚠️-->
+    </div>
+        
+    <div class="right-section">
+        <button class="upload-btn" (click)="openFileUpload()">Upload File</button>                      <!--⬆️-->
+
+        <input
+      type="file"
+      #fileInput
+      accept=".log"
+      style="display: none"
+      (change)="onFileSelected($event)"
+      multiple
+    />
+
+        <div class="user-btn">{{ user() }}</div>
+        <button class="logout-btn" (click)="logout()">Logout</button>                                    <!--🔒-->
+    </div>
+</header>
