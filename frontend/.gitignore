@@ -42,4 +42,7 @@ testem.log
 Thumbs.db
 
 # keycloak
+/keycloak-26.1.4/data/h2/*
+/keycloak-26.1.4/data/h2/
 /keycloak-26.1.4/data/h2/keycloakdb.mv.db
+/keycloak-26.1.4/data/h2/keycloakdb.trace.db
