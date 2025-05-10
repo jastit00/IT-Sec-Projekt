@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# keycloak
+/keycloak-26.1.4/data/h2/keycloakdb.mv.db
