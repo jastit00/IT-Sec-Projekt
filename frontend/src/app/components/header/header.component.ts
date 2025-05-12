@@ -2,25 +2,46 @@ import { Component, input, signal, inject } from '@angular/core';
 import { logout } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
+import { NgIf, NgFor } from '@angular/common';
+import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [RouterLink, NgIf, NgFor],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-
 export class HeaderComponent {
   title = signal('Security Event Detection');
   user = input('User');
-
+  showDashboard1Menu = false;
+  
+  // Chart configuration
+  charts: Chart[] = [];
+  
   private defaultService = inject(DefaultService);
-
+  private chartVisibilityService = inject(ChartVisibilityService);
+  
+  constructor() {
+    // Initialize charts from the service
+    this.charts = this.chartVisibilityService.getAllCharts();
+    
+    // Subscribe to chart changes
+    this.chartVisibilityService.charts$.subscribe(updatedCharts => {
+      this.charts = updatedCharts;
+    });
+  }
+  
   logout() {
     logout();
   }
-
-   //Methode wird aufgerufen wenn Datei ausgewählrt wird
+  
+  // Toggle chart visibility
+  toggleChart(chartId: string) {
+    this.chartVisibilityService.toggleChartVisibility(chartId);
+  }
+  
+  // Methode wird aufgerufen wenn Datei ausgewählt wird
   onFileSelected($event: Event) {
      // Die Dateien aus dem Event extrahieren
     const input = $event.target as HTMLInputElement;
@@ -41,6 +62,7 @@ export class HeaderComponent {
       });
     }
   }
+  
   // Methode, die den Dateiauswahldialog öffnet
   openFileUpload() {
     // Sucht das Datei-Input-Element im DOM
@@ -50,6 +72,5 @@ export class HeaderComponent {
     if (fileInput) {
       fileInput.click();
     }
-  }  
-  
+  } 
 }

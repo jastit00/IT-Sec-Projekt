@@ -61,5 +61,5 @@ describe('HeaderComponent', () => {
     component.onFileSelected(mockEvent as unknown as Event); // Simuliere die Auswahl von Dateien
     expect(console.log).toHaveBeenCalledWith('Dateien ausgewählt:', ['mockFile']); // Überprüfe das Log
   });
-  
+ 
 });

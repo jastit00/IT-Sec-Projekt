@@ -1,23 +1,29 @@
-header { //generell muss noch auf responsive design geachtet werden und noch angepasst werden
+header {
     display: flex;
-    padding-inline: 16px;
-    padding-right: 50px;
-    padding-left: 50px;
-    padding-block: 0;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px;
     background-color: #333;
     color: white;
-    align-items: center;
-    justify-content: space-between;
     height: 50px;
-    position: relative; //absolute Positionierung
+    position: relative;
+    flex-wrap: wrap;
 }
-
-.title {
-    font-size: 20px;
-    padding-right: 0.7em;
-    font-weight: bold;
+.left-section,
+.right-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
-
+.logo-test {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    background-color: rgb(12, 83, 153);
+    left: 0;
+    top: 0;
+}
+button,
 .user-btn {
     background-color: #333;
     color: white;
@@ -26,55 +32,131 @@ header { //generell muss noch auf responsive design geachtet werden und noch ang
     border-radius: 4px;
     font-size: 16px;
     font-weight: bold;
-}
-
-.left-section {
-    display: flex;
-    gap: 12px;
-    margin-left: 0px;
-}
-
-.right-section {
-    display: flex;
-    gap: 12px;
-}
-
-.logo-test {
-    width: 50px;
-    height: 50px;
-    position: absolute;
-    //background-image: url('../dashboard.png'); //lädt noch nicht
-    background-color: rgb(12, 83, 153); 
-    left: 0;
-    top: 0;
-}
-
-button {
-    background-color: #333;
-    color: white;
-    border: none;
-    padding: 6px 8px;
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
 }
-
 button:hover {
     color: orange;
-    text-underline-offset: 17px;
     text-decoration: underline;
+    text-underline-offset: 17px;
     text-decoration-thickness: 2px;
 }
-
+.title {
+    font-size: 20px;
+    padding-right: 0.7em;
+    font-weight: bold;
+}
 .title:hover {
     color: white;
     text-decoration: none;
 }
-
 .critical-events-btn {
-    //color: rgb(255, 76, 76);
     padding: 6px 12px;
-    border: none;
     border-radius: 4px;
-  }
+}
+.dropdown {
+    position: relative;
+}
+.dropdown-btn {
+    background-color: #333;
+    color: white;
+    padding: 6px 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #444;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 1;
+    border-radius: 4px;
+    margin-top: 0;
+}
+.dropdown-content a {
+    display: block;
+    padding: 12px 16px;
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+.dropdown-content a:hover {
+    background-color: #555;
+    color: orange;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    text-decoration-thickness: 2px;
+}
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+.dropdown:hover .dropdown-btn {
+    color: orange;
+    text-decoration: underline;
+    text-underline-offset: 17px;
+    text-decoration-thickness: 2px;
+}
+
+.dropdown-item {
+    position: relative;
+}
+
+.submenu {
+    display: block;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background-color: #444;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 2;
+    border-radius: 4px;
+}
+
+.submenu a, .chart-toggle-item {
+    display: block;
+    padding: 12px 16px;
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.submenu a:hover, .chart-toggle-item:hover {
+    background-color: #555;
+    color: orange;
+}
+
+.chart-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+}
+
+.chart-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.chart-label {
+    cursor: pointer;
+}
+
+.chart-toggle input[type="checkbox"]:checked + .chart-label {
+    color: orange;
+    font-weight: bold;
+}
+
+.chart-toggle-item {
+    transition: background-color 0.2s;
+}
+
+
+

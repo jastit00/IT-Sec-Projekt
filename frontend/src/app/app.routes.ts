@@ -12,5 +12,7 @@ export const routes: Routes = [
     { path: 'all-events', component: AllEventsComponent, canActivate: [authGuard] },
     { path: 'not-found', component: NotFoundComponent },
     { path: 'hidden-backdoor', component: TeapotComponent },
+    { path: 'dashboard/1', redirectTo: 'dashboard' },
+    { path: 'dashboard/2', redirectTo: 'dashboard' },
     { path: '**', redirectTo: 'not-found' }
 ];
