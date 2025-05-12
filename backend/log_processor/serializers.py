@@ -22,6 +22,7 @@ class UsysConfigSerializer(serializers.ModelSerializer):
 class LogFileSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     filename = serializers.CharField(read_only=True)
+    file_hash = serializers.CharField(max_length=64)
     source = serializers.CharField(required=False)
     uploaded_by = serializers.CharField(read_only=True)
     uploaded_at = serializers.DateTimeField(read_only=True, default=timezone.now)

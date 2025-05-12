@@ -38,7 +38,6 @@ def detect_incidents():
     # TODO
     # Placeholder other detections
     #detect_unauthorized_config_change()
-    #detect_concurrent_logins()
     #
     #########################################
 
@@ -177,28 +176,19 @@ def detect_bruteforce():
     # Return the count of incidents created
     return {"bruteforce": bruteforce_incidents_created}
 
-#[added 4.05.2025]
-# third time doing this bs. It's either sucessfull or I'm giving up
 def detect_concurrent_logins():
     simultaneous_logins_created=0
-    #1. get all user logins that were successful
+
+    # get all user logins that were successful
     all_successful_logins=User_Login.objects.all().filter(result="success")
-    #print("logins filtered successfully")
-    # typeof all_successful_logins -> QuerySet
-    #2. see wether those logins have a matching logout (use the terminal)
-    # we will use this dict later on
-    potential_used_accounts=[] # "grey list"
+    # see whether those logins have a matching logout
+    potential_used_accounts=[]
     for login in all_successful_logins:
-        #print("we are in a loop")
         if (User_Logout.objects.all().filter(terminal=login.terminal).count())==0:
-            #print("there is a login w/o logout")
             # in this case, we haven't found a logout that pairs with the successful login
             if login.username in potential_used_accounts:
-                #print("there has been already a unmatched login")
                 # the account has already been registered in the list -> we have a potential simultaneous login
-                # create incident and use timestamp of the second login w/ same account
                 if not Incident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
-                    #print("we are going to create an incident object")
                     # Create a new incident
                     incident = Incident.objects.create(
                         timestamp=login.timestamp,
@@ -206,17 +196,11 @@ def detect_concurrent_logins():
                         ip_address=login.ip_address,
                         reason="Sucessful Simultaneous Login"
                     )
-                    #print("we created an incident object")
                     Related_Log.objects.create(
                             incident=incident,
                             user_login=login
                         )
                     simultaneous_logins_created+=1
-                    #print("we created a realted log object")
-                #else:
-                    #print("incident already exist")
             else:
-                potential_used_accounts.append(login.username)
-                #print("login acct put in gray list")
-        #print("---------------")
+                potential_used_accounts.append(login.username) # append new not logged out account to list
     return {"simultaneous_logins":simultaneous_logins_created}

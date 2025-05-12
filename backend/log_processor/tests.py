@@ -65,7 +65,7 @@ class UsysConfigLogTest(TestCase):
     # Beispiel: Log-Datei mit fehlenden Feldern
      missing_fields_log = SimpleUploadedFile("missing_fields_log.log", b"Some log line with missing fields")
     
-     response = self.client.post('/api/upload/', {'file': missing_fields_log}, format='multipart')
+     response = self.client.post('/api/logfiles/', {'file': missing_fields_log}, format='multipart')
 
     # Anpassen der erwarteten Antwort, um 'success' statt 'error' zu erwarten
      self.assertEqual(response.data["status"], "success")
@@ -92,7 +92,7 @@ class LogFileUploadAPITest(TestCase):
 
     def test_upload_log_file(self):
         with open(self.test_log_path, "rb") as log_file:
-            response = self.client.post('/api/upload/', {'file': log_file}, format='multipart')
+            response = self.client.post('/api/logfiles/', {'file': log_file}, format='multipart')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('id', response.data)
@@ -104,7 +104,7 @@ class LogFileUploadAPITest(TestCase):
             f.write("this is not a .log file")
 
         with open(invalid_path, "rb") as log_file:
-            response = self.client.post('/api/upload/', {'file': log_file}, format='multipart')
+            response = self.client.post('/api/logfiles/', {'file': log_file}, format='multipart')
 
         os.remove(invalid_path)
 
@@ -112,16 +112,31 @@ class LogFileUploadAPITest(TestCase):
         self.assertIn("Only .log files are allowed.", response.data["message"])
 
     def test_processed_logins(self):
-        response = self.client.get('/api/audit_logs/', {'start': '2023-01-01', 'end': '2023-12-31'})
+        response = self.client.get('/api/logfiles/processed-logins/', {'start': '2023-01-01', 'end': '2023-12-31'})
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
 
     def test_processed_incidents(self):
-        response = self.client.get('/api/incidents/', {'start': '2023-01-01', 'end': '2023-12-31'})
+        response = self.client.get('/api/logfiles/incidents/', {'start': '2023-01-01', 'end': '2023-12-31'})
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
 
     def test_processed_config_changes(self):
-        response = self.client.get('/api/config_changes/', {'start': '2023-01-01', 'end': '2023-12-31'})
+        response = self.client.get('/api/logfiles/config_changes/', {'start': '2023-01-01', 'end': '2023-12-31'})
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
+    
+    def test_duplicate_file_upload(self):
+    # Erstes Mal die Datei hochladen
+      with open(self.test_log_path, "rb") as log_file:
+        response = self.client.post('/api/logfiles/', {'file': log_file}, format='multipart')
+      self.assertEqual(response.status_code, 200)
+    
+    # Zweites Mal die gleiche Datei hochladen
+      with open(self.test_log_path, "rb") as log_file:
+        response = self.client.post('/api/logfiles/', {'file': log_file}, format='multipart')
+    
+    # Überprüfen, dass die Datei nicht erneut hochgeladen wird (Antwortcode 400)
+      self.assertEqual(response.status_code, 400)
+      self.assertIn("Diese Datei wurde bereits hochgeladen.", response.data["message"])
+ 

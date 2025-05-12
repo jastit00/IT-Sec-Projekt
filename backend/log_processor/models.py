@@ -7,7 +7,6 @@ class User_Login(models.Model):
     username = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField()
     terminal = models.CharField(max_length=4, blank=True)
-    session = models.CharField(max_length=50)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
@@ -17,8 +16,7 @@ class User_Logout(models.Model):
     log_type = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
     username = models.CharField(max_length=100)
-    terminal = models.CharField(max_length=4) 
-    session = models.CharField(max_length=50)  
+    terminal = models.CharField(max_length=4)  
     result = models.CharField(max_length=20)
     
     def __str__(self):
@@ -37,8 +35,9 @@ class Usys_Config(models.Model):
 
 class UploadedLogFile(models.Model):
     filename = models.CharField(max_length=255)
+    file_hash = models.CharField(max_length=64, unique=True, null=False)
     source = models.CharField(max_length=100, default='unknown')
-    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    uploaded_by = models.CharField(max_length=150, null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20)
     

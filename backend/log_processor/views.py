@@ -14,6 +14,8 @@ from log_processor.serializers import LogFileSerializer, UserLoginSerializer, Us
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
 from django.views.decorators.csrf import csrf_exempt
+import hashlib
+
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
 
@@ -35,9 +37,21 @@ class LogFileUploadView(APIView):
             return Response({"status": "error", "message": "Only .log files are allowed."}, status=status.HTTP_400_BAD_REQUEST)
 
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            hasher = hashlib.sha256()
             for chunk in uploaded_file.chunks():
+                hasher.update(chunk)
                 temp_file.write(chunk)
+            file_hash = hasher.hexdigest()
             file_path = temp_file.name
+         
+
+        if UploadedLogFile.objects.filter(file_hash=file_hash).exists():
+            logger.warning(f"Duplicate file upload attempt: {uploaded_file.name}")
+            os.unlink(file_path)
+            return Response(
+                {"status": "error", "message": "Diese Datei wurde bereits hochgeladen."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             result = process_log_file(file_path)
@@ -49,10 +63,13 @@ class LogFileUploadView(APIView):
             if os.path.exists(file_path):
                 os.unlink(file_path)
 
+        # Benutzer aus der HTTP-Anfrage extrahieren
+        uploaded_by_user = request.headers.get('X-Username', 'anonym')
         uploaded_log_file = UploadedLogFile(
             filename=uploaded_file.name,
+            file_hash=file_hash,
             source=source,
-            uploaded_by=request.user if request.user.is_authenticated else None,
+            uploaded_by=uploaded_by_user,
             uploaded_at=timezone.now(),
             status='success' if result.get('status') != 'error' else 'error'  # <- Direkt hier berechnen
         )
@@ -63,11 +80,12 @@ class LogFileUploadView(APIView):
         filtered_data = {
         'id': data.get('id'),
         'status': data.get('status'),
-        'file': data.get('file'),
-        'name': data.get('name'),
+        'filename': data.get('filename'),
+        
          }
 
-        logger.info(f"Audit log uploaded by {request.user.username if request.user.is_authenticated else 'anonymous'}: {uploaded_file.name}")
+    
+        logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
 
 @csrf_exempt

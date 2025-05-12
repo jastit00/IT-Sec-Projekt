@@ -214,3 +214,5 @@ type=USER_LOGIN msg=audit(1743072589.792:44): pid=5148 uid=0 auid=4294967295 ses
 type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda6 res=success'UID="root" AUID="unset"
 type=USER_LOGIN msg=audit(1743072635.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.37 terminal=cda7 res=success'UID="root" AUID="unset"
 
+type=USER_LOGOUT msg=audit(1743072573.900:25): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-logout acct="production" exe="web" hostname=? addr=? terminal=8431 res=success'UID="root" AUID="unset"
+type=USER_END msg=audit(1743466282.880:11): pid=2575 uid=0 auid=4294967295 ses=4294967295 msg='op=user-session-timeout acct="admin" exe="web" hostname=? addr=? terminal=1a91 res=success'UID="root" AUID="unset"

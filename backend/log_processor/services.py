@@ -7,7 +7,6 @@ from .models import User_Login, Usys_Config, User_Logout
 def process_log_file(file_path: str) -> dict:
     entries_created = 0
 
-
     try:
         with open(file_path, 'r') as log_file:
             lines = log_file.readlines()
@@ -23,14 +22,12 @@ def process_log_file(file_path: str) -> dict:
                     username_match = re.search(r'acct="([^"]*)"', line)
                     ip_address_match = re.search(r'addr=([^\s]*)', line)
                     result_match = re.search(r"res=([^'\s]*)", line)
-                    session_match = re.search(r'ses=([^\s]*)', line)
                     terminal_match = re.search(r'terminal=([^\s]*)', line)
 
                     # set default values if regex fails
                     username = username_match.group(1) if username_match else ""
                     ip_address = ip_address_match.group(1) if ip_address_match else ""
                     result = result_match.group(1) if result_match else ""
-                    session = session_match.group(1) if session_match else ""
                     terminal = terminal_match.group(1) if terminal_match else ""
 
                     # check if th DB-object already exists and create it if not
@@ -38,7 +35,6 @@ def process_log_file(file_path: str) -> dict:
                         timestamp=timestamp, 
                         username=username, 
                         ip_address=ip_address,
-                        session=session, 
                         result=result,
                         terminal=terminal
                         ).exists():
@@ -47,34 +43,30 @@ def process_log_file(file_path: str) -> dict:
                             timestamp=timestamp,
                             username=username,
                             ip_address=ip_address,
-                            session=session,
                             result=result,
                             terminal=terminal
                         )
                         entries_created += 1 # increment counter for each new entry
 
-                 # check for USER_LOGOUT      
-                elif "type=USER_LOGOUT" in line:
+                 # check for USER_LOGOUT or timeout      
+                elif "type=USER_LOGOUT" in line or "type=USER_END" in line:
                     # get timestampm and convert it to datetime object
                     timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
 
                     # Extract other fields using regex
                     username_match = re.search(r'acct="([^"]*)"', line)
                     result_match = re.search(r"res=([^'\s]*)", line)
-                    session_match = re.search(r'ses=([^\s]*)', line)
                     terminal_match = re.search(r'terminal=([^\s]*)', line)
 
                     # set default values if regex fails
                     username = username_match.group(1) if username_match else ""
                     result = result_match.group(1) if result_match else ""
-                    session = session_match.group(1) if session_match else ""
                     terminal = terminal_match.group(1) if terminal_match else ""
 
                     # check if th DB-object already exists and create it if not
                     if not User_Logout.objects.filter(
                         timestamp=timestamp, 
                         username=username, 
-                        session=session, 
                         result=result,
                         terminal=terminal
                         ).exists():
@@ -82,7 +74,6 @@ def process_log_file(file_path: str) -> dict:
                             log_type="USER_LOGOUT",
                             timestamp=timestamp,
                             username=username,
-                            session=session,
                             result=result,
                             terminal=terminal
                         )
@@ -120,7 +111,7 @@ def process_log_file(file_path: str) -> dict:
                         value=value,
                         condition=condition,
                         terminal=terminal,
-                        result=result
+                        result=result,
                     ).exists():
                         Usys_Config.objects.create(
                             log_type="USYS_CONFIG",
@@ -131,7 +122,7 @@ def process_log_file(file_path: str) -> dict:
                             value=value,
                             condition=condition,
                             terminal=terminal,
-                            result=result
+                            result=result,
                         )
                         entries_created += 1
 
