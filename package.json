@@ -2,6 +2,8 @@
   "dependencies": {
     "@angular/cdk": "^19.2.14",
     "angular-gridster2": "^19.0.0",
-    "interactjs": "^1.10.27"
+    "chart.js": "^4.4.9",
+    "interactjs": "^1.10.27",
+    "primeng": "^19.1.2"
   }
 }

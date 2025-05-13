@@ -4,6 +4,7 @@ import { ChartOneComponent } from '../components/chart-one/chart-one.component';
 import { ChartTwoComponent } from '../components/chart-two/chart-two.component';
 import { ChartThreeComponent } from '../components/chart-three/chart-three.component';
 import { ChartFourComponent } from '../components/chart-four/chart-four.component';
+import { ChartSixComponent } from '../components/chart-six/chart-six.component'; // Neue Komponente importieren
 import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChartVisibilityService } from '../services/chart-visibility.service';
@@ -20,7 +21,8 @@ import { Subscription } from 'rxjs';
     ChartOneComponent,
     ChartTwoComponent,
     ChartThreeComponent,
-    ChartFourComponent
+    ChartFourComponent,
+    ChartSixComponent // ChartSixComponent zu den Imports hinzufügen
   ]
 })
 export class HomeComponent implements OnInit, OnDestroy {

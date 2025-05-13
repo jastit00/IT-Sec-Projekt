@@ -16,12 +16,13 @@ export class ChartVisibilityService {
     { id: 'chart1', name: 'Diagramm 1', visible: true },
     { id: 'chart2', name: 'Diagramm 2', visible: true },
     { id: 'chart3', name: 'Diagramm 3', visible: true },
-    { id: 'chart4', name: 'Diagramm 4', visible: true }
+    { id: 'chart4', name: 'Diagramm 4', visible: true },
+    { id: 'chart6', name: 'Diagramm 6', visible: true }
   ];
 
   // BehaviorSubject to track chart visibility state
   private chartsSubject = new BehaviorSubject<Chart[]>(this.defaultCharts);
-
+  
   // Observable that components can subscribe to
   public charts$: Observable<Chart[]> = this.chartsSubject.asObservable();
 
@@ -82,6 +83,28 @@ export class ChartVisibilityService {
   }
 
   /**
+   * Add a new chart or update an existing one
+   * @param chart The chart to add or update
+   */
+  addChart(chart: Chart): void {
+    const currentCharts = this.chartsSubject.getValue();
+    const existingChartIndex = currentCharts.findIndex(c => c.id === chart.id);
+    
+    if (existingChartIndex >= 0) {
+      // Update existing chart
+      const updatedCharts = [...currentCharts];
+      updatedCharts[existingChartIndex] = chart;
+      this.chartsSubject.next(updatedCharts);
+    } else {
+      // Add new chart
+      const updatedCharts = [...currentCharts, chart];
+      this.chartsSubject.next(updatedCharts);
+    }
+    
+    this.saveConfiguration(this.chartsSubject.getValue());
+  }
+
+  /**
    * Reset all charts to their default visibility
    */
   resetToDefaults(): void {
@@ -101,13 +124,21 @@ export class ChartVisibilityService {
   }
 
   /**
-   * Load saved configuration from localStorage
+   * Load saved configuration from localStorage and ensure all default charts exist
    */
   private loadSavedConfiguration(): void {
     try {
       const savedConfig = localStorage.getItem('chartConfiguration');
       if (savedConfig) {
-        const parsedConfig = JSON.parse(savedConfig) as Chart[];
+        let parsedConfig = JSON.parse(savedConfig) as Chart[];
+        
+        // Ensure all default charts exist in the loaded configuration
+        this.defaultCharts.forEach(defaultChart => {
+          if (!parsedConfig.some(chart => chart.id === defaultChart.id)) {
+            parsedConfig.push(defaultChart);
+          }
+        });
+        
         this.chartsSubject.next(parsedConfig);
       }
     } catch (error) {

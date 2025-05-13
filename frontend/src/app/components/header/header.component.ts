@@ -30,9 +30,21 @@ export class HeaderComponent {
     // Initialize charts from the service
     this.charts = this.chartVisibilityService.getAllCharts();
     
+    // Manuell sicherstellen, dass Chart 6 existiert
+    if (!this.charts.some(chart => chart.id === 'chart6')) {
+      this.chartVisibilityService.addChart({
+        id: 'chart6',
+        name: 'Diagramm 6',
+        visible: true
+      });
+      // Charts neu laden
+      this.charts = this.chartVisibilityService.getAllCharts();
+    }
+    
     // Subscribe to chart changes
     this.chartVisibilityService.charts$.subscribe(updatedCharts => {
       this.charts = updatedCharts;
+      console.log('Charts im Header aktualisiert:', this.charts); // Debug-Ausgabe
     });
 
     
@@ -47,8 +59,16 @@ export class HeaderComponent {
     this.chartVisibilityService.toggleChartVisibility(chartId);
   }
   
+  // Debug-Methode: Lokalen Speicher zurücksetzen
+  resetLocalStorage() {
+    localStorage.removeItem('chartConfiguration');
+    this.chartVisibilityService.resetToDefaults();
+    console.log('LocalStorage zurückgesetzt');
+  }
+  
   // Methode wird aufgerufen wenn Datei ausgewählt wird
   onFileSelected($event: Event) {
+     // Die Dateien aus dem Event extrahieren
     const input = $event.target as HTMLInputElement;
     const files = input.files;
     
@@ -87,5 +107,5 @@ export class HeaderComponent {
     if (fileInput) {
       fileInput.click();
     }
-  } 
+  }
 }
