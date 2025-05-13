@@ -4,10 +4,13 @@ import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
+
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor],
+  imports: [RouterLink, NgIf, NgFor, MatDialogModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -21,6 +24,7 @@ export class HeaderComponent {
   
   private defaultService = inject(DefaultService);
   private chartVisibilityService = inject(ChartVisibilityService);
+  private dialog = inject(MatDialog);
   
   constructor() {
     // Initialize charts from the service
@@ -30,6 +34,8 @@ export class HeaderComponent {
     this.chartVisibilityService.charts$.subscribe(updatedCharts => {
       this.charts = updatedCharts;
     });
+
+    
   }
   
   logout() {
@@ -43,24 +49,33 @@ export class HeaderComponent {
   
   // Methode wird aufgerufen wenn Datei ausgewählt wird
   onFileSelected($event: Event) {
-     // Die Dateien aus dem Event extrahieren
     const input = $event.target as HTMLInputElement;
-    // Holt die ausgewählten Dateien
     const files = input.files;
     
-    // Wenn Dateien ausgewählt wurden, gebe sie in der Konsole aus
+    
+
+
     if (files && files.length > 0) {
       const now = new Date().toISOString();
-      //console.log('Dateien ausgewählt:', Array.from(files)); // Array von Dateien in der Konsole ausgeben
       this.defaultService.logfilesPost(files[0], "InputFirewall", "currentUser", now).subscribe({
         next: (result) => {
-          console.log('Upload erfolgreich:', result);
+          this.dialog.open(UploadResultDialogComponent, {
+            data: result
+          });
         },
         error: (err) => {
-          console.error('Fehler beim Upload:', err);
+          // Falls der Server ein JSON mit "status" und "message" liefert
+          const serverError = err.error?.status === 'error'
+            ? err.error
+            : { status: 'error', message: 'Unbekannter Fehler beim Upload.' };
+      
+          this.dialog.open(UploadResultDialogComponent, {
+            data: serverError
+          });
         }
       });
     }
+  
   }
   
   // Methode, die den Dateiauswahldialog öffnet
