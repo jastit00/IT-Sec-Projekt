@@ -159,4 +159,11 @@ button:hover {
 }
 
 
-
+.chart-toggle.disabled .chart-label {
+    text-decoration: line-through;
+    text-decoration-color: #be0c0c;
+    text-decoration-thickness: 2px;
+    color: #999;
+    position: relative;
+  }
+  

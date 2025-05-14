@@ -1,111 +1,67 @@
-import { Component, input, signal, inject } from '@angular/core';
-import { logout } from '../../auth/keycloak.service';
-import { RouterLink } from '@angular/router';
-import { DefaultService } from '../../api-client';
-import { NgIf, NgFor } from '@angular/common';
-import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
-
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule],
-  templateUrl: './header.component.html',
-  styleUrl: './header.component.scss'
+  selector: 'app-chart-rename-dialog',
+  standalone: true,
+  imports: [MatDialogModule, FormsModule, NgIf],
+  template: `
+    <h2 mat-dialog-title>Chart umbenennen</h2>
+    <div mat-dialog-content>
+      <p>Geben Sie einen neuen Namen für das Diagramm ein:</p>
+      <input type="text" [(ngModel)]="chartName" placeholder="Diagramm Name" class="full-width">
+      <div *ngIf="nameError" class="error-message">
+        {{ nameError }}
+      </div>
+    </div>
+    <div mat-dialog-actions>
+      <button mat-button (click)="onCancel()">Abbrechen</button>
+      <button mat-button [disabled]="!isNameValid()" (click)="onSave()">Speichern</button>
+    </div>
+  `,
+  styles: [`
+    .full-width {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    .error-message {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+  `]
 })
-export class HeaderComponent {
-  title = signal('Security Event Detection');
-  user = input('User');
-  showDashboard1Menu = false;
-  
-  // Chart configuration
-  charts: Chart[] = [];
-  
-  private defaultService = inject(DefaultService);
-  private chartVisibilityService = inject(ChartVisibilityService);
-  private dialog = inject(MatDialog);
-  
-  constructor() {
-    // Initialize charts from the service
-    this.charts = this.chartVisibilityService.getAllCharts();
-    
-    // Manuell sicherstellen, dass Chart 6 existiert
-    if (!this.charts.some(chart => chart.id === 'chart6')) {
-      this.chartVisibilityService.addChart({
-        id: 'chart6',
-        name: 'Diagramm 6',
-        visible: true
-      });
-      // Charts neu laden
-      this.charts = this.chartVisibilityService.getAllCharts();
+export class ChartRenameDialogComponent {
+  chartName: string;
+  nameError: string = '';
+
+  constructor(
+    public dialogRef: MatDialogRef<ChartRenameDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { chartName: string }
+  ) {
+    this.chartName = data.chartName;
+  }
+
+  isNameValid(): boolean {
+    if (!this.chartName || this.chartName.trim() === '') {
+      this.nameError = 'Der Name darf nicht leer sein.';
+      return false;
     }
-    
-    // Subscribe to chart changes
-    this.chartVisibilityService.charts$.subscribe(updatedCharts => {
-      this.charts = updatedCharts;
-      console.log('Charts im Header aktualisiert:', this.charts); // Debug-Ausgabe
-    });
+    this.nameError = '';
+    return true;
+  }
 
-    
+  onCancel(): void {
+    this.dialogRef.close();
   }
-  
-  logout() {
-    logout();
-  }
-  
-  // Toggle chart visibility
-  toggleChart(chartId: string) {
-    this.chartVisibilityService.toggleChartVisibility(chartId);
-  }
-  
-  // Debug-Methode: Lokalen Speicher zurücksetzen
-  resetLocalStorage() {
-    localStorage.removeItem('chartConfiguration');
-    this.chartVisibilityService.resetToDefaults();
-    console.log('LocalStorage zurückgesetzt');
-  }
-  
-  // Methode wird aufgerufen wenn Datei ausgewählt wird
-  onFileSelected($event: Event) {
-     // Die Dateien aus dem Event extrahieren
-    const input = $event.target as HTMLInputElement;
-    const files = input.files;
-    
-    
 
-
-    if (files && files.length > 0) {
-      const now = new Date().toISOString();
-      this.defaultService.logfilesPost(files[0], "InputFirewall", "currentUser", now).subscribe({
-        next: (result) => {
-          this.dialog.open(UploadResultDialogComponent, {
-            data: result
-          });
-        },
-        error: (err) => {
-          // Falls der Server ein JSON mit "status" und "message" liefert
-          const serverError = err.error?.status === 'error'
-            ? err.error
-            : { status: 'error', message: 'Unbekannter Fehler beim Upload.' };
-      
-          this.dialog.open(UploadResultDialogComponent, {
-            data: serverError
-          });
-        }
-      });
-    }
-  
-  }
-  
-  // Methode, die den Dateiauswahldialog öffnet
-  openFileUpload() {
-    // Sucht das Datei-Input-Element im DOM
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    
-    // Wenn das Input-Element gefunden wurde, simuliert einen Klick darauf, um den Dateiauswahldialog zu öffnen
-    if (fileInput) {
-      fileInput.click();
+  onSave(): void {
+    if (this.isNameValid()) {
+      this.dialogRef.close(this.chartName);
     }
   }
 }

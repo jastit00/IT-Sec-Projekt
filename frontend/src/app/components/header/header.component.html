@@ -1,43 +1,43 @@
 <header>
     <div class="left-section">
-        <div class="icon-placeholder">
-            <div class="logo-test"></div>
-        </div>
-        <button class="title" routerLink="/dashboard">{{ title() }}</button>  
-        <div class="dropdown">
-            <button class="dropdown-btn" routerLink="/dashboard">Dashboard</button>
-            <div class="dropdown-content">
-                <div class="dropdown-item" (mouseenter)="showDashboard1Menu = true" (mouseleave)="showDashboard1Menu = false">
-                    <a routerLink="/dashboard/1">Dashboard 1</a>
-                    <div class="submenu" *ngIf="showDashboard1Menu">
-                        <div class="chart-toggle-item" *ngFor="let chart of charts">
-                            <label class="chart-toggle">
-                                <input type="checkbox" [checked]="chart.visible" (change)="toggleChart(chart.id)">
-                                <span class="chart-label">{{ chart.name }}</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <a routerLink="/dashboard/2">Dashboard 2</a>
-                <a routerLink="/dashboard/3">Dashboard 3</a>
+      <div class="icon-placeholder">
+        <div class="logo-test"></div>
+      </div>
+      <button class="title" routerLink="/dashboard">{{ title() }}</button>
+      <div class="dropdown">
+        <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">Dashboard</button>
+        <div class="dropdown-content">
+          <div class="dropdown-item" (mouseenter)="showDashboard1Menu = true" (mouseleave)="showDashboard1Menu = false">
+            <a routerLink="/dashboard/1" [class.disabled-link]="isMaxChartsReached">Dashboard 1</a>
+            <div class="submenu" *ngIf="showDashboard1Menu">
+              <div class="chart-toggle-item" *ngFor="let chart of charts">
+                <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
+                  <input type="checkbox" [checked]="chart.visible" 
+                         (change)="toggleChart(chart.id)" 
+                         [disabled]="!chart.visible && isMaxChartsReached">
+                  <span class="chart-label">{{ chart.name }}</span>
+                </label>
+              </div>
             </div>
+          </div>
+          <a routerLink="/dashboard/2" [class.disabled-link]="isMaxChartsReached">Dashboard 2</a>
+          <a routerLink="/dashboard/3" [class.disabled-link]="isMaxChartsReached">Dashboard 3</a>
         </div>
-        
-        <button routerLink="/all-events">All Events</button>
-        <button class="critical-events-btn" routerLink="/critical-events">Critical Events</button>
+      </div>
+      <button routerLink="/all-events">All Events</button>
+      <button class="critical-events-btn" routerLink="/critical-events">Critical Events</button>
     </div>
-        
     <div class="right-section">
-        <button class="upload-btn" (click)="openFileUpload()">Upload File</button>
-        <input
-            type="file"
-            #fileInput
-            accept=".log"
-            style="display: none"
-            (change)="onFileSelected($event)"
-            multiple
-        />
-        <div class="user-btn">{{ user() }}</div>
-        <button class="logout-btn" (click)="logout()">Logout</button>
+      <button class="upload-btn" (click)="openFileUpload()">Upload File</button>
+      <input
+        type="file"
+        #fileInput
+        accept=".log"
+        style="display: none"
+        (change)="onFileSelected($event)"
+        multiple
+      />
+      <div class="user-btn">{{ user() }}</div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
-</header>
+  </header>
