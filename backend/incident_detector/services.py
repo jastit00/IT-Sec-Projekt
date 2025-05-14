@@ -23,7 +23,6 @@ CRITICAL_CONFIG_RULES = [
         "table": "users",
         "action": "update",
         "key": "password_changetime",
-        "value": "*"
     },
 ]
 

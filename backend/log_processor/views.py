@@ -9,13 +9,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from log_processor.services import process_log_file
-from log_processor.models import UploadedLogFile, User_Login, Usys_Config
-from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer
+from log_processor.models import UploadedLogFile, User_Login, Usys_Config,User_Logout
+from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
 from django.views.decorators.csrf import csrf_exempt
 import hashlib
-
+from incident_detector.services import CRITICAL_CONFIG_RULES;
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
 
@@ -64,7 +64,7 @@ class LogFileUploadView(APIView):
                 os.unlink(file_path)
 
         # Benutzer aus der HTTP-Anfrage extrahieren
-        uploaded_by_user = request.headers.get('X-Username', 'anonym')
+        uploaded_by_user = request.data.get('uploaded_by', 'anonym')
         uploaded_log_file = UploadedLogFile(
             filename=uploaded_file.name,
             file_hash=file_hash,
@@ -127,6 +127,64 @@ def processed_incidents(request):
     serializer = IncidentSerializer(queryset, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def unified_event_log(request):
+    # Daten sammeln
+    incidents = Incident.objects.all()
+    user_logins = User_Login.objects.all()
+    user_logouts = User_Logout.objects.all()
+    usys_configs = Usys_Config.objects.all()
+
+    # Serialisieren
+    incident_data = IncidentSerializer(incidents, many=True).data
+    login_data = UserLoginSerializer(user_logins, many=True).data
+    logout_data = UserLogoutSerializer(user_logouts, many=True).data
+    config_data = UsysConfigSerializer(usys_configs, many=True).data
+
+    # Event-Typ hinzufügen
+    for entry in incident_data:
+        entry['event_type'] = 'incident'
+        entry['severity'] = 'critical'
+
+    for entry in login_data:
+        entry['event_type'] = 'login'
+        entry['severity'] = 'normal' if entry.get('result') == 'success' else 'warning'
+        
+    for entry in logout_data:
+        entry['event_type'] = 'logout'
+        entry['severity'] = 'normal' if entry.get('result') == 'success' else 'warning'
+ 
+    for entry in config_data:
+        entry['event_type'] = 'config'
+        
+  
+        if entry.get("result") == "success":
+            entry['severity'] = 'normal'  # Erfolg -> normale Schwere
+        else:
+            entry['severity'] = 'warning'  # Fehler -> Warnung
+
+
+ 
+    # Alle Daten zusammenführen
+    all_events = incident_data + login_data + logout_data + config_data
+
+    # Nur gewünschte Felder behalten
+    fields_to_keep = ['timestamp', 'event_type', 'reason','ip_address', 'action','result', 'severity']
+    filtered_events = filter_fields(all_events, fields_to_keep)
+
+    # Sortieren von neu nach alt
+    sorted_events = sorted(
+        filtered_events,
+        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
+        reverse=True
+    )
+
+    return Response(sorted_events)
+def filter_fields(data, fields_to_keep):
+    """
+    Filtert die Liste der Daten, sodass nur die angegebenen Felder beibehalten werden.
+    """
+    return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
 
 #import os
 #import tempfile
