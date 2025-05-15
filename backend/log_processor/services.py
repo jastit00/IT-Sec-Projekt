@@ -3,15 +3,14 @@ import re
 from datetime import datetime
 from django.utils import timezone
 from incident_detector.services import detect_incidents
-from .models import User_Login, Usys_Config, User_Logout
+from .models import User_Login, Usys_Config, User_Logout, NetfilterPkt
+
 def process_log_file(file_path: str) -> dict:
     entries_created = 0
-
     try:
         with open(file_path, 'r') as log_file:
             lines = log_file.readlines()
             for line in lines:        
-               
                 
                 # check for USER_LOGIN        
                 if "type=USER_LOGIN" in line:
@@ -125,6 +124,48 @@ def process_log_file(file_path: str) -> dict:
                             result=result,
                         )
                         entries_created += 1
+                
+                # check for NETFILTER_PACKET
+                elif "type=NETFILTER_PKT" in line:
+                    # Extract timestamp
+                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+
+                    # Extract other fields using regex
+                    source_ip_match = re.search(r'saddr=([^\s]*)', line)
+                    destination_ip_match = re.search(r'daddr=([^\s]*)', line)
+                    protocol_match = re.search(r'proto=([^\s]*)', line)
+
+                    # set default values if regex fails
+                    source_ip = source_ip_match.group(1) if source_ip_match else ""
+                    destination_ip = destination_ip_match.group(1) if destination_ip_match else ""
+                    protocol_number = protocol_match.group(1) if protocol_match else ""
+
+                    match protocol_number:
+                        case "1":
+                            protocol = "ICMP"
+                        case "6":
+                             protocol = "TCP"
+                        case "17":
+                             protocol = "UDP"
+                        case _: 
+                            protocol = "not defined ({protocol_number})" if protocol_number else "not defined"
+                    
+                    # check if th DB-object already exists and create it if not
+                    if not NetfilterPkt.objects.filter(
+                        timestamp=timestamp,
+                        source_ip=source_ip,
+                        destination_ip=destination_ip,
+                        protocol=protocol,
+                    ).exists():
+                        NetfilterPkt.objects.create(
+                            log_type="NETFILTER_PKT",
+                            timestamp=timestamp,
+                            source_ip=source_ip,
+                            destination_ip=destination_ip,
+                            protocol=protocol,
+                        )
+                        entries_created += 1
+
 
         incidents_created = detect_incidents()
         return {

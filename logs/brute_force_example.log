@@ -213,6 +213,26 @@ type=USER_LOGIN msg=audit(1743072589.468:43): pid=5148 uid=0 auid=4294967295 ses
 type=USER_LOGIN msg=audit(1743072589.792:44): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=? res=failed'UID="root" AUID="unset"
 type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda6 res=success'UID="root" AUID="unset"
 type=USER_LOGIN msg=audit(1743072635.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.37 terminal=cda7 res=success'UID="root" AUID="unset"
-
 type=USER_LOGOUT msg=audit(1743072573.900:25): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-logout acct="production" exe="web" hostname=? addr=? terminal=8431 res=success'UID="root" AUID="unset"
 type=USER_END msg=audit(1743466282.880:11): pid=2575 uid=0 auid=4294967295 ses=4294967295 msg='op=user-session-timeout acct="admin" exe="web" hostname=? addr=? terminal=1a91 res=success'UID="root" AUID="unset"
+type=NETFILTER_PKT msg=audit(1747246510.330:41996): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:41997): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:41998): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:41999): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:42000): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:42001): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:42002): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:42003): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.330:42004): mark=0x0 saddr=192.168.0.88 daddr=172.16.0.2 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42005): mark=0x0 saddr=192.168.0.88 daddr=172.16.0.2 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42006): mark=0x0 saddr=192.168.0.88 daddr=172.16.0.2 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42007): mark=0x0 saddr=192.168.0.88 daddr=172.16.0.2 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42008): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42009): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42010): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42011): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42012): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42013): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42014): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42015): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
+type=NETFILTER_PKT msg=audit(1747246510.390:42016): mark=0x0 saddr=172.16.0.2 daddr=192.168.0.88 proto=6
