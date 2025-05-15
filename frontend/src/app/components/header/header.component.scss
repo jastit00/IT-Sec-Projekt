@@ -167,3 +167,34 @@ button:hover {
     position: relative;
   }
   
+
+
+.critical-events-btn {
+    position: relative;
+    display: inline-block;
+    padding-top: 10px; /* Add padding-top to make room for the badge */
+  }
+  
+  /* Badge container */
+  .badge-container {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 10;
+  }
+  
+  /* Make the PrimeNG badge rounded */
+  :host ::ng-deep .p-badge {
+    border-radius: 50%;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+  }
+  
+  /* Additional styling for danger severity badge */
+  :host ::ng-deep .p-badge.p-badge-danger {
+    background-color: #dc3545;
+  }

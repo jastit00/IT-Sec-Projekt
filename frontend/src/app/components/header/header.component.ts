@@ -6,10 +6,12 @@ import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
+import { BadgeModule } from 'primeng/badge';
+import { EventService } from '../../services/event-service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule],
+  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -27,6 +29,7 @@ export class HeaderComponent {
   private defaultService = inject(DefaultService);
   private chartVisibilityService = inject(ChartVisibilityService);
   private dialog = inject(MatDialog);
+  private eventService = inject(EventService);
 
   constructor() {
     // Initialize charts from the service
@@ -53,6 +56,16 @@ export class HeaderComponent {
       this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
       console.log('Charts im Header aktualisiert:', this.charts, 'Max reached:', this.isMaxChartsReached);
     });
+  }
+
+  // Get count of critical events
+  getCriticalEventsCount(): number {
+    return this.eventService.events.filter(event => event.status === 'Kritisch').length;
+  }
+  
+  // Check if there are any critical events
+  hasCriticalEvents(): boolean {
+    return this.getCriticalEventsCount() > 0;
   }
 
   logout() {

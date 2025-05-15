@@ -12,9 +12,9 @@
             <div class="submenu" *ngIf="showDashboard1Menu">
               <div class="chart-toggle-item" *ngFor="let chart of charts">
                 <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                  <input type="checkbox" [checked]="chart.visible" 
-                         (change)="toggleChart(chart.id)" 
-                         [disabled]="!chart.visible && isMaxChartsReached">
+                  <input type="checkbox" [checked]="chart.visible"
+                    (change)="toggleChart(chart.id)"
+                    [disabled]="!chart.visible && isMaxChartsReached">
                   <span class="chart-label">{{ chart.name }}</span>
                 </label>
               </div>
@@ -25,7 +25,12 @@
         </div>
       </div>
       <button routerLink="/all-events">All Events</button>
-      <button class="critical-events-btn" routerLink="/critical-events">Critical Events</button>
+      <button class="critical-events-btn" routerLink="/critical-events">
+        <span class="badge-container">
+          <p-badge *ngIf="hasCriticalEvents()" [value]="getCriticalEventsCount().toString()" severity="danger"></p-badge>
+        </span>
+        Critical Events
+      </button>
     </div>
     <div class="right-section">
       <button class="upload-btn" (click)="openFileUpload()">Upload File</button>
