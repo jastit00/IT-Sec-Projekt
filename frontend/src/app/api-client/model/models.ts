@@ -1,3 +1,4 @@
+export * from './events';
 export * from './logEntryConfigChanges';
 export * from './logEntryIncidents';
 export * from './logEntryLogin';

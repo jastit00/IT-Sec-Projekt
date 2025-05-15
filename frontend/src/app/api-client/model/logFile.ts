@@ -14,11 +14,11 @@ export interface LogFile {
     status?: LogFile.StatusEnum;
 }
 export namespace LogFile {
-    export type StatusEnum = 'success' | 'error';
     export const StatusEnum = {
-        Success: 'success' as StatusEnum,
-        Error: 'error' as StatusEnum
-    };
+        Success: 'success',
+        Error: 'error'
+    } as const;
+    export type StatusEnum = typeof StatusEnum[keyof typeof StatusEnum];
 }
 
 
