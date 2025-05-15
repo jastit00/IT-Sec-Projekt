@@ -1,9 +1,59 @@
 import os
 import re
+import tempfile
+import hashlib
 from datetime import datetime
+
 from django.utils import timezone
+
+from .models import (
+    UploadedLogFile,
+    User_Login,
+    User_Logout,
+    Usys_Config,
+    NetfilterPkt,
+)
 from incident_detector.services import detect_incidents
-from .models import User_Login, Usys_Config, User_Logout, NetfilterPkt
+
+
+
+
+def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        hasher = hashlib.sha256()
+        for chunk in uploaded_file.chunks():
+            hasher.update(chunk)
+            temp_file.write(chunk)
+        file_hash = hasher.hexdigest()
+        file_path = temp_file.name
+
+    if UploadedLogFile.objects.filter(file_hash=file_hash).exists():
+        os.unlink(file_path)
+        return {"status": "duplicate", "file_hash": file_hash}
+
+    try:
+        result = process_log_file(file_path)
+    except Exception:
+        os.unlink(file_path)
+        raise
+    finally:
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+
+    uploaded_log_file = UploadedLogFile.objects.create(
+        filename=uploaded_file.name,
+        file_hash=file_hash,
+        source=source,
+        uploaded_by=uploaded_by_user,
+        uploaded_at=timezone.now(),
+        status='success' if result.get('status') != 'error' else 'error'
+    )
+
+    return {"status": "success", "uploaded_log_file": uploaded_log_file}
+
+
+
+
 
 def process_log_file(file_path: str) -> dict:
     entries_created = 0

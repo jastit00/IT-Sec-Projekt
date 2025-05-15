@@ -164,6 +164,7 @@ def detect_bruteforce():
                         Related_Log.objects.create(
                             incident=incident,
                             user_login=login_attempt  # Set the user_login field
+                            
                         )
                     
                     bruteforce_incidents_created += 1  # Increment the incident counter

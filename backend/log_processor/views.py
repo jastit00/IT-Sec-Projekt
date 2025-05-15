@@ -1,20 +1,15 @@
-import os
-import tempfile
 import logging
-from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
-from log_processor.services import process_log_file
+from rest_framework.decorators import api_view
+from log_processor.services import handle_uploaded_log_file  
 from log_processor.models import UploadedLogFile, User_Login, Usys_Config
 from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
-from django.views.decorators.csrf import csrf_exempt
-import hashlib
 
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
@@ -22,11 +17,11 @@ logger = logging.getLogger(__name__)#für den ligger name falls was schief geht 
 
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
-    @csrf_exempt
-    
-    def post(self, request, *args, **kwargs):#später erweiterbar
+
+    def post(self, request, *args, **kwargs):
         uploaded_file = request.FILES.get('file')
         source = request.data.get('source', 'unknown')
+        uploaded_by_user = request.headers.get('X-Username', 'anonym')
 
         if not uploaded_file:
             logger.warning("Upload attempt without file.")
@@ -36,55 +31,24 @@ class LogFileUploadView(APIView):
             logger.warning("Upload attempt with invalid file type.")
             return Response({"status": "error", "message": "Only .log files are allowed."}, status=status.HTTP_400_BAD_REQUEST)
 
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            hasher = hashlib.sha256()
-            for chunk in uploaded_file.chunks():
-                hasher.update(chunk)
-                temp_file.write(chunk)
-            file_hash = hasher.hexdigest()
-            file_path = temp_file.name
-         
-
-        if UploadedLogFile.objects.filter(file_hash=file_hash).exists():
-            logger.warning(f"Duplicate file upload attempt: {uploaded_file.name}")
-            os.unlink(file_path)
-            return Response(
-                {"status": "error", "message": "Diese Datei wurde bereits hochgeladen."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         try:
-            result = process_log_file(file_path)
+            result = handle_uploaded_log_file(uploaded_file, source, uploaded_by_user)
         except Exception as e:
             logger.exception("Error while processing log file.")
-            os.unlink(file_path)
             return Response({"status": "error", "message": "Failed to process audit log file."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        finally:
-            if os.path.exists(file_path):
-                os.unlink(file_path)
 
-        # Benutzer aus der HTTP-Anfrage extrahieren
-        uploaded_by_user = request.headers.get('X-Username', 'anonym')
-        uploaded_log_file = UploadedLogFile(
-            filename=uploaded_file.name,
-            file_hash=file_hash,
-            source=source,
-            uploaded_by=uploaded_by_user,
-            uploaded_at=timezone.now(),
-            status='success' if result.get('status') != 'error' else 'error'  # <- Direkt hier berechnen
-        )
-        uploaded_log_file.save()
+        if result["status"] == "duplicate":
+            logger.warning(f"Duplicate file upload attempt: {uploaded_file.name}")
+            return Response({"status": "error", "message": "Diese Datei wurde bereits hochgeladen."}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = LogFileSerializer(uploaded_log_file)
+        serializer = LogFileSerializer(result["uploaded_log_file"])
         data = serializer.data
         filtered_data = {
-        'id': data.get('id'),
-        'status': data.get('status'),
-        'filename': data.get('filename'),
-        
-         }
+            'id': data.get('id'),
+            'status': data.get('status'),
+            'filename': data.get('filename'),
+        }
 
-    
         logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
 
@@ -126,34 +90,3 @@ def processed_incidents(request):
         queryset = queryset.filter(timestamp__lte=end)
     serializer = IncidentSerializer(queryset, many=True)
     return Response(serializer.data)
-
-
-#import os
-#import tempfile
-#from django.http import JsonResponse
-#from django.views.decorators.csrf import csrf_exempt
-#from .services import process_log_file
-
-# TODO maybe add try/except block to catch more errors and return them in the response
-#@csrf_exempt # disable CSRF protection -> maybe change it later -> angular
-#def upload_log_file(request):
-#   if request.method == 'POST' and 'file' in request.FILES:
-#       uploaded_file = request.FILES['file']
-#     
-#       # Save uploaded file to a temporary location
-#       temp_file = tempfile.NamedTemporaryFile(delete=False)
-#       file_path = temp_file.name
-# 
-#       # Write the uploaded file to the temporary file
-#       for chunk in uploaded_file.chunks():
-#           temp_file.write(chunk)
-#       temp_file.close()
-#       
-#       # Process the file using the existing function
-#       result = process_log_file(file_path)
-#       
-#       # Clean up
-#       os.unlink(file_path)
-#       
-#       return JsonResponse(result)
-#   return JsonResponse({"status": "error", "message": "Please upload a file"}, status=400)
