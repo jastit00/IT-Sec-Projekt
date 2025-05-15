@@ -12,21 +12,20 @@ import { DefaultService } from '../../api-client';
 })
 export class ConfigChangesComponent implements OnInit {
   private defaultService = inject(DefaultService);
-
-  logEntries: any[] = [];
-  displayedColumns: string[] = [];
+  displayedColumns: string[] = ['id', 'timestamp', 'table', 'action', 'user', 'result', 'description'];
   dataSource: any[] = [];
 
-  ngOnInit() {
-    this.defaultService.logfilesConfigChangesGet().subscribe({
-      next: (data) => {
-        this.logEntries = data;
-        this.displayedColumns = Object.keys(data[0] || {}); // Fallback für leeres Array
-        this.dataSource = data;
-      },
-      error: (err) => {
-        console.error('API Fehler bei Config Logs:', err);
-      }
+  ngOnInit(): void {
+    this.defaultService.logfilesConfigChangesGet().subscribe((entries: any[]) => {
+      this.dataSource = entries.map((entry) => ({
+        id: entry.id,
+        timestamp: new Date(entry.timestamp).toLocaleString(), 
+        table: entry.table,
+        action: entry.action,
+        user: entry.terminal,
+        result: entry.result,
+        description: `Key: ${entry.key}, Value: ${entry.value}, Condition: ${entry.condition || '—'}`
+      }));
     });
   }
 
