@@ -1,5 +1,5 @@
-import { Component, input, signal, inject, ViewChild, ElementRef } from '@angular/core';
-import { logout } from '../../auth/keycloak.service';
+import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { keycloak, logout } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
@@ -15,9 +15,9 @@ import { EventService } from '../../services/event-service';
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   title = signal('Security Event Detection');
-  user = input('User');
+  username = signal('User'); // Default value until Keycloak data is loaded
   showDashboard1Menu = false;
   // Chart configuration
   charts: Chart[] = [];
@@ -38,14 +38,14 @@ export class HeaderComponent {
     // Check if max charts are reached initially
     this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
     
-    // Manuell sicherstellen, dass Chart 6 existiert
+    // Manually ensure Chart 6 exists
     if (!this.charts.some(chart => chart.id === 'chart6')) {
       this.chartVisibilityService.addChart({
         id: 'chart6',
         name: 'Diagramm 6',
         visible: false
       });
-      // Charts neu laden
+      // Reload charts
       this.charts = this.chartVisibilityService.getAllCharts();
     }
     
@@ -56,6 +56,46 @@ export class HeaderComponent {
       this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
       console.log('Charts im Header aktualisiert:', this.charts, 'Max reached:', this.isMaxChartsReached);
     });
+  }
+
+  ngOnInit(): void {
+    // Set username from Keycloak when component initializes
+    this.initUsername();
+    console.log('HeaderComponent initialized, attempting to get Keycloak username');
+  }
+
+  // Initialize username from Keycloak
+  private initUsername() {
+    console.log('Initializing username, Keycloak authenticated:', keycloak.authenticated);
+    if (keycloak.authenticated) {
+      try {
+        // Safely access token information
+        if (keycloak.idTokenParsed) {
+          const tokenInfo = keycloak.idTokenParsed as any;
+          const preferredUsername = tokenInfo.preferred_username;
+          const name = tokenInfo.name;
+          
+          // Use preferred_username, full name, or just 'User' if nothing is available
+          this.username.set(preferredUsername || name || 'User');
+          console.log('Keycloak username set:', this.username());
+        } else {
+          // If token isn't parsed yet, get username directly from keycloak instance
+          keycloak.loadUserProfile().then(profile => {
+            this.username.set(profile.username || 'User');
+            console.log('Username loaded from profile:', profile.username);
+          }).catch(error => {
+            console.error('Failed to load user profile:', error);
+            this.username.set('User');
+          });
+        }
+      } catch (error) {
+        console.error('Error accessing Keycloak token:', error);
+        this.username.set('User');
+      }
+    } else {
+      this.username.set('User');
+      console.log('Keycloak not authenticated, using default username');
+    }
   }
 
   // Get count of critical events
@@ -81,28 +121,39 @@ export class HeaderComponent {
     }
   }
 
-  // Debug-Methode: Lokalen Speicher zurücksetzen
+  // Debug method: Reset local storage
   resetLocalStorage() {
     localStorage.removeItem('chartConfiguration');
     this.chartVisibilityService.resetToDefaults();
     console.log('LocalStorage zurückgesetzt');
   }
 
-  // Methode wird aufgerufen wenn Datei ausgewählt wird
+  // Method called when file is selected
   onFileSelected($event: Event) {
-    // Die Dateien aus dem Event extrahieren
+    // Extract files from the event
     const input = $event.target as HTMLInputElement;
     const files = input.files;
     if (files && files.length > 0) {
+      // Get username safely
+      let currentUsername = 'unknown';
+      if (keycloak.authenticated) {
+        try {
+          const tokenInfo = keycloak.idTokenParsed as any;
+          currentUsername = tokenInfo?.preferred_username || 'unknown';
+        } catch (error) {
+          console.error('Error accessing token information:', error);
+        }
+      }
+      
       const now = new Date().toISOString();
-      this.defaultService.logfilesPost(files[0], "InputFirewall", "currentUser", now).subscribe({
+      this.defaultService.logfilesPost(files[0], "InputFirewall", currentUsername, now).subscribe({
         next: (result) => {
           this.dialog.open(UploadResultDialogComponent, {
             data: result
           });
         },
         error: (err) => {
-          // Falls der Server ein JSON mit "status" und "message" liefert
+          // If server returns JSON with "status" and "message"
           const serverError = err.error?.status === 'error'
             ? err.error
             : { status: 'error', message: 'Unbekannter Fehler beim Upload.' };
@@ -114,7 +165,7 @@ export class HeaderComponent {
     }
   }
 
-  // Methode, die den Dateiauswahldialog öffnet
+  // Method that opens the file selection dialog
   openFileUpload() {
     if (this.fileInput) {
       this.fileInput.nativeElement.click();
