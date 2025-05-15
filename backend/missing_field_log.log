@@ -1,0 +1,1 @@
+type=USYS_CONFIG msg=audit(1714035623.123:124): table="system_settings" action="modify" key="password_policy" value="none" res=success
