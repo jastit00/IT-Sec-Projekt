@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChartVisibilityService } from '../services/chart-visibility.service';
 import { Subscription } from 'rxjs';
+import { ConfigChangesComponent } from '../components/config-changes/config-changes.component';
 
 @Component({
   selector: 'app-home',
@@ -22,7 +23,8 @@ import { Subscription } from 'rxjs';
     ChartTwoComponent,
     ChartThreeComponent,
     ChartFourComponent,
-    ChartSixComponent // ChartSixComponent zu den Imports hinzufügen
+    ChartSixComponent,
+    ConfigChangesComponent // ChartSixComponent zu den Imports hinzufügen
   ]
 })
 export class HomeComponent implements OnInit, OnDestroy {

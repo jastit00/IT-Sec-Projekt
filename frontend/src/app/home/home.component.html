@@ -17,6 +17,8 @@
         <app-chart-four/>
       } @else if (isChart(id, 'chart6')) {
         <app-chart-six/>
+      } @else if (isChart(id, 'config-changes')) {
+        <app-config-changes />
       }
       <!-- Resize -->
       <div class="resize-handle resize-e" (mousedown)="onResizeStart($event, 'horizontal')"></div>
