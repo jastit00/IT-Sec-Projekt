@@ -30,7 +30,7 @@
 
 
 mat-table {
-  min-width: 1000px;
+  min-width: 700px;
   background: white;
 }
 
@@ -47,12 +47,13 @@ mat-header-row {
 mat-cell,
 mat-header-cell {
   height: 60px;        
-  line-height: 60px;   
-  padding: 0 16px;     
+  line-height: 60px;       
   vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
 }
  
 
