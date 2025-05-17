@@ -72,7 +72,7 @@ def processed_logins(request):
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    queryset = Usys_Config.objects.all()
+    queryset = UsysConfig.objects.all()
     if start:
         queryset = queryset.filter(timestamp__gte=start)
     if end:
@@ -101,7 +101,7 @@ def unified_event_log(request):
     user_logins = UserLogin.objects.all()
     user_logouts = UserLogout.objects.all()
     usys_configs = UsysConfig.objects.all()
-    packet_input = NetfilterPaket.objects.all()
+    packet_input = NetfilterPacket.objects.all()
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data
