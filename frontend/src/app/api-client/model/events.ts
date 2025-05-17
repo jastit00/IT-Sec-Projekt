@@ -9,19 +9,19 @@
  */
 
 
-export interface LogEntryConfigChanges { 
+export interface Events { 
     id?: number;
     timestamp?: string;
-    table?: string;
-    terminal?: string;
+    reason?: string;
+    ipAddress?: string;
     action?: string;
-    key?: string;
-    value?: string;
-    result?: LogEntryConfigChanges.ResultEnum;
+    event_type?: string;
+    result?: Events.ResultEnum;
+    severity?: string;
 }
-export namespace LogEntryConfigChanges {
+export namespace Events {
     export const ResultEnum = {
-        Success: 'success',
+        Successful: 'successful',
         Failed: 'failed'
     } as const;
     export type ResultEnum = typeof ResultEnum[keyof typeof ResultEnum];

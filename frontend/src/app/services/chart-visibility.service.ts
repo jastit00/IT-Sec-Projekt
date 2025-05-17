@@ -20,7 +20,8 @@ export class ChartVisibilityService {
     { id: 'chart2', name: 'Diagramm 2', visible: true },
     { id: 'chart3', name: 'Diagramm 3', visible: true },
     { id: 'chart4', name: 'Diagramm 4', visible: true },
-    { id: 'chart6', name: 'Diagramm 6', visible: false } // Default auf false gesetzt, da Max = 4
+    { id: 'chart6', name: 'Diagramm 6', visible: false },
+    { id: 'config-changes', name: 'Diagramm 7', visible: false }, // Default auf false gesetzt, da Max = 4
   ];
 
   // BehaviorSubject to track chart visibility state

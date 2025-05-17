@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
   title: Logfile API
-  version: 1.0.3
+  version: 1.0.4
   description: API zum Abrufen von Logdateien aus der Datenbank
 servers:
-  - url: http://localhost:5432/api
+  - url: http://localhost:8000/api
 
 
 paths:
@@ -135,7 +135,7 @@ paths:
         '500' :
           description: server kaputt
         
-  /logfiles/processed-configuration-changes:
+  /logfiles/config_changes:
     get:
       summary: Liste ausgewerteter Konfigurationsänderungen aus Datenbank
       parameters:
@@ -165,6 +165,29 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/LogEntryConfigChanges'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt
+          
+  /logfiles/unified-events:
+    get:
+      summary: Liste aller Events
+        
+      responses:
+        '200':
+          description: Liste aller Datenbankeinträge (aller events)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Events'
                 
         '401':
           description: nicht authentifiziert
@@ -246,21 +269,55 @@ components:
           type: string
           format: date-time
           
-        username:
+        table: #type of change
           type: string
           
-        ipAddress:
+        terminal: #username 
           type: string
-          format: ipv4
           
-        changedSettings:
-          type: array
-          items: 
-            type: string
+        action: 
+          type: string
+          
+        key:
+          type: string
+        
+        value:
+          type: string
           
         result: 
           type: string
+          enum: [success, failed]
+          
+          
+    Events:
+      type: object
+      properties:
+        id:
+          type: integer
+          
+        timestamp:
+          type: string
+          format: date-time
+          
+        reason:
+          type: string
+        
+        ipAddress:
+          type: string
+          format: ipv4
+        
+        action:
+          type: string
+          
+        event_type:
+          type: string
+        
+        result: 
+          type: string
           enum: [successful, failed] 
+        
+        severity:
+          type: string
     
           
           
