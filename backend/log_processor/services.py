@@ -3,23 +3,23 @@ import re
 import tempfile
 import hashlib
 from datetime import datetime
-
 from django.utils import timezone
-
-from .models import (
-    UploadedLogFile,
-    User_Login,
-    User_Logout,
-    Usys_Config,
-    NetfilterPkt,
-)
+from log_processor.models import UploadedLogFile, UserLogin, UserLogout, UsysConfig, NetfilterPacket
 from incident_detector.services import detect_incidents
 
-
-
-
-
 def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
+    """
+    Handles a newly uploaded log file by saving it temporarily, calculating its SHA-256 hash,
+    checking for duplicates, processing its contents, and storing metadata in the database.
+    
+    Parameters: 
+        uploaded_file (InMemoryUploadedFile): The uploaded log file.
+        source (str): The source of the upload.
+        uploaded_by_user (str): The user who uploaded the file.
+    
+    Returns:
+        dict: A dictionary containing the status of the upload and any relevant metadata.
+    """
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         hasher = hashlib.sha256()
         for chunk in uploaded_file.chunks():
@@ -49,113 +49,96 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
         uploaded_at=timezone.now(),
         status='success' if result.get('status') != 'error' else 'error'
     )
-
     return {"status": "success", "uploaded_log_file": uploaded_log_file}
 
 
 
+def process_log_file(file_path):
+    """
+    Parses an audit log file, extracts entries, saves them to the database,
+    and triggers incident detection.
 
+    Parameters:
+        file_path: Path to the temporary uploaded log file.
 
-def process_log_file(file_path: str) -> dict:
+    Returns:
+        dict: A dictionary containing the status of the processing and the number of entries created.
+    """
     entries_created = 0
+
     try:
         with open(file_path, 'r') as log_file:
-            lines = log_file.readlines()
-            for line in lines:        
-                
-                # check for USER_LOGIN        
+            for line in log_file:
+                line = line.strip()
+
+                # USER_LOGIN
                 if "type=USER_LOGIN" in line:
-                    # get timestampm and convert it to datetime object
-                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+                    timestamp = extract_timestamp(line)
+                    if not timestamp:
+                        continue
 
-                    # Extract other fields using regex
-                    username_match = re.search(r'acct="([^"]*)"', line)
-                    ip_address_match = re.search(r'addr=([^\s]*)', line)
-                    result_match = re.search(r"res=([^'\s]*)", line)
-                    terminal_match = re.search(r'terminal=([^\s]*)', line)
+                    username = extract_match(r'acct="([^"]*)"', line)
+                    ip_address = extract_match(r'addr=([^\s]*)', line)
+                    result = extract_match(r'res=([^\'\s]*)', line)
+                    terminal = extract_match(r'terminal=([^\s]*)', line)
 
-                    # set default values if regex fails
-                    username = username_match.group(1) if username_match else ""
-                    ip_address = ip_address_match.group(1) if ip_address_match else ""
-                    result = result_match.group(1) if result_match else ""
-                    terminal = terminal_match.group(1) if terminal_match else ""
-
-                    # check if th DB-object already exists and create it if not
-                    if not User_Login.objects.filter(
-                        timestamp=timestamp, 
-                        username=username, 
+                    if not UserLogin.objects.filter(
+                        timestamp=timestamp,
+                        username=username,
                         ip_address=ip_address,
                         result=result,
                         terminal=terminal
-                        ).exists():
-                        User_Login.objects.create(
-                            log_type="USER_LOGIN",
+                    ).exists():
+                        UserLogin.objects.create(
                             timestamp=timestamp,
                             username=username,
                             ip_address=ip_address,
                             result=result,
                             terminal=terminal,
-                            severity="normal" if result == "success" else "warning",
+                            severity="normal" if result == "success" else "warning"
                         )
-                        entries_created += 1 # increment counter for each new entry
+                        entries_created += 1
 
-                 # check for USER_LOGOUT or timeout      
+                # USER_LOGOUT or USER_END
                 elif "type=USER_LOGOUT" in line or "type=USER_END" in line:
-                    # get timestampm and convert it to datetime object
-                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+                    timestamp = extract_timestamp(line)
+                    if not timestamp:
+                        continue
 
-                    # Extract other fields using regex
-                    username_match = re.search(r'acct="([^"]*)"', line)
-                    result_match = re.search(r"res=([^'\s]*)", line)
-                    terminal_match = re.search(r'terminal=([^\s]*)', line)
+                    username = extract_match(r'acct="([^"]*)"', line)
+                    result = extract_match(r'res=([^\'\s]*)', line)
+                    terminal = extract_match(r'terminal=([^\s]*)', line)
 
-                    # set default values if regex fails
-                    username = username_match.group(1) if username_match else ""
-                    result = result_match.group(1) if result_match else ""
-                    terminal = terminal_match.group(1) if terminal_match else ""
-
-                    # check if th DB-object already exists and create it if not
-                    if not User_Logout.objects.filter(
-                        timestamp=timestamp, 
-                        username=username, 
+                    if not UserLogout.objects.filter(
+                        timestamp=timestamp,
+                        username=username,
                         result=result,
                         terminal=terminal
-                        ).exists():
-                        User_Logout.objects.create(
-                            log_type="USER_LOGOUT",
+                    ).exists():
+                        UserLogout.objects.create(
                             timestamp=timestamp,
                             username=username,
                             result=result,
                             terminal=terminal,
-                            severity="normal" if result == "success" else "warning",
+                            severity="normal" if result == "success" else "warning"
                         )
-                        entries_created += 1 # increment counter for each new entry
-                
-                # check for USYS_CONFIG
+                        entries_created += 1
+
+                # USYS_CONFIG
                 elif "type=USYS_CONFIG" in line:
-                    # Extract timestamp
-                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+                    timestamp = extract_timestamp(line)
+                    if not timestamp:
+                        continue
 
-                    # this needs to be tweaked maybe
-                    table_match = re.search(r'table="([^"]*)"', line)  
-                    action_match = re.search(r'action="([^"]*)"', line)  
-                    key_match = re.search(r'key="([^"]*)"', line)  
-                    value_match = re.search(r'value="([^"]*)"?', line)  
-                    condition_match = re.search(r'condition="([^"]*)"', line)  
-                    terminal_match = re.search(r'terminal\s*=\s*([^\s]*)', line)  
-                    result_match = re.search(r"res\s*=\s*([^'\s]*)", line) 
-                    
+                    table = extract_match(r'table="([^"]*)"', line)
+                    action = extract_match(r'action="([^"]*)"', line)
+                    key = extract_match(r'key="([^"]*)"', line)
+                    value = extract_match(r'value="([^"]*)"?', line)
+                    condition = extract_match(r'condition="([^"]*)"', line)
+                    terminal = extract_match(r'terminal\s*=\s*([^\s]*)', line)
+                    result = extract_match(r'res\s*=\s*([^\'\s]*)', line)
 
-                    # set default values if regex fails
-                    action = action_match.group(1) if action_match else ""
-                    key = key_match.group(1) if key_match else ""
-                    value = value_match.group(1) if value_match else ""
-                    condition = condition_match.group(1) if condition_match else ""
-                    table = table_match.group(1) if table_match else ""
-                    terminal = terminal_match.group(1) if terminal_match else ""
-                    result = result_match.group(1) if result_match else ""         
-
-                    if not Usys_Config.objects.filter(
+                    if not UsysConfig.objects.filter(
                         timestamp=timestamp,
                         table=table,
                         action=action,
@@ -163,10 +146,9 @@ def process_log_file(file_path: str) -> dict:
                         value=value,
                         condition=condition,
                         terminal=terminal,
-                        result=result,
+                        result=result
                     ).exists():
-                        Usys_Config.objects.create(
-                            log_type="USYS_CONFIG",
+                        UsysConfig.objects.create(
                             timestamp=timestamp,
                             table=table,
                             action=action,
@@ -175,57 +157,50 @@ def process_log_file(file_path: str) -> dict:
                             condition=condition,
                             terminal=terminal,
                             result=result,
-                            severity="normal" if result == "success" else "warning",
+                            severity="normal" if result == "success" else "warning"
                         )
                         entries_created += 1
-                
-                # check for NETFILTER_PACKET
+
+                # NETFILTER_PACKET
                 elif "type=NETFILTER_PKT" in line:
-                    # Extract timestamp
-                    timestamp = timezone.make_aware(datetime.fromtimestamp(float(re.search(r'msg=audit\((\d+\.\d+)', line).group(1))))
+                    timestamp = extract_timestamp(line)
+                    if not timestamp:
+                        continue
 
-                    # Extract other fields using regex
-                    source_ip_match = re.search(r'saddr=([^\s]*)', line)
-                    destination_ip_match = re.search(r'daddr=([^\s]*)', line)
-                    protocol_match = re.search(r'proto=([^\s]*)', line)
-
-                    # set default values if regex fails
-                    source_ip = source_ip_match.group(1) if source_ip_match else ""
-                    destination_ip = destination_ip_match.group(1) if destination_ip_match else ""
-                    protocol_number = protocol_match.group(1) if protocol_match else ""
+                    source_ip = extract_match(r'saddr=([^\s]*)', line)
+                    destination_ip = extract_match(r'daddr=([^\s]*)', line)
+                    protocol_number = extract_match(r'proto=([^\s]*)', line)
 
                     match protocol_number:
                         case "1":
                             protocol = "ICMP"
                         case "6":
-                             protocol = "TCP"
+                            protocol = "TCP"
                         case "17":
-                             protocol = "UDP"
-                        case _: 
-                            protocol = "not defined ({protocol_number})" if protocol_number else "not defined"
-                    
-                    # check if th DB-object already exists and create it if not
-                    if not NetfilterPkt.objects.filter(
+                            protocol = "UDP"
+                        case _:
+                            protocol = f"not defined ({protocol_number})" if protocol_number else "not defined"
+
+                    if not NetfilterPacket.objects.filter(
                         timestamp=timestamp,
                         source_ip=source_ip,
                         destination_ip=destination_ip,
-                        protocol=protocol,
+                        protocol=protocol
                     ).exists():
-                        NetfilterPkt.objects.create(
-                            log_type="NETFILTER_PKT",
+                        NetfilterPacket.objects.create(
                             timestamp=timestamp,
                             source_ip=source_ip,
                             destination_ip=destination_ip,
-                            protocol=protocol,
+                            protocol=protocol
                         )
                         entries_created += 1
 
-
         incidents_created = detect_incidents()
+
         return {
             "status": "success",
             "entries_created": entries_created,
-            "incidents_created": incidents_created,
+            "incidents_created": incidents_created
         }
 
     except FileNotFoundError:
@@ -240,12 +215,30 @@ def process_log_file(file_path: str) -> dict:
         }
     
 
+def extract_timestamp(line):
+    """
+    Helper function to extract the timestamp from a log line.
+    Returns a timezone-aware datetime object.
+    """
+    match = re.search(r'msg=audit\((\d+\.\d+)', line)
+    return timezone.make_aware(datetime.fromtimestamp(float(match.group(1)))) if match else None
 
 
+def extract_match(pattern, line, default=""):
+    """
+    Helper function to extract a regex match group from a line.
+    Returns the matched group or the default value if no match is found.
+    """
+    match = re.search(pattern, line)
+    return match.group(1) if match else default
 
 
 
 def extract_dos_details(data):
+    """
+    Extracts details of potential DoS attacks from the log data.
+    Returns a list of dictionaries with relevant information.
+    """
     pattern = re.compile(
         r'Potential DoS attack - (\d+) packets in ([\d\.]+)s to ([\d\.]+)'
     )

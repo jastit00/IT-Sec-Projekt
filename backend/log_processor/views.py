@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
 from log_processor.services import handle_uploaded_log_file  
-from log_processor.models import User_Login, Usys_Config,User_Logout,NetfilterPkt
-from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPktSerializer
+from log_processor.models import UserLogin, UsysConfig,UserLogout,NetfilterPacket
+from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketSerializer
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
 
@@ -59,7 +59,7 @@ class LogFileUploadView(APIView):
 def processed_logins(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    queryset = User_Login.objects.all()
+    queryset = UserLogin.objects.all()
     if start:
         queryset = queryset.filter(timestamp__gte=start)
     if end:
@@ -98,22 +98,22 @@ def processed_incidents(request):
 def unified_event_log(request):
     # Daten sammeln
     incidents = Incident.objects.all()
-    user_logins = User_Login.objects.all()
-    user_logouts = User_Logout.objects.all()
-    usys_configs = Usys_Config.objects.all()
-    paket_input = NetfilterPkt.objects.all()
+    user_logins = UserLogin.objects.all()
+    user_logouts = UserLogout.objects.all()
+    usys_configs = UsysConfig.objects.all()
+    packet_input = NetfilterPaket.objects.all()
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data
     logout_data = UserLogoutSerializer(user_logouts, many=True).data
     config_data = UsysConfigSerializer(usys_configs, many=True).data
-    paket_input=NetfilterPktSerializer(paket_input, many=True).data
+    packet_input = NetfilterPaketSerializer(packet_input, many=True).data
 
     # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + paket_input
+    all_events = incident_data + login_data + logout_data + config_data + packet_input
 
     # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','ip_address', 'action','result', 'severity','paket_input']
+    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input']
     filtered_events = filter_fields(all_events, fields_to_keep)
 
     # Sortieren von neu nach alt

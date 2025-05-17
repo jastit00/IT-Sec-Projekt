@@ -1,24 +1,24 @@
 from rest_framework import serializers
-from .models import User_Login, User_Logout, Usys_Config,NetfilterPkt
+from .models import UserLogin, UserLogout, UsysConfig, NetfilterPacket
 from django.utils import timezone
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_Login
+        model = UserLogin
         fields = '__all__'
 
 class UserLogoutSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_Logout
+        model = UserLogout
         fields = '__all__'
 
 class UsysConfigSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Usys_Config
+        model = UsysConfig
         fields = '__all__'
         
-class NetfilterPktSerializer(serializers.ModelSerializer):
+class NetfilterPacketSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetfilterPkt
+        model = NetfilterPacket
         fields = '__all__'
 
     def get_changedSettings(self, obj):

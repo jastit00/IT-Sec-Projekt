@@ -1,16 +1,22 @@
-from datetime import timedelta, datetime
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import Incident, Related_Log
-from log_processor.models import User_Login, User_Logout, Usys_Config 
-from .models import NetfilterPkt, Incident
+from datetime import timedelta
+#from django.shortcuts import render
+#from django.http import JsonResponse
+from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPacket, UploadedLogFile
+from incident_detector.models import Incident, RelatedLog
 from collections import defaultdict
+#from django.utils import timezone
 
 
 
 
-BRUTE_FORCE_ATTEMPT_THRESHOLD = 13
-BRUTE_FORCE_TIME_DELTA = timedelta(minutes=5)
+BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
+BRUTE_FORCE_TIME_DELTA = timedelta(minutes=2)
+BRUTE_FORCE_REPEAT_THRESHOLD = timedelta(minutes=10)
+
+DOS_TIME_DELTA = timedelta(seconds=10)             # Zeitfenster zur Erkennung eines Angriffs
+DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # Mindestabstand, bis erneut ein Angriff für dieselbe Quelle/Ziel erkannt wird
+DOS_PACKET_THRESHOLD = 100       
+
 
 # vars for critical config change detection
 CRITICAL_CONFIG_RULES = [
@@ -18,213 +24,246 @@ CRITICAL_CONFIG_RULES = [
         "table": "config",
         "action": "update",
         "key": "password_policy",
-        "value": "enabled"
     },
     {
         "table": "users",
         "action": "update",
         "key": "password_changetime",
-        "value": "*"
     },
 ]
 
 
 
-
- 
-# Parameter für Erkennung und Wiederholung
-DOS_TIME_DELTA = timedelta(seconds=10)             # Zeitfenster zur Erkennung eines Angriffs
-DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # Mindestabstand, bis erneut ein Angriff für dieselbe Quelle/Ziel erkannt wird
-DOS_PACKET_THRESHOLD = 100                         # Mindestanzahl an Paketen im Fenster, um als DoS zu gelten
-
-
-
-
-
-# Create your views here.
 def detect_incidents():
-    bruteforce_incidents = detect_bruteforce()
-    critical_config_incidents = detect_critical_config_change()
-    simultaniousLogins = detect_concurrent_logins()
-    attackDos=detect_dos_attack()
-    #########################################
-    # TODO
-    # Placeholder other detections
-    #detect_unauthorized_config_change()
-    #
-    #########################################
-
-    return {"incidents": {
-        "bruteforce": bruteforce_incidents["bruteforce"],
-        "critical_config_change": critical_config_incidents["critical_config_change"],
-        "simultanious_logins": simultaniousLogins["simultaneous_logins"],
-        "dos_attack": attackDos["dos_attacks"]
-
-}}
+    return {
+        "incidents": {
+            "bruteforce": detect_bruteforce()["bruteforce"],
+            "critical_config_change": detect_critical_config_change()["critical_config_change"],
+            "concurrent_logins": detect_concurrent_logins()["concurrent_logins"],
+            "dos_attack": detect_dos_attack()["dos_attacks"]
+        }
+    }
 
 
+
+
+def format_timedelta(delta):
+    """
+    Converts a timedelta object into a short  string.
+    
+    Parameters:
+        delta (timedelta): The timedelta object to format.
+    
+    Returns:
+        str: a string of minutes and seconds.
+    """
+    seconds = int(delta.total_seconds())
+    minutes, seconds = divmod(seconds, 60)
+    if minutes and seconds:
+        return f"{minutes} minutes and {seconds} seconds"
+    elif minutes:
+        return f"{minutes} minutes"
+    else:
+        return f"{seconds} seconds"
+
+def detect_bruteforce():
+    """
+    Detects brute force login attempts by identifying repeated login attempts
+    from the same user and IP address within a short time window.
+
+    Returns:
+        dict: {"bruteforce": <number_of_incidents_created>}
+    """
+
+    all_logins = UserLogin.objects.all().order_by('timestamp')
+    incidents_created = 0
+
+    # Group login attempts by (username, IP address)
+    login_groups = defaultdict(list)
+    for attempt in all_logins:
+        key = (attempt.username, attempt.ip_address)
+        login_groups[key].append(attempt)
+
+    # Check each user-IP group for brute-force behavior
+    for (username, ip_address), attempts in login_groups.items():
+        if len(attempts) < BRUTE_FORCE_ATTEMPT_THRESHOLD:
+            continue
+
+        start = 0
+        while start <= len(attempts) - BRUTE_FORCE_ATTEMPT_THRESHOLD:
+            window_start = attempts[start].timestamp
+            window_end = window_start + BRUTE_FORCE_TIME_DELTA
+
+            # Gather all login attempts within the time window
+            window_attempts = []
+            current = start
+            while current < len(attempts) and attempts[current].timestamp <= window_end:
+                window_attempts.append(attempts[current])
+                current += 1
+
+            if len(window_attempts) >= BRUTE_FORCE_ATTEMPT_THRESHOLD:
+                successful = [attempt for attempt in window_attempts if attempt.result == "success"]
+
+                if successful:
+                    severity = "critical"
+                    event_time = successful[-1].timestamp 
+                    reason = f"{len(window_attempts)} attempts in {format_timedelta(BRUTE_FORCE_TIME_DELTA)}, {len(successful)} successful"
+                else:
+                    severity = "high"
+                    event_time = window_attempts[-1].timestamp
+                    reason = f"{len(window_attempts)} failed attempts in {format_timedelta(BRUTE_FORCE_TIME_DELTA)}"
+
+                # Check if a similar incident was already recorded near this time
+                if not Incident.objects.filter(
+                    username=username,
+                    src_ip_address=ip_address,
+                    incident_type="bruteforce",
+                    timestamp=event_time
+                ).exists():
+                    incident = Incident.objects.create(
+                        timestamp=event_time,
+                        username=username,
+                        src_ip_address=ip_address,
+                        reason=reason,
+                        severity=severity,
+                        incident_type="bruteforce"
+                    )
+
+                    RelatedLog.objects.bulk_create([
+                        RelatedLog(incident=incident, user_login=attempt)
+                        for attempt in window_attempts
+                    ])
+
+                    incidents_created += 1
+
+                start = current  # Move to the end of the current window
+            else:
+                start += 1  # Not enough attempts — shift window forward
+
+    return {"bruteforce": incidents_created}
 
 def detect_critical_config_change():
-    all_config_changes = Usys_Config.objects.all().order_by('timestamp')
-    critical_config_incidents_created = 0  # Initialize incident counter
-    
-    # Loop through all config changes to find critical changes
+    """
+    Detects and logs incidents for critical configuration changes based on predefined rules.
+
+    Returns:
+        dict: Dictionary containing the number of critical config change incidents created.
+    """
+    all_config_changes = UsysConfig.objects.all().order_by('timestamp')
+    incidents_created = 0
+
     for config_change in all_config_changes:
+        is_critical = False
         for rule in CRITICAL_CONFIG_RULES:
-            # Check if the rule's table, action, key, and value match 
             if (
                 ("table" not in rule or rule["table"] == config_change.table) and
                 ("action" not in rule or rule["action"] == config_change.action) and
                 ("key" not in rule or rule["key"] == config_change.key) and
                 ("value" not in rule or rule["value"] == config_change.value)
-                ):
-                
-                
-                # TODO
-                # Fetch the most recent login entry for the username before or at the time of the config change -> EDIT THIS IF LOGOUT LOGIC IS WOORKING
-                # if we have login / logout tiome windows, we can check if the user was logged in at the time of the config change instead of just the most recent login
-                login = User_Login.objects.filter(
-                    username=config_change.terminal,
-                    timestamp__lte=config_change.timestamp  # "less than or equal" -> login before or at the time of the config change
-                ).order_by('-timestamp').first() # this returns the most recent entry
-                
-                # If a login entry is found, use its IP address; otherwise, set ip_address to None
-                ip_address = login.ip_address if login else None
+            ):
+                is_critical = True
+                break
 
+        if not is_critical:
+            continue
 
+        login = UserLogin.objects.filter(
+            username=config_change.terminal,
+            timestamp__lte=config_change.timestamp
+        ).order_by('-timestamp').first()
+        src_ip_address = login.ip_address if login else None
 
+        severity = "critical" if config_change.result == "success" else "high"
+        reason = f"{config_change.action} on {config_change.key} (critical config, result: {config_change.result}, user: {config_change.terminal})"
 
+        if not Incident.objects.filter(
+            timestamp=config_change.timestamp,
+            username=config_change.terminal,
+            src_ip_address=src_ip_address,
+            incident_type="config_change"
+        ).exists():
+            incident = Incident.objects.create(
+                timestamp=config_change.timestamp,
+                username=config_change.terminal,
+                src_ip_address=src_ip_address,
+                reason=reason,
+                severity=severity,
+                incident_type="config_change"
+            )
 
-                
-                # Ensure ip_address is defined before creating an incident
-                if ip_address:
-                    # Check if an incident already exists for this change
-                    if not Incident.objects.filter(
-                        timestamp=config_change.timestamp,
-                        username=config_change.terminal,
-                        ip_address=ip_address,
-                    ).exists():
-                        # Create a new incident
-                        incident = Incident.objects.create(
-                            timestamp=config_change.timestamp,
-                            username=config_change.terminal,
-                            ip_address=ip_address,
-                            reason="Critical Config Change: " + config_change.action + " on " + config_change.key
-                            
-                        )
-                        
-                        # Create a RelatedLog entry for the config change
-                        Related_Log.objects.create(
-                            incident=incident,
-                            usys_config=config_change  
-                        )
-                        critical_config_incidents_created += 1  # Increment the incident counter
-    
-    return {"critical_config_change": critical_config_incidents_created }
+            RelatedLog.objects.bulk_create([
+                RelatedLog(incident=incident, usys_config=config_change)
+            ])
 
+        incidents_created += 1
 
-
-
-def detect_bruteforce():
-    all_logins = User_Login.objects.all().order_by('timestamp')
-    bruteforce_incidents_created = 0  # Initialize incident counter
-    # Login attempts by user/ip
-    login_attempts_by_user_ip_address = {}
-
-    # First, loop through all logins to create a dict of login attempts by user/ip
-    for login in all_logins:
-        key = (login.username, login.ip_address)
-        
-        # Create the list of login attempts for each user/ip
-        if key not in login_attempts_by_user_ip_address:
-            login_attempts_by_user_ip_address[key] = []
-        login_attempts_by_user_ip_address[key].append(login)
-
-    # Second, loop through the login attempts to find brute force attempts
-    for (username, ip_address), attempts in login_attempts_by_user_ip_address.items():
-        if len(attempts) < BRUTE_FORCE_ATTEMPT_THRESHOLD:
-            continue # Skip if not enough attempts
-        
-        # Check for sequences of attempts that are within the time window
-        i = 0
-        while i < len(attempts) - BRUTE_FORCE_ATTEMPT_THRESHOLD + 1:
-            window_start = attempts[i].timestamp # Start of the time window
-            window_end = window_start + BRUTE_FORCE_TIME_DELTA # End of the time window
-            
-            # Count attempts in the time window
-            j = i
-            while j < len(attempts) and attempts[j].timestamp <= window_end:
-                j += 1
-            
-            # If found enough attempts in the time window -> potential bruteforce attempt
-            if j - i >= BRUTE_FORCE_ATTEMPT_THRESHOLD:
-                attack_attempts = attempts[i:j] # Get the list of attempts in the time window
-                
-                # Check if the last attempt was successful
-                last_attempt = attack_attempts[-1]
-                reason = "Potential Successful Brute Force Attempt" if last_attempt.result == "success" else "Potential Failed Brute Force Attempt"
-                
-                # Create incident for this brute force attempt
-                if not Incident.objects.filter(username=username, ip_address=ip_address, reason=reason).exists():
-                    # Create a new incident
-                    incident = Incident.objects.create(
-                        timestamp=last_attempt.timestamp,
-                        username=username,
-                        ip_address=ip_address,
-                        reason=reason
-                    )
-                    
-                    # Create Related_Log entries for each login attempt
-                    for login_attempt in attack_attempts:
-                        Related_Log.objects.create(
-                            incident=incident,
-                            user_login=login_attempt  # Set the user_login field
-                            
-                        )
-                    
-                    bruteforce_incidents_created += 1  # Increment the incident counter
-
-                # Move the index to the end of the current window
-                i = j
-            else:
-                i += 1 # Move to the next attempt
-
-    # Return the count of incidents created
-    return {"bruteforce": bruteforce_incidents_created}
+    return {"critical_config_change": incidents_created}
 
 def detect_concurrent_logins():
-    simultaneous_logins_created=0
+    """
+    Detects and logs simultaneous logins without a corresponding logout.
 
-    # get all user logins that were successful
-    all_successful_logins=User_Login.objects.all().filter(result="success")
-    # see whether those logins have a matching logout
-    potential_used_accounts=[]
-    for login in all_successful_logins:
-        if (User_Logout.objects.all().filter(terminal=login.terminal).count())==0:
-            # in this case, we haven't found a logout that pairs with the successful login
-            if login.username in potential_used_accounts:
-                # the account has already been registered in the list -> we have a potential simultaneous login
-                if not Incident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
-                    # Create a new incident
+    Returns:
+        dict: Number of simultaneous login incidents created.
+    """
+    incidents_created = 0
+    active_user_sessions = {}  # username -> IP
+
+    successful_logins = UserLogin.objects.filter(result="success").order_by("timestamp")
+
+    for login in successful_logins:
+        logout_found = UserLogout.objects.filter(
+            terminal=login.terminal,
+            timestamp__gt=login.timestamp
+        ).exists()
+
+        if not logout_found:
+            if login.username in active_user_sessions:
+                previous_ip = active_user_sessions[login.username]
+
+                # Prepare reason based on IP match
+                if login.ip_address == previous_ip:
+                    reason = f"{login.username} logged in from same IP {login.ip_address} without logout"
+                else:
+                    reason = f"{login.username} logged in from {login.ip_address} (prev: {previous_ip}) without logout"
+
+                if not Incident.objects.filter(
+                    username=login.username,
+                    src_ip_address=login.ip_address,
+                    incident_type="concurrent_login"
+                ).exists():
                     incident = Incident.objects.create(
                         timestamp=login.timestamp,
                         username=login.username,
-                        ip_address=login.ip_address,
-                        reason="Sucessful Simultaneous Login"
+                        src_ip_address=login.ip_address,
+                        reason=reason,
+                        severity="medium",
+                        incident_type="concurrent_login"
                     )
-                    Related_Log.objects.create(
-                            incident=incident,
-                            user_login=login
-                        )
-                    simultaneous_logins_created+=1
+
+                    RelatedLog.objects.bulk_create([
+                        RelatedLog(incident=incident, user_login=login)
+                    ])
+
+                    incidents_created += 1
             else:
-                potential_used_accounts.append(login.username) # append new not logged out account to list
-    return {"simultaneous_logins":simultaneous_logins_created}
+                # First time we've seen a login without logout for this user
+                active_user_sessions[login.username] = login.ip_address
+
+    return {"concurrent_logins": incidents_created}
+
 
 
 
 def detect_dos_attack():
-    all_packets = NetfilterPkt.objects.all().order_by('timestamp')
+    """
+    Detects potential DoS attacks based on the number of packets sent in a specified time window.
+    If the number of packets exceeds a defined threshold, an incident is created.
+    
+    Returns:
+        dict: A dictionary containing the number of DoS incidents created.
+    """
+    all_packets = NetfilterPacket.objects.all().order_by('timestamp')
     dos_incidents_created = 0
 
     last_incident_time = {}
@@ -245,20 +284,30 @@ def detect_dos_attack():
             if len(window_packets) >= DOS_PACKET_THRESHOLD:
                 last_time = last_incident_time.get((src_ip, dst_ip))
 
-                # Prüfe, ob ein Incident mit gleicher Quelle, Ziel und Grund im selben Zeitraum schon existiert
+                reason = f"{len(window_packets)} packets in {format_timedelta(DOS_TIME_DELTA)}"
+                
                 existing_incident = Incident.objects.filter(
-                    ip_address=src_ip,
+                    src_ip_address=src_ip,
+                    dst_ip_address=dst_ip,
                     timestamp__range=(window_start, window_end),
-                    reason__contains=f"to {dst_ip}"
+                    incident_type="dos",
                 ).exists()
 
                 if not existing_incident and (not last_time or window_start > last_time + DOS_REPEAT_THRESHOLD):
-                    Incident.objects.create(
+                    incident = Incident.objects.create(
                         timestamp=window_packets[-1].timestamp,
-                        ip_address=src_ip,
-                        reason=f"Potential DoS attack - {len(window_packets)} packets in {DOS_TIME_DELTA.total_seconds()}s to {dst_ip}",
+                        src_ip_address=src_ip,
+                        dst_ip_address=dst_ip,
+                        reason=reason,
                         incident_type="dos",
+                        severity="high",
                     )
+                    
+                    RelatedLog.objects.bulk_create([
+                        RelatedLog(incident=incident, netfilter_packet=pkt)
+                        for pkt in window_packets
+                    ]) 
+                     
                     last_incident_time[(src_ip, dst_ip)] = window_packets[-1].timestamp
                     dos_incidents_created += 1
 
