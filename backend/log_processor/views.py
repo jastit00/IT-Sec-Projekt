@@ -11,6 +11,8 @@ from log_processor.serializers import LogFileSerializer, UserLoginSerializer, Us
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
 
+from log_processor.services import extract_dos_details
+
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
 
@@ -128,3 +130,23 @@ def filter_fields(data, fields_to_keep):
     
     return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
 
+#ziel quell timepstramp pakete zeit/pakete
+
+
+@api_view(['GET'])
+def dos_pakets(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+
+    queryset = Incident.objects.filter(incident_type='dos')
+
+    if start:
+        queryset = queryset.filter(timestamp__gte=start)
+    if end:
+        queryset = queryset.filter(timestamp__lte=end)
+
+    serializer = IncidentSerializer(queryset, many=True)
+    data = serializer.data
+
+    result = extract_dos_details(data)
+    return Response(result)

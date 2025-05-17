@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from .models import Incident, Related_Log
 from log_processor.models import User_Login, User_Logout, Usys_Config 
 from .models import NetfilterPkt, Incident
+from collections import defaultdict
 
 
 
@@ -221,8 +222,6 @@ def detect_concurrent_logins():
     return {"simultaneous_logins":simultaneous_logins_created}
 
 
-from collections import defaultdict
-from datetime import timedelta
 
 def detect_dos_attack():
     all_packets = NetfilterPkt.objects.all().order_by('timestamp')
@@ -257,7 +256,8 @@ def detect_dos_attack():
                     Incident.objects.create(
                         timestamp=window_packets[-1].timestamp,
                         ip_address=src_ip,
-                        reason=f"Potential DoS attack - {len(window_packets)} packets in {DOS_TIME_DELTA.total_seconds()}s to {dst_ip}"
+                        reason=f"Potential DoS attack - {len(window_packets)} packets in {DOS_TIME_DELTA.total_seconds()}s to {dst_ip}",
+                        incident_type="dos",
                     )
                     last_incident_time[(src_ip, dst_ip)] = window_packets[-1].timestamp
                     dos_incidents_created += 1

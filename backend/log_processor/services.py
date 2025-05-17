@@ -18,6 +18,7 @@ from incident_detector.services import detect_incidents
 
 
 
+
 def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         hasher = hashlib.sha256()
@@ -237,3 +238,28 @@ def process_log_file(file_path: str) -> dict:
             "status": "error",
             "message": str(e)
         }
+    
+
+
+
+
+
+
+def extract_dos_details(data):
+    pattern = re.compile(
+        r'Potential DoS attack - (\d+) packets in ([\d\.]+)s to ([\d\.]+)'
+    )
+
+    result = []
+    for item in data:
+        text = item.get('reason', '')
+        match = pattern.search(text)
+        if match:
+            result.append({
+                'timestamp': item.get('timestamp'),
+                'pakete': int(match.group(1)),
+                'zeit': float(match.group(2)),
+                'ziel': match.group(3),
+                'quelle': item.get('ip_address', ''),
+            })
+    return result

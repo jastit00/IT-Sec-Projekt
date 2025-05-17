@@ -9,6 +9,7 @@ class Incident(models.Model):
     reason = models.TextField()
     event_type = models.CharField(max_length=50, default='incident')  
     severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='boese') 
     def __str__(self):
         return f"{self.reason} from {self.ip_address} at {self.timestamp} with {self.username}"
 
@@ -20,7 +21,7 @@ class Related_Log(models.Model):
     user_login = models.ForeignKey(User_Login, on_delete=models.SET_NULL, null=True, blank=True)
     usys_config = models.ForeignKey(Usys_Config, on_delete=models.SET_NULL, null=True, blank=True)
     netfilter_pkt = models.ForeignKey(NetfilterPkt, on_delete=models.SET_NULL, null=True, blank=True)
-
+    
     
     def __str__(self):
         if self.user_login:
