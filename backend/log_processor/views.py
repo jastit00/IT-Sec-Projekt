@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
 from log_processor.services import handle_uploaded_log_file  
-from log_processor.models import UploadedLogFile, User_Login, Usys_Config,User_Logout,NetfilterPkt
+from log_processor.models import User_Login, Usys_Config,User_Logout,NetfilterPkt
 from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPktSerializer
 from incident_detector.models import Incident
 from incident_detector.serializers import IncidentSerializer
