@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Incident, Related_Log
 from log_processor.models import User_Login, User_Logout, Usys_Config 
-
+from .models import NetfilterPkt, Incident
 
 
 
@@ -28,12 +28,24 @@ CRITICAL_CONFIG_RULES = [
 ]
 
 
+
+
+ 
+# Parameter für Erkennung und Wiederholung
+DOS_TIME_DELTA = timedelta(seconds=10)             # Zeitfenster zur Erkennung eines Angriffs
+DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # Mindestabstand, bis erneut ein Angriff für dieselbe Quelle/Ziel erkannt wird
+DOS_PACKET_THRESHOLD = 100                         # Mindestanzahl an Paketen im Fenster, um als DoS zu gelten
+
+
+
+
+
 # Create your views here.
 def detect_incidents():
     bruteforce_incidents = detect_bruteforce()
     critical_config_incidents = detect_critical_config_change()
     simultaniousLogins = detect_concurrent_logins()
-    
+    attackDos=detect_dos_attack()
     #########################################
     # TODO
     # Placeholder other detections
@@ -44,7 +56,9 @@ def detect_incidents():
     return {"incidents": {
         "bruteforce": bruteforce_incidents["bruteforce"],
         "critical_config_change": critical_config_incidents["critical_config_change"],
-        "simultanious_logins": simultaniousLogins["simultaneous_logins"]
+        "simultanious_logins": simultaniousLogins["simultaneous_logins"],
+        "dos_attack": attackDos["dos_attacks"]
+
 }}
 
 
@@ -205,3 +219,51 @@ def detect_concurrent_logins():
             else:
                 potential_used_accounts.append(login.username) # append new not logged out account to list
     return {"simultaneous_logins":simultaneous_logins_created}
+
+
+from collections import defaultdict
+from datetime import timedelta
+
+def detect_dos_attack():
+    all_packets = NetfilterPkt.objects.all().order_by('timestamp')
+    dos_incidents_created = 0
+
+    last_incident_time = {}
+
+    packets_by_connection = defaultdict(list)
+    for packet in all_packets:
+        key = (packet.source_ip, packet.destination_ip)
+        packets_by_connection[key].append(packet)
+
+    for (src_ip, dst_ip), packets in packets_by_connection.items():
+        i = 0
+        while i < len(packets) - DOS_PACKET_THRESHOLD + 1:
+            window_start = packets[i].timestamp
+            window_end = window_start + DOS_TIME_DELTA
+
+            window_packets = [pkt for pkt in packets[i:] if pkt.timestamp <= window_end]
+
+            if len(window_packets) >= DOS_PACKET_THRESHOLD:
+                last_time = last_incident_time.get((src_ip, dst_ip))
+
+                # Prüfe, ob ein Incident mit gleicher Quelle, Ziel und Grund im selben Zeitraum schon existiert
+                existing_incident = Incident.objects.filter(
+                    ip_address=src_ip,
+                    timestamp__range=(window_start, window_end),
+                    reason__contains=f"to {dst_ip}"
+                ).exists()
+
+                if not existing_incident and (not last_time or window_start > last_time + DOS_REPEAT_THRESHOLD):
+                    Incident.objects.create(
+                        timestamp=window_packets[-1].timestamp,
+                        ip_address=src_ip,
+                        reason=f"Potential DoS attack - {len(window_packets)} packets in {DOS_TIME_DELTA.total_seconds()}s to {dst_ip}"
+                    )
+                    last_incident_time[(src_ip, dst_ip)] = window_packets[-1].timestamp
+                    dos_incidents_created += 1
+
+                i += len(window_packets)
+            else:
+                i += 1
+
+    return {"dos_attacks": dos_incidents_created}

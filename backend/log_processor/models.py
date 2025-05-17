@@ -34,7 +34,7 @@ class Usys_Config(models.Model):
     condition = models.CharField(max_length=100) 
     terminal = models.CharField(max_length=100)
     result = models.CharField(max_length=20)
-    event_type = models.CharField(max_length=50, default='config')  # NEU
+    event_type = models.CharField(max_length=50, default='config change')  # NEU
     severity = models.CharField(max_length=20,null=True)
 class UploadedLogFile(models.Model):
     filename = models.CharField(max_length=255)
@@ -53,6 +53,7 @@ class NetfilterPkt(models.Model):
     source_ip = models.GenericIPAddressField()
     destination_ip = models.GenericIPAddressField()
     protocol = models.CharField(max_length=10)
-    
+    event_type = models.CharField(max_length=50, default='network paket')  # NEU
+    severity = models.CharField(max_length=20,default='normal')
     def __str__(self):
         return f"{self.source_ip} to {self.destination_ip} at {self.timestamp}"
