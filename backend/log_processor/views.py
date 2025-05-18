@@ -8,10 +8,9 @@ from rest_framework.decorators import api_view
 from log_processor.services import handle_uploaded_log_file  
 from log_processor.models import UserLogin, UsysConfig,UserLogout,NetfilterPacket
 from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketSerializer
-from incident_detector.models import Incident
-from incident_detector.serializers import IncidentSerializer
+from incident_detector.models import Incident,DosIncident
+from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer
 
-from log_processor.services import extract_dos_details
 
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
@@ -107,13 +106,13 @@ def unified_event_log(request):
     login_data = UserLoginSerializer(user_logins, many=True).data
     logout_data = UserLogoutSerializer(user_logouts, many=True).data
     config_data = UsysConfigSerializer(usys_configs, many=True).data
-    packet_input = NetfilterPaketSerializer(packet_input, many=True).data
+    packet_input = NetfilterPacketSerializer(packet_input, many=True).data
 
     # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + packet_input
+    all_events = incident_data + login_data + logout_data + config_data + packet_input 
 
     # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input']
+    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input','incident_type']
     filtered_events = filter_fields(all_events, fields_to_keep)
 
     # Sortieren von neu nach alt
@@ -130,23 +129,33 @@ def filter_fields(data, fields_to_keep):
     
     return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
 
-#ziel quell timepstramp pakete zeit/pakete
 
 
 @api_view(['GET'])
-def dos_pakets(request):
+def dos_packets(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
 
-    queryset = Incident.objects.filter(incident_type='dos')
+    queryset = DosIncident.objects.all()
 
     if start:
         queryset = queryset.filter(timestamp__gte=start)
     if end:
         queryset = queryset.filter(timestamp__lte=end)
 
-    serializer = IncidentSerializer(queryset, many=True)
-    data = serializer.data
+    serializer = DosIncidentSerializer(queryset, many=True)
 
-    result = extract_dos_details(data)
-    return Response(result)
+    fields_to_keep = ['timestamp', 'src_ip_address', 'dst_ip_address', 'protocol', 'packets','timeDelta']
+    
+    filtered_events = [
+        {k: item[k] for k in fields_to_keep if k in item}
+        for item in serializer.data
+    ]
+
+    sorted_events = sorted(
+        filtered_events,
+        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
+        reverse=True
+    )
+
+    return Response(sorted_events)

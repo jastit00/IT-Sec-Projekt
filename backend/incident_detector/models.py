@@ -14,6 +14,33 @@ class Incident(models.Model):
     def __str__(self):
         return f"{self.reason} from {self.src_ip_address} at {self.timestamp} with {self.username}"
 
+
+class DosIncident(models.Model):
+    timestamp = models.DateTimeField()
+    src_ip_address = models.GenericIPAddressField()
+    dst_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timeDelta = models.CharField(max_length=20)
+    event_type = models.CharField(max_length=50, default='incident')  
+    severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='dos') 
+    packets=models.CharField(max_length=20) 
+    protocol = models.CharField(max_length=10)
+    reason = models.TextField()
+    def __str__(self):
+        return f"{self.reason} from {self.src_ip_address} at {self.timestamp}"
+
+
+
+
+
+
+
+
+
+
+
+
+
 class RelatedLog(models.Model):
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name='related_logs_set')
     log_file = models.ForeignKey(UploadedLogFile, on_delete=models.CASCADE, related_name='related_logs_set',null=True)

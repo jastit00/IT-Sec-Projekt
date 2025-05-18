@@ -234,25 +234,3 @@ def extract_match(pattern, line, default=""):
 
 
 
-def extract_dos_details(data):
-    """
-    Extracts details of potential DoS attacks from the log data.
-    Returns a list of dictionaries with relevant information.
-    """
-    pattern = re.compile(
-        r'Potential DoS attack - (\d+) packets in ([\d\.]+)s to ([\d\.]+)'
-    )
-
-    result = []
-    for item in data:
-        text = item.get('reason', '')
-        match = pattern.search(text)
-        if match:
-            result.append({
-                'timestamp': item.get('timestamp'),
-                'pakete': int(match.group(1)),
-                'zeit': float(match.group(2)),
-                'ziel': match.group(3),
-                'quelle': item.get('ip_address', ''),
-            })
-    return result
