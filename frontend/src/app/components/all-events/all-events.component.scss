@@ -2,50 +2,50 @@
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
-}
-
-.events-table th, 
-.events-table td {
+  }
+  
+  .events-table th, 
+  .events-table td {
     border: 1px solid #ddd;
     padding: 12px;
     text-align: left;
-}
-
-.events-table th {
+  }
+  
+  .events-table th {
     background-color: #f2f2f2;
     color: #333;
-}
-
-.events-table tr:nth-child(even) {
+  }
+  
+  .events-table tr:nth-child(even) {
     background-color: #f9f9f9;
-}
-
-.events-table tr:hover {
+  }
+  
+  .events-table tr:hover {
     background-color: #f1f1f1;
-}
-.status {
+  }
+  
+  .status {
     padding: 5px 10px;
     border-radius: 4px;
     font-weight: bold;
-}
-
-.Kritisch {
+  }
+  
+  .Kritisch {
     background-color: #e74c3c;
     color: white;
-}
-
-.Warnung {
+  }
+  
+  .Warnung {
     background-color: #f39c12;
     color: white;
-}
-
-.Normal {
+  }
+  
+  .Normal {
     background-color: #2ecc71;
     color: white;
-}
-
-
-.timestamp {
+  }
+  
+  .timestamp {
     font-size: 0.85em;
     color: #7f8c8d;
     font-style: italic;
@@ -73,3 +73,62 @@
     font-style: italic;
   }
   
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+    font-style: italic;
+  }
+  
+  /* Neue Styles für Loading und Controls */
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+  }
+  
+  .loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+  }
+  
+  .refresh-button {
+    display: flex;
+    align-items: center;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  
+  .refresh-button:hover {
+    background-color: #2980b9;
+  }
+  
+  .refresh-icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 16px;
+  }
