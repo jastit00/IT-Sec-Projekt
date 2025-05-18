@@ -2,7 +2,7 @@
 
 API zum Abrufen von Logdateien aus der Datenbank
 
-The version of the OpenAPI document: 1.0.4
+The version of the OpenAPI document: 1.0.6
 
 ## Building
 
