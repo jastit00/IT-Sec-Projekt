@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view
 from log_processor.services import handle_uploaded_log_file  
 from log_processor.models import UserLogin, UsysConfig,UserLogout,NetfilterPacket
 from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketSerializer
-from incident_detector.models import Incident,DosIncident
-from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer
+from incident_detector.models import Incident,DosIncident,DDosIncident
+from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer,DDosIncidentSerializer
 
 
 
@@ -85,11 +85,13 @@ def processed_incidents(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
     queryset = Incident.objects.all()
+    
     if start:
         queryset = queryset.filter(timestamp__gte=start)
     if end:
         queryset = queryset.filter(timestamp__lte=end)
     serializer = IncidentSerializer(queryset, many=True)
+
     return Response(serializer.data)
 
 @csrf_exempt
@@ -101,18 +103,19 @@ def unified_event_log(request):
     user_logouts = UserLogout.objects.all()
     usys_configs = UsysConfig.objects.all()
     packet_input = NetfilterPacket.objects.all()
+    ddos_incident=DDosIncident.objects.all()
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data
     logout_data = UserLogoutSerializer(user_logouts, many=True).data
     config_data = UsysConfigSerializer(usys_configs, many=True).data
-    packet_input = NetfilterPacketSerializer(packet_input, many=True).data
-
+    packet_input_data = NetfilterPacketSerializer(packet_input, many=True).data
+    ddos_Incident_data = DDosIncidentSerializer(ddos_incident, many=True).data
     # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + packet_input 
+    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data
 
     # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input','incident_type']
+    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input','incident_type',]
     filtered_events = filter_fields(all_events, fields_to_keep)
 
     # Sortieren von neu nach alt
@@ -159,3 +162,35 @@ def dos_packets(request):
     )
 
     return Response(sorted_events)
+
+
+
+@api_view(['GET'])
+def ddos_packets(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+
+    queryset = DDosIncident.objects.all()
+
+    if start:
+        queryset = queryset.filter(timestamp__gte=start)
+    if end:
+        queryset = queryset.filter(timestamp__lte=end)
+
+    serializer = DDosIncidentSerializer(queryset, many=True)
+
+    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets','timeDelta','sources']
+    
+    filtered_events = [
+        {k: item[k] for k in fields_to_keep if k in item}
+        for item in serializer.data
+    ]
+
+    sorted_events = sorted(
+        filtered_events,
+        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
+        reverse=True
+    )
+
+    return Response(sorted_events)
+

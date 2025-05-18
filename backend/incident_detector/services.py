@@ -2,7 +2,7 @@ from datetime import timedelta
 #from django.shortcuts import render
 #from django.http import JsonResponse
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPacket, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog,DosIncident
+from incident_detector.models import Incident, RelatedLog,DDosIncident,DosIncident
 from collections import defaultdict
 #from django.utils import timezone
 
@@ -17,10 +17,11 @@ DOS_TIME_DELTA = timedelta(seconds=10)             # Zeitfenster zur Erkennung e
 DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # Mindestabstand, bis erneut ein Angriff für dieselbe Quelle/Ziel erkannt wird
 DOS_PACKET_THRESHOLD = 100       
 
-DDOS_PACKET_THRESHOLD = 50
+DDOS_PACKET_THRESHOLD = 10
 DDOS_TIME_DELTA = timedelta(seconds=2)
 DDOS_REPEAT_THRESHOLD = timedelta(seconds=60)
-DDOS_MIN_SOURCES = 5
+DDOS_MIN_SOURCES = 2
+
 # vars for critical config change detection
 CRITICAL_CONFIG_RULES = [
     {
@@ -43,7 +44,8 @@ def detect_incidents():
             "bruteforce": detect_bruteforce()["bruteforce"],
             "critical_config_change": detect_critical_config_change()["critical_config_change"],
             "concurrent_logins": detect_concurrent_logins()["concurrent_logins"],
-            "dos_attack": detect_dos_attack()["dos_attacks"]
+            "dos_attack": detect_dos_attack()["dos_attacks"],
+            "ddos_attack": detect_ddos_attack()["ddos_attacks"]
         }
     }
 
@@ -77,7 +79,6 @@ def detect_bruteforce():
     Returns:
         dict: {"bruteforce": <number_of_incidents_created>}
     """
-
     all_logins = UserLogin.objects.all().order_by('timestamp')
     incidents_created = 0
 
@@ -129,9 +130,7 @@ def detect_bruteforce():
                         src_ip_address=ip_address,
                         reason=reason,
                         severity=severity,
-                        incident_type="bruteforce",
-                       
-
+                        incident_type="bruteforce"
                     )
 
                     RelatedLog.objects.bulk_create([
@@ -178,7 +177,7 @@ def detect_critical_config_change():
         ).order_by('-timestamp').first()
         src_ip_address = login.ip_address if login else None
 
-        severity = "critical" if config_change.result == "success" else "high"
+        severity = "high" if config_change.result == "success" else "critical"
         reason = f"{config_change.action} on {config_change.key} (critical config, result: {config_change.result}, user: {config_change.terminal})"
 
         if not Incident.objects.filter(
@@ -229,8 +228,10 @@ def detect_concurrent_logins():
                 # Prepare reason based on IP match
                 if login.ip_address == previous_ip:
                     reason = f"{login.username} logged in from same IP {login.ip_address} without logout"
+                    severity = "medium"
                 else:
                     reason = f"{login.username} logged in from {login.ip_address} (prev: {previous_ip}) without logout"
+                    severity = "high"
 
                 if not Incident.objects.filter(
                     username=login.username,
@@ -242,7 +243,7 @@ def detect_concurrent_logins():
                         username=login.username,
                         src_ip_address=login.ip_address,
                         reason=reason,
-                        severity="medium",
+                        severity=severity,
                         incident_type="concurrent_login"
                     )
 
@@ -257,49 +258,41 @@ def detect_concurrent_logins():
 
     return {"concurrent_logins": incidents_created}
 
-
-
-
 def detect_dos_attack():
     """
     Detects potential DoS attacks based on the number of packets sent in a specified time window.
-    If the number of packets exceeds a defined threshold, an incident is created.
-    
-    Returns:
-        dict: A dictionary containing the number of DoS incidents created.
     """
     all_packets = NetfilterPacket.objects.all().order_by('timestamp')
     dos_incidents_created = 0
 
     last_incident_time = {}
-
     packets_by_connection = defaultdict(list)
+
     for packet in all_packets:
         key = (packet.source_ip, packet.destination_ip)
         packets_by_connection[key].append(packet)
-        
+
     for (src_ip, dst_ip), packets in packets_by_connection.items():
         i = 0
         while i < len(packets) - DOS_PACKET_THRESHOLD + 1:
             window_start = packets[i].timestamp
             window_end = window_start + DOS_TIME_DELTA
-
             window_packets = [pkt for pkt in packets[i:] if pkt.timestamp <= window_end]
 
             if len(window_packets) >= DOS_PACKET_THRESHOLD:
                 last_time = last_incident_time.get((src_ip, dst_ip))
-
                 reason = f"{len(window_packets)} packets in {format_timedelta(DOS_TIME_DELTA)}"
-                
+
                 existing_incident = DosIncident.objects.filter(
                     src_ip_address=src_ip,
                     dst_ip_address=dst_ip,
                     timestamp__range=(window_start, window_end),
                     incident_type="dos",
-                    
                 ).exists()
 
                 if not existing_incident and (not last_time or window_start > last_time + DOS_REPEAT_THRESHOLD):
+                    protocols_in_window = set(pkt.protocol for pkt in window_packets)
+                    protocols_str = ", ".join(sorted(protocols_in_window))
                     DosIncident.objects.create(
                         timestamp=window_packets[-1].timestamp,
                         src_ip_address=src_ip,
@@ -307,14 +300,10 @@ def detect_dos_attack():
                         reason=reason,
                         incident_type="dos",
                         severity="high",
-                        packets=str(len(window_packets)), 
-
+                        packets=str(len(window_packets)),
                         timeDelta=format_timedelta(DOS_TIME_DELTA),
-                        protocol="test",
+                        protocol=protocols_str,
                     )
-                    
-                
-                     
                     last_incident_time[(src_ip, dst_ip)] = window_packets[-1].timestamp
                     dos_incidents_created += 1
 
@@ -323,4 +312,61 @@ def detect_dos_attack():
                 i += 1
 
     return {"dos_attacks": dos_incidents_created}
+
+def detect_ddos_attack():
+    """
+    Detects potential DDoS attacks by evaluating packets from multiple sources to the same destination.
+    """
+    all_packets = NetfilterPacket.objects.all().order_by('timestamp')
+    ddos_incidents_created = 0
+
+    last_incident_time = {}
+    packets_by_target = defaultdict(list)
+
+    for packet in all_packets:
+        packets_by_target[packet.destination_ip].append(packet)
+
+    for dst_ip, packets in packets_by_target.items():
+        i = 0
+        while i < len(packets) - DDOS_PACKET_THRESHOLD + 1:
+            window_start = packets[i].timestamp
+            window_end = window_start + DDOS_TIME_DELTA
+            window_packets = [pkt for pkt in packets[i:] if pkt.timestamp <= window_end]
+            source_ips_in_window = set(pkt.source_ip for pkt in window_packets)
+
+            if len(window_packets) >= DDOS_PACKET_THRESHOLD and len(source_ips_in_window) >= DDOS_MIN_SOURCES:
+                last_time = last_incident_time.get(dst_ip)
+
+                existing_incident = DDosIncident.objects.filter(
+                    dst_ip_address=dst_ip,
+                    timestamp__range=(window_start, window_end),
+                ).exists()
+
+                if not existing_incident and (not last_time or window_start > last_time + DDOS_REPEAT_THRESHOLD):
+                    protocols_in_window = set(pkt.protocol for pkt in window_packets)
+                    protocols_str = ", ".join(sorted(protocols_in_window))
+                    DDosIncident.objects.create(
+                        timestamp=window_packets[-1].timestamp,
+                        dst_ip_address=dst_ip,
+                        timeDelta=str(DDOS_TIME_DELTA),
+                        event_type="incident",
+                        severity="critical",
+                        incident_type="ddos",
+                        packets=str(len(window_packets)),
+                        protocol=protocols_str,
+                        reason=(
+                            f"Potential DDoS attack - {len(window_packets)} packets "
+                            f"from {len(source_ips_in_window)} sources in {DDOS_TIME_DELTA.total_seconds()}s"
+                        ),
+                        sources=str(len(source_ips_in_window)),
+                    )
+                    last_incident_time[dst_ip] = window_packets[-1].timestamp
+                    ddos_incidents_created += 1
+
+                i += len(window_packets)
+            else:
+                i += 1
+
+    return {"ddos_attacks": ddos_incidents_created}
+
 

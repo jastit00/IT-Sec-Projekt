@@ -30,12 +30,55 @@ class DosIncident(models.Model):
         return f"{self.reason} from {self.src_ip_address} at {self.timestamp}"
 
 
+class DDosIncident(models.Model):
+    timestamp = models.DateTimeField()
+    dst_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timeDelta = models.CharField(max_length=20)
+    event_type = models.CharField(max_length=50, default='incident')  
+    severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='ddos') 
+    packets=models.CharField(max_length=20) 
+    protocol = models.CharField(max_length=10)
+    reason = models.TextField()
+    sources = models.CharField(max_length=10)
+    def __str__(self):
+     return f"{self.reason} targeting {self.dst_ip_address} at {self.timestamp}"
 
+class LoginIncident(models.Model):
+    timestamp = models.DateTimeField()
+    src_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    username = models.CharField(max_length=100)
+    reason = models.TextField()
+    event_type = models.CharField(max_length=50, default='incident')  
+    severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='concurrentLogin') 
+    def __str__(self):
+       return f"{self.username} at {self.timestamp} from {self.ip_address}"
 
+class ConfigIncident(models.Model):
+    timestamp = models.DateTimeField()
+    src_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    username = models.CharField(max_length=100)
+    reason = models.TextField()
+    event_type = models.CharField(max_length=50, default='incident')  
+    severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='configchange') 
+    def __str__(self):
+       return f"{self.username} at {self.timestamp} from {self.ip_address}"
 
-
-
-
+class BruteforceIncident(models.Model):
+    timestamp = models.DateTimeField()
+    src_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    username = models.CharField(max_length=100)
+    reason = models.TextField()
+    attempts= models.CharField(max_length=100)
+    timeDelta = models.CharField(max_length=20)
+    successful= models.CharField(max_length=20)
+    event_type = models.CharField(max_length=50, default='incident')  
+    severity = models.CharField(max_length=20, default='critical') 
+    incident_type = models.CharField(max_length=20, default='configchange') 
+    def __str__(self):
+       return f"{self.username} at {self.timestamp} from {self.src_ip_address}"
 
 
 
