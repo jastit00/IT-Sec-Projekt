@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ChartModule } from 'primeng/chart';  
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
+import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-chart-two',
@@ -12,6 +13,7 @@ import { DefaultService } from '../../api-client';
 })
 export class ChartTwoComponent {
   private defaultService = inject(DefaultService);
+  private updateService = inject(ChartUpdateService)
   
   data: any = {
     labels: [],
@@ -23,6 +25,16 @@ export class ChartTwoComponent {
   };
   
   ngOnInit(): void {
+  
+  this.loadData();
+  this.updateService.updateChart$.subscribe(() => {
+    console.log('in der component');
+    this.loadData();
+  });
+
+  }
+
+ loadData() {
     this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
       const ipCountMap: { [ip: string]: number } = {};
   
