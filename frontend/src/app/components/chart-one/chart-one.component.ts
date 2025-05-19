@@ -2,13 +2,13 @@ import { Component, inject, Input, OnInit, SimpleChanges } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-chart-one',
   standalone: true,
-  imports: [CommonModule, ChartModule],
+  imports: [CommonModule, ChartModule, ReactiveFormsModule],
   templateUrl: './chart-one.component.html',
   styleUrls: ['./chart-one.component.scss']
 })
@@ -16,6 +16,10 @@ import { ChartUpdateService } from '../../services/chart-update.service';
 export class ChartOneComponent implements OnInit {
   private defaultService = inject(DefaultService);
   private updateService = inject(ChartUpdateService);
+  private fb = inject(FormBuilder);
+
+ showSettings = false;
+ dateForm!: FormGroup;
 
   data: any = {
     labels: [],
@@ -27,16 +31,38 @@ export class ChartOneComponent implements OnInit {
   };
 ngOnInit(): void {
   
+  this.dateForm = this.fb.group({
+      start: [null],
+      end: [null],
+      chartType: ['pie']
+    });
+
   this.loadData();
   this.updateService.updateChart$.subscribe(() => {
-    console.log('in der component');
+    
     this.loadData();
   });
 
+  
   }
 
- loadData() {
-    this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
+
+    
+  
+
+ loadData(start?: string, end?: string) {
+
+    const observe = 'body';
+    const reportProgress = false;
+  
+    const call = (start && end)
+    
+
+    ? this.defaultService.logfilesProcessedLoginsGet(start, end, observe, reportProgress)
+    : this.defaultService.logfilesProcessedLoginsGet();
+
+
+    call.subscribe((logins: any[]) => {
       const ipCountMap: { [ip: string]: number } = {};
   
       logins.forEach(entry => {
@@ -85,8 +111,33 @@ ngOnInit(): void {
     }
   };
 onSettingsClick() {
-    console.log('Test Click');
+
+    this.showSettings = !this.showSettings;
+    
+}
+
+onApply() {
+    const startDate = this.dateForm.get('start')?.value;
+    const endDate = this.dateForm.get('end')?.value;
+    
+
+    const start = startDate ? new Date(startDate).toISOString() : undefined;
+    const end = endDate ? new Date(endDate).toISOString() : undefined;
+    
+    this.loadData(start, end);
+    this.showSettings = false;
   }
-  
+
+onReset() {
+  this.dateForm.patchValue({
+    start: undefined,
+    end: undefined,
+    chartType: 'pie'
+  });
+
+  this.loadData();
+}  
 
 }
+
+

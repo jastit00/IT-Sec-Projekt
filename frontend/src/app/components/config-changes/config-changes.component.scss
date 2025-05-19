@@ -13,7 +13,7 @@
 .sticky-title {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 4;
   background-color: #fff;
   padding: 1rem;
   border-bottom: 1px solid #e0e0e0;
@@ -38,7 +38,7 @@ mat-header-cell,
 mat-header-row {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 4;
   background-color: #f5f5f5;
   height: 60px;
 }
