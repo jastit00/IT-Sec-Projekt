@@ -13,6 +13,11 @@
       <label>end:</label>
       <input type="datetime-local" formControlName="end">
 
+      <label for="targetDstIp">destination:</label>
+      <select id="targetDstIp" formControlName="targetDstIp">
+      <option [value]="null">Choose the adress</option>
+      <option *ngFor="let ip of availableDstIps" [value]="ip">{{ ip }}</option>
+      </select>
 
       <label for="chartType">Charttype:</label>
       <select formControlName="chartType" id="chartType">

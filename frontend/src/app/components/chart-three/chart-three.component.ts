@@ -22,6 +22,7 @@ export class ChartThreeComponent implements OnInit{
 
   showSettings = false;
   dateForm!: FormGroup;
+  availableDstIps: string[] = [];
   
   data = {
     labels: ['Ip1', 'Ip2', 'Ip3', 'Ip4', 'Ip5'],
@@ -38,7 +39,8 @@ export class ChartThreeComponent implements OnInit{
   this.dateForm = this.fb.group({
     start: [null],
     end: [null],
-    chartType: ['pie']
+    chartType: ['pie'],
+    targetDstIp: [null] 
   });
 
 
@@ -53,7 +55,7 @@ export class ChartThreeComponent implements OnInit{
 
     const observe = 'body';
     const reportProgress = false;
-    const TARGET_DST_IP = '192.168.0.88';  // festgelegte Ziel-IP
+    
     const call = (start && end)
     
 
@@ -62,6 +64,19 @@ export class ChartThreeComponent implements OnInit{
 
 
     call.subscribe((entries: any[]) => {
+
+    const dstIpsSet = new Set<string>();
+      entries.forEach(e => dstIpsSet.add(e.dst_ip_address));
+      const uniqueIps = Array.from(dstIpsSet);
+      this.availableDstIps = uniqueIps;
+
+    const currentTarget = this.dateForm.get('targetDstIp')?.value;
+      if (!currentTarget && uniqueIps.length > 0) {
+        this.dateForm.patchValue({ targetDstIp: uniqueIps[0] });
+      }
+    
+    const TARGET_DST_IP = this.dateForm.get('targetDstIp')?.value;
+
     const packetMap: { [srcIp: string]: number } = {};
 
     entries.forEach(entry => {
@@ -137,10 +152,12 @@ onApply() {
   }
 
 onReset() {
+  const firstIp = this.availableDstIps[0] || null;
   this.dateForm.patchValue({
     start: undefined,
     end: undefined,
-    chartType: 'pie'
+    chartType: 'pie',
+    targetDstIp: firstIp
   });
 
   this.loadData();
