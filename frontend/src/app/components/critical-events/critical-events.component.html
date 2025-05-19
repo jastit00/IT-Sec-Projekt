@@ -1,0 +1,32 @@
+<h2>All Events</h2>
+<table class="events-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Status</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (event of events; track event.id) {
+    <tr>
+      @if(event.status === "Kritisch"){
+      <td>{{ event.date }} <span class="timestamp">{{ event.relativeTime }}</span></td>
+      <td>{{ event.event }}</td>
+      <td><span class="status status-critical">{{ event.status }}</span></td>
+      <td>
+        <div ngIf="event.ips.length > 0; else noIps">
+          @for(ips of event.ips; track ips) {
+            <span class="ip-badge">{{ ips }}</span>
+          }
+        </div>
+        <ng-template #noIps>
+          <span class="no-ips">Keine</span>
+        </ng-template>
+      </td>
+      }
+    </tr>
+  }
+  </tbody>
+</table>

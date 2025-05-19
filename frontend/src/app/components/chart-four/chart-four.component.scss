@@ -1,0 +1,41 @@
+.chart-container {
+  position: relative;
+}
+
+h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reddot {
+  width: 15px;
+  height: 15px;
+  background-color: red;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.settings-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 5px;
+  color: #333;
+}
+
+.settings-button:hover {
+  color: #666;
+}
+.settings-button svg {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: middle;
+}
