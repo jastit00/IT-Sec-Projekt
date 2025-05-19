@@ -2,19 +2,24 @@ import { Component, inject } from '@angular/core';
 import { ChartModule } from 'primeng/chart';  
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-chart-two',
   standalone: true,
-  imports: [CommonModule, ChartModule],
+  imports: [CommonModule, ChartModule, ReactiveFormsModule],
   templateUrl: './chart-two.component.html',
   styleUrl: './chart-two.component.scss'
 })
 export class ChartTwoComponent {
   private defaultService = inject(DefaultService);
   private updateService = inject(ChartUpdateService)
+  private fb = inject(FormBuilder);
   
+  showSettings = false;
+  dateForm!: FormGroup;
+
   data: any = {
     labels: [],
     datasets: [{
@@ -25,17 +30,34 @@ export class ChartTwoComponent {
   };
   
   ngOnInit(): void {
+
+  this.dateForm = this.fb.group({
+      start: [null],
+      end: [null],
+      chartType: ['bar']
+    });
   
   this.loadData();
   this.updateService.updateChart$.subscribe(() => {
-    console.log('in der component');
+    
     this.loadData();
   });
 
   }
 
- loadData() {
-    this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
+ loadData(start?: string, end?: string) {
+
+    const observe = 'body';
+    const reportProgress = false;
+  
+    const call = (start && end)
+    
+
+    ? this.defaultService.logfilesProcessedLoginsGet(start, end, observe, reportProgress)
+    : this.defaultService.logfilesProcessedLoginsGet();
+
+
+    call.subscribe((logins: any[]) => {
       const ipCountMap: { [ip: string]: number } = {};
   
       logins.forEach(entry => {
@@ -83,7 +105,32 @@ export class ChartTwoComponent {
       }
     }
   };
-  onSettingsClick() {
-    console.log('Test Click');
+onSettingsClick() {
+
+    this.showSettings = !this.showSettings;
+    
+}
+
+onApply() {
+    const startDate = this.dateForm.get('start')?.value;
+    const endDate = this.dateForm.get('end')?.value;
+    
+
+    const start = startDate ? new Date(startDate).toISOString() : undefined;
+    const end = endDate ? new Date(endDate).toISOString() : undefined;
+    
+    this.loadData(start, end);
+    this.showSettings = false;
   }
+
+onReset() {
+  this.dateForm.patchValue({
+    start: undefined,
+    end: undefined,
+    chartType: 'bar'
+  });
+
+  this.loadData();
+}  
+
 }
