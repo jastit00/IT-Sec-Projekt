@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { DefaultService } from '../../api-client';
+import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-config-changes',
@@ -12,10 +13,22 @@ import { DefaultService } from '../../api-client';
 })
 export class ConfigChangesComponent implements OnInit {
   private defaultService = inject(DefaultService);
+  private updateService = inject(ChartUpdateService)
+
+
   displayedColumns: string[] = ['id', 'timestamp', 'table', 'action', 'user', 'result', 'description'];
   dataSource: any[] = [];
 
   ngOnInit(): void {
+  
+  this.loadData();
+  this.updateService.updateChart$.subscribe(() => {
+    this.loadData();
+  });
+
+  }
+
+ loadData() {
     this.defaultService.logfilesConfigChangesGet().subscribe((entries: any[]) => {
       this.dataSource = entries.map((entry) => ({
         id: entry.id,

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Logfile API
-  version: 1.0.4
+  version: 1.0.6
   description: API zum Abrufen von Logdateien aus der Datenbank
 servers:
   - url: http://localhost:8000/api
@@ -135,7 +135,7 @@ paths:
         '500' :
           description: server kaputt
         
-  /logfiles/config_changes:
+  /logfiles/config-changes:
     get:
       summary: Liste ausgewerteter Konfigurationsänderungen aus Datenbank
       parameters:
@@ -197,6 +197,47 @@ paths:
           
         '500' :
           description: server kaputt
+          
+  /logfiles/dos-packets:
+    get:
+      summary: verdächtige HTTP Pakete, gruppiert nach IP-Adresse
+      
+      parameters:
+        
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+            
+      responses:
+        '200':
+          description: verdächtige Pakete, gruppiert nach IP-Adresse
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DosPackets'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt        
   
 components:
   schemas:
@@ -318,8 +359,30 @@ components:
         
         severity:
           type: string
-    
           
+    DosPackets:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        
+        timewindow:
+          type: integer
           
+        protocol:
+          type: string
           
-    
+        SourceipAddress:
+          type: string
+          format: ipv4
+          
+        DestinationipAddress:
+          type: string
+          format: ipv4
+          
+        Count:
+          type: integer
+        
+        
+          

@@ -3,6 +3,7 @@ import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-chart-one',
@@ -13,28 +14,28 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 })
 
 export class ChartOneComponent implements OnInit {
-
   private defaultService = inject(DefaultService);
-  private fb = inject(FormBuilder);
+  private updateService = inject(ChartUpdateService);
 
-  @Input() data: any = {
+  data: any = {
     labels: [],
     datasets: [{
-      label: 'Login-Versuche pro IP',
+      label: 'attempted logins by IP',
       data: [],
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
+ngOnInit(): void {
   
-  chartForm: FormGroup;
+  this.loadData();
+  this.updateService.updateChart$.subscribe(() => {
+    console.log('in der component');
+    this.loadData();
+  });
 
-  constructor() {
-    this.chartForm = this.fb.group({
-      data: this.data
-    });
   }
 
-  ngOnInit(): void {
+ loadData() {
     this.defaultService.logfilesProcessedLoginsGet().subscribe((logins: any[]) => {
       const ipCountMap: { [ip: string]: number } = {};
   
@@ -43,53 +44,43 @@ export class ChartOneComponent implements OnInit {
         ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
       });
 
-      this.chartForm.patchValue({
-        data: {
-          labels: Object.keys(ipCountMap),
-          datasets: [{
-            label: 'Login-Versuche pro IP',
-            data: Object.values(ipCountMap),
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-          }]
-        }
-      });
+      this.data = {
+        labels: Object.keys(ipCountMap),
+        datasets: [{
+          label: 'attempted logins by IP',
+          data: Object.values(ipCountMap),
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+          
+        }]
+      };
     });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
-      this.chartForm.patchValue({
-        data: changes['data'].currentValue
-      });
-    }
-  }
 
-  options = {
+ options = {
     responsive: true,
     maintainAspectRatio: false,
-    scale: {
-      ticks: {
-        beginAtZero: true,
-        max: 100, 
-        stepSize: 20
-      }
-    },
     plugins: {
       legend: {
-        position: 'top', 
+        position: 'bottom',  // Legende unter dem Diagramm
+        align: 'center',    // Zentrierte Ausrichtung der Legende
         labels: {
+          boxWidth: 25,     // Breite des Farb-Kastens
+          padding: 15,      // Abstand zwischen den Labels
           font: {
-            size: 14
+            size: 20        
           }
         }
       },
-    },
-    layout: {
-      padding: {
-        top: 0,  
-        right: 0,
-        bottom: 0,
-        left: 0
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 10,
+        titleFont: {
+          size: 14
+        },
+        bodyFont: {
+          size: 13
+        }
       }
     }
   };

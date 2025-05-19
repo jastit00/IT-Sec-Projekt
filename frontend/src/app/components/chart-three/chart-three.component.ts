@@ -3,6 +3,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ChartModule } from 'primeng/chart';  
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../api-client';
+import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-chart-three',
@@ -15,34 +16,61 @@ import { DefaultService } from '../../api-client';
 export class ChartThreeComponent implements OnInit{
   
   private defaultService = inject(DefaultService);
+  private updateService = inject(ChartUpdateService);
   
   data = {
     labels: ['Ip1', 'Ip2', 'Ip3', 'Ip4', 'Ip5'],
     datasets: [{
+      label: 'attempted logins by IP',
       data: [0, 25, 50, 75, 100], //stimmen noch nicht
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
 
-  ngOnInit(): void {  // Requests nach DST IP durchsuchen
-    this.defaultService.logfilesProcessedLoginsGet().subscribe((http_requests: any[]) => {
-      const ipCountMap: { [ip: string]: number } = {};
+
+  ngOnInit(): void {
   
-      http_requests.forEach(entry => {  // DST IP in Chart anzeigen
-        const target_ip = entry.ip_address;
-        ipCountMap[target_ip] = (ipCountMap[target_ip] || 0) + 1;
-      });
-  
-      this.data = {
-        labels: Object.keys(ipCountMap),
-        datasets: [{
-          //label: 'Login-Versuche pro IP',
-          data: Object.values(ipCountMap),
-          backgroundColor: []
-        }]
-      };
-    });
+  this.loadData();
+  this.updateService.updateChart$.subscribe(() => {
+    console.log('in der component');
+    this.loadData();
+  });
+
   }
+
+ loadData() {
+    
+  
+  const TARGET_DST_IP = '192.168.0.88';  // festgelegte Ziel-IP
+
+  this.defaultService.logfilesDosPacketsGet().subscribe((entries: any[]) => {
+    const packetMap: { [srcIp: string]: number } = {};
+
+    entries.forEach(entry => {
+      if (entry.dst_ip_address === TARGET_DST_IP) {
+        const srcIp = entry.src_ip_address;
+        const packets = parseInt(entry.packets, 10);  // Wichtig: von string zu number
+
+        if (!isNaN(packets)) {
+          packetMap[srcIp] = (packetMap[srcIp] || 0) + packets;
+        }
+      }
+    });
+
+    const labels = Object.keys(packetMap);
+    const dataValues = Object.values(packetMap);
+
+    this.data = {
+      labels,
+      
+      datasets: [{
+        label: 'attempted logins by IP',
+        data: dataValues,
+        backgroundColor: ['#FF6384']
+      }]
+    };
+  });
+}
   
   options = {
     responsive: true,
