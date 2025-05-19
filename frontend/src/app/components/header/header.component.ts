@@ -8,6 +8,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
 import { BadgeModule } from 'primeng/badge';
 import { EventService } from '../../services/event-service';
+import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
   selector: 'app-header',
@@ -30,8 +31,10 @@ export class HeaderComponent implements OnInit {
   private chartVisibilityService = inject(ChartVisibilityService);
   private dialog = inject(MatDialog);
   private eventService = inject(EventService);
+  private updateService = inject(ChartUpdateService);
 
   constructor() {
+
     // Initialize charts from the service
     this.charts = this.chartVisibilityService.getAllCharts();
     
@@ -150,7 +153,10 @@ export class HeaderComponent implements OnInit {
         next: (result) => {
           this.dialog.open(UploadResultDialogComponent, {
             data: result
+            
           });
+            this.updateService.triggerChartUpdate();
+
         },
         error: (err) => {
           // If server returns JSON with "status" and "message"
