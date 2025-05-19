@@ -5,6 +5,7 @@
       <th>Date</th>
       <th>Event</th>
       <th>Status</th>
+      <th>IPs</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -15,16 +16,16 @@
       <td>{{ event.event }}</td>
       <td><span class="status {{ event.status }}">{{ event.status }}</span></td>
       <td>
-        <div ngIf="event.ips.length > 0; else noIps">
-          @for(ips of event.ips; track ips) {
-            <span class="ip-badge">{{ ips }}</span>
+        @if (event.ips && event.ips.length > 0) {
+          @for(ip of event.ips; track ip) {
+            <span class="ip-badge">{{ ip }}</span>
           }
-        </div>
-        <ng-template #noIps>
+        } @else {
           <span class="no-ips">Keine</span>
-        </ng-template>
+        }
       </td>
+      <td>{{ event.description }}</td>
     </tr>
-  }
+    }
   </tbody>
 </table>

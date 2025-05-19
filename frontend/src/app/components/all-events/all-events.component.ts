@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { EventService } from '../../services/event-service';
+import { EventService, SecurityEvent } from '../../services/event-service';
 
 @Component({
   selector: 'app-all-events',
@@ -7,8 +7,9 @@ import { EventService } from '../../services/event-service';
   styleUrls: ['./all-events.component.scss']
 })
 export class AllEventsComponent {
-  events: { id: number; date: string; relativeTime: string; event: string; status: string; ips: string[]; }[];
-  constructor(private eventService: EventService) { 
-    this.events = this.eventService.events;
+  events: SecurityEvent[];
+
+  constructor(private eventService: EventService) {
+    this.events = this.eventService.getAllEvents();
   }
 }
