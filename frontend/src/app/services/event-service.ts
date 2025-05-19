@@ -85,12 +85,12 @@ export class EventService {
       //extract all IP addresses 
       const ips = this.extractIPs(backendEvent);
       
-      console.log(`Event ${backendEvent.id} (${backendEvent.event_type}):`, {
+     /**  console.log(`Event ${backendEvent.id} (${backendEvent.event_type}):`, {
         source_ips: backendEvent.source_ips,
         src_ip_address: backendEvent.src_ip_address,
         extracted_ips: ips,
         details: backendEvent.details
-      });
+      });*/
       
       return {
         id: backendEvent.id,
