@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of, tap, finalize } from 'rxjs';
-// Import the DefaultService from the API client
+//Import API
 import { DefaultService } from '../api-client';
-// Import the Events interface from our models folder
+//und Events interface auch
 import { Events } from '../models/events.model';
-// Frontend interface for security events
+
+//frontend interface für die security events
 export interface SecurityEvent {
   id: number;
   date: string;
@@ -13,7 +14,9 @@ export interface SecurityEvent {
   event: string;
   status: 'Kritisch' | 'Warnung' | 'Normal';
   ips: string[];
+  description: string;
 }
+
 @Injectable({
   providedIn: 'root'
 })
@@ -21,16 +24,18 @@ export class EventService {
   // Use inject instead of constructor injection
   private defaultService = inject(DefaultService);
   private httpClient = inject(HttpClient);
-  private apiBaseUrl = 'http://localhost:8000/api'; // Base URL for direct HTTP calls
+  private apiBaseUrl = 'http://localhost:8000/api'; // base URL
   
-  // Current events from the API call
+  //aktuelle  events von API call
   events: SecurityEvent[] = [];
   loading = false;
+
   constructor() {
     // Load data on initialization
     this.loadEventsFromBackend().subscribe(); // Direkt subscribe, sonst lädt es nicht
   }
-  // Method to load data from the backend
+
+  //method to load data from backend
   loadEventsFromBackend(): Observable<SecurityEvent[]> {
     this.loading = true;
     
@@ -64,15 +69,28 @@ export class EventService {
     }
     
     return backendEvents.map(backendEvent => {
-      // Format date for display
+      //format date for display
       const eventDate = new Date(backendEvent.timestamp);
       const formattedDate = this.formatDate(eventDate);
       
-      // Calculate relative time
+      //calculate relative time
       const relativeTime = this.calculateRelativeTime(eventDate);
       
-      // Map status based on severity
+      //map status based on severity
       const status = this.mapSeverityToStatus(backendEvent.severity);
+      
+      //generate description 
+      const description = this.generateDescription(backendEvent);
+      
+      //extract all IP addresses 
+      const ips = this.extractIPs(backendEvent);
+      
+      console.log(`Event ${backendEvent.id} (${backendEvent.event_type}):`, {
+        source_ips: backendEvent.source_ips,
+        src_ip_address: backendEvent.src_ip_address,
+        extracted_ips: ips,
+        details: backendEvent.details
+      });
       
       return {
         id: backendEvent.id,
@@ -80,17 +98,40 @@ export class EventService {
         relativeTime: relativeTime,
         event: backendEvent.event_type,
         status: status,
-        ips: backendEvent.source_ips || []
+        ips: ips,
+        description: description
       };
     });
   }
-  // Helper method for date formatting (DD.MM.YYYY)
+
+  //description based on event type
+  private generateDescription(event: Events): string {
+    switch (event.event_type.toLowerCase()) {
+      case 'network packet':
+        return ''; //nw packet geht ja noch nicht
+      case 'logout':
+        return event.result || '';
+      case 'login':
+        return event.result || '';
+      case 'incident':
+        //incident_type + src_ip_address + reason
+        return `${event.incident_type || ''};${event.src_ip_address || ''};${event.reason || ''}`.trim();
+      case 'config change':
+        //action + result
+        return `${event.action || ''} ${event.result || ''}`.trim();
+      default:
+        return '';
+    }
+  }
+
+  //date formatierung
   private formatDate(date: Date): string {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
   }
+
   // Helper method for calculating relative time
   private calculateRelativeTime(date: Date): string {
     const now = new Date();
@@ -98,6 +139,7 @@ export class EventService {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
+
     if (diffDays > 0) {
       return `(vor ${diffDays} ${diffDays === 1 ? 'Tag' : 'Tagen'})`;
     } else if (diffHours > 0) {
@@ -106,7 +148,8 @@ export class EventService {
       return `(vor ${diffMins} ${diffMins === 1 ? 'Minute' : 'Minuten'})`;
     }
   }
-  // Helper method for mapping severity levels
+
+
   private mapSeverityToStatus(severity: string): 'Kritisch' | 'Warnung' | 'Normal' {
     severity = severity.toLowerCase();
     if (severity.includes('critical') || severity.includes('kritisch') || severity.includes('high')) {
@@ -117,9 +160,53 @@ export class EventService {
       return 'Normal';
     }
   }
+  
+  // Helper method to extract IPs from event
+  private extractIPs(event: Events): string[] {
+    const ips: string[] = [];
+    
+    //check if the event has source_ips
+    if (event.source_ips && Array.isArray(event.source_ips)) {
+      event.source_ips.forEach(ip => {
+        if (ip && typeof ip === 'string' && ip.trim() !== '') {
+          ips.push(ip.trim());
+        }
+      });
+    }
+    
+    //check src_ip_address 
+    if (event.src_ip_address && typeof event.src_ip_address === 'string' && event.src_ip_address.trim() !== '') {
+      const ip = event.src_ip_address.trim();
+      if (!ips.includes(ip)) {
+        ips.push(ip);
+      }
+    }
+    
+    //check IP
+    if (event.event_type.toLowerCase() === 'incident' && event.details) {
+      if (event.details.src_ip_address && typeof event.details.src_ip_address === 'string') {
+        const ip = event.details.src_ip_address.trim();
+        if (ip !== '' && !ips.includes(ip)) {
+          ips.push(ip);
+        }
+      }
+      
+      //check ipAddress
+      if (event.details.ipAddress && typeof event.details.ipAddress === 'string') {
+        const ip = event.details.ipAddress.trim();
+        if (ip !== '' && !ips.includes(ip)) {
+          ips.push(ip);
+        }
+      }
+    }
+    
+    return ips;
+  }
+
   getCriticalEvents(): SecurityEvent[] {
     return this.events.filter(event => event.status === 'Kritisch');
   }
+
   getCriticalEventsCount(): number {
     return this.getCriticalEvents().length;
   }
