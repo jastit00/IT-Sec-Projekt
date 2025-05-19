@@ -27,7 +27,7 @@ export class ChartThreeComponent implements OnInit{
   data = {
     labels: ['Ip1', 'Ip2', 'Ip3', 'Ip4', 'Ip5'],
     datasets: [{
-      label: 'attempted logins by IP',
+      label: 'forwarded packets by source IP',
       data: [0, 25, 50, 75, 100], //stimmen noch nicht
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
@@ -97,7 +97,7 @@ export class ChartThreeComponent implements OnInit{
       labels,
       
       datasets: [{
-        label: 'attempted logins by IP',
+        label: 'forwarded packets by source IP',
         data: dataValues,
         backgroundColor: ['#FF6384']
       }]
