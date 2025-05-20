@@ -18,10 +18,10 @@ class UserLogout(models.Model):
     username = models.CharField(max_length=100)
     terminal = models.CharField(max_length=20, blank=True)
     result = models.CharField(max_length=20)
-    event_type = models.CharField(max_length=50, default='logout')  # NEU
+    event_type = models.CharField(max_length=50, default='logout')
     severity = models.CharField(max_length=20, default='normal')
     def __str__(self):
-       return f"{self.username} at {self.timestamp} "
+       return f"{self.username} at {self.timestamp}"
 
 class UsysConfig(models.Model):
     timestamp = models.DateTimeField()
@@ -32,7 +32,7 @@ class UsysConfig(models.Model):
     condition = models.CharField(max_length=100) 
     terminal = models.CharField(max_length=100)
     result = models.CharField(max_length=20)
-    event_type = models.CharField(max_length=50, default='config change')  # NEU
+    event_type = models.CharField(max_length=50, default='config change')
     severity = models.CharField(max_length=20, default='normal')
     def __str__(self):
         return f"{self.action} {self.key} at {self.timestamp} with value {self.value}"
@@ -44,8 +44,6 @@ class UploadedLogFile(models.Model):
     uploaded_by = models.CharField(max_length=150, null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20)
-
-    
     entries_created = models.IntegerField(default=0)
     incidents_created_total = models.IntegerField(default=0)
 # dicts speichern ,  JSONField (ab Django 3.1+)
