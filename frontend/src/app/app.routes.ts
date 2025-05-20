@@ -14,5 +14,6 @@ export const routes: Routes = [
     { path: 'hidden-backdoor', component: TeapotComponent },
     { path: 'dashboard/1', redirectTo: 'dashboard' },
     { path: 'dashboard/2', redirectTo: 'dashboard' },
+    { path: '', redirectTo: 'dashboard', pathMatch: 'full'},
     { path: '**', redirectTo: 'not-found' }
 ];
