@@ -1,7 +1,7 @@
 from datetime import timedelta
 #from django.shortcuts import render
 #from django.http import JsonResponse
-from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPacket, UploadedLogFile
+from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
 from incident_detector.models import Incident, RelatedLog,DDosIncident,DosIncident
 from collections import defaultdict
 #from django.utils import timezone

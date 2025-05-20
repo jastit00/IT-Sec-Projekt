@@ -4,7 +4,8 @@ import tempfile
 import hashlib
 from datetime import datetime
 from django.utils import timezone
-from log_processor.models import UploadedLogFile, UserLogin, UserLogout, UsysConfig, NetfilterPacket
+from collections import defaultdict
+from log_processor.models import UploadedLogFile, UserLogin, UserLogout, UsysConfig, NetfilterPackets
 from incident_detector.services import detect_incidents
 
 def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
@@ -47,17 +48,10 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
         source=source,
         uploaded_by=uploaded_by_user,
         uploaded_at=timezone.now(),
-        status='success' if result.get('status') != 'error' else 'error',
-        entries_created=result.get('entries_created', 0),
-        incidents_created_total=result.get('incidents_created_total', 0),
-        incident_counts=result.get('incident_counts', {})  
+        status='success' if result.get('status') != 'error' else 'error'
     )
-    return {
-    "status": result.get("status", "success"),
-    "uploaded_log_file": uploaded_log_file,
-    "entries_created": result.get("entries_created", 0),
-    "incidents_created": result.get("incidents_created", 0)
-}
+    return {"status": "success", "uploaded_log_file": uploaded_log_file}
+
 
 
 def process_log_file(file_path):
@@ -72,7 +66,8 @@ def process_log_file(file_path):
         dict: A dictionary containing the status of the processing and the number of entries created.
     """
     entries_created = 0
- 
+    packet_counts = defaultdict(int)
+
     try:
         with open(file_path, 'r') as log_file:
             for line in log_file:
@@ -85,21 +80,21 @@ def process_log_file(file_path):
                         continue
 
                     username = extract_match(r'acct="([^"]*)"', line)
-                    src_ip_address = extract_match(r'addr=([^\s]*)', line)
+                    ip_address = extract_match(r'addr=([^\s]*)', line)
                     result = extract_match(r'res=([^\'\s]*)', line)
                     terminal = extract_match(r'terminal=([^\s]*)', line)
 
                     if not UserLogin.objects.filter(
                         timestamp=timestamp,
                         username=username,
-                        src_ip_address=src_ip_address,
+                        ip_address=ip_address,
                         result=result,
                         terminal=terminal
                     ).exists():
                         UserLogin.objects.create(
                             timestamp=timestamp,
                             username=username,
-                            src_ip_address=src_ip_address,
+                            ip_address=ip_address,
                             result=result,
                             terminal=terminal,
                             severity="normal" if result == "success" else "warning"
@@ -173,9 +168,13 @@ def process_log_file(file_path):
                     timestamp = extract_timestamp(line)
                     if not timestamp:
                         continue
-
-                    src_ip_address = extract_match(r'saddr=([^\s]*)', line)
-                    dst_ip_address = extract_match(r'daddr=([^\s]*)', line)
+                    
+                    # maybe tweak later (30s timeframe)
+                    second = 0 if timestamp.second < 30 else 30
+                    timestamp_minute = timestamp.replace(second=second, microsecond=0)
+                    
+                    source_ip = extract_match(r'saddr=([^\s]*)', line)
+                    destination_ip = extract_match(r'daddr=([^\s]*)', line)
                     protocol_number = extract_match(r'proto=([^\s]*)', line)
 
                     match protocol_number:
@@ -187,31 +186,28 @@ def process_log_file(file_path):
                             protocol = "UDP"
                         case _:
                             protocol = f"not defined ({protocol_number})" if protocol_number else "not defined"
-
-                    if not NetfilterPacket.objects.filter(
-                        timestamp=timestamp,
-                        src_ip_address=src_ip_address,
-                        dst_ip_address=dst_ip_address,
-                        protocol=protocol
-                    ).exists():
-                        NetfilterPacket.objects.create(
-                            timestamp=timestamp,
-                            src_ip_address=src_ip_address,
-                            dst_ip_address=dst_ip_address,
-                            protocol=protocol
-                        )
-                        entries_created += 1
-
+                    
+                    key = (timestamp_minute, source_ip, destination_ip, protocol)
+                    packet_counts[key] += 1
         
-        result = detect_incidents()
+        for (timestamp_minute, source_ip, destination_ip, protocol), count in packet_counts.items():
+            NetfilterPackets.objects.create(
+                timestamp=timestamp_minute,
+                source_ip=source_ip,
+                destination_ip=destination_ip,
+                protocol=protocol,
+                count=count
+            )
+            entries_created += 1  
+                    
+        
+        incidents_created = detect_incidents()
 
         return {
-    "status": "success",
-    "entries_created": entries_created,
-    "incidents_created_total": len(result["incidents"]),
-    "incident_counts": result["counts"]
+            "status": "success",
+            "entries_created": entries_created,
+            "incidents_created": incidents_created
         }
-
 
     except FileNotFoundError:
         return {
@@ -224,7 +220,6 @@ def process_log_file(file_path):
             "message": str(e)
         }
     
-
 def extract_timestamp(line):
     """
     Helper function to extract the timestamp from a log line.
@@ -241,6 +236,8 @@ def extract_match(pattern, line, default=""):
     """
     match = re.search(pattern, line)
     return match.group(1) if match else default
+
+
 
 
 

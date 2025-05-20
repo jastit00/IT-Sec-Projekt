@@ -1,5 +1,5 @@
 from django.db import models
-from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPacket, UploadedLogFile
+from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPackets, UploadedLogFile
 
 # Create your models here.
 class Incident(models.Model):
@@ -91,7 +91,7 @@ class RelatedLog(models.Model):
     # Optional foreign keys - one of these will be set
     user_login = models.ForeignKey(UserLogin, on_delete=models.SET_NULL, null=True, blank=True)
     usys_config = models.ForeignKey(UsysConfig, on_delete=models.SET_NULL, null=True, blank=True)
-    netfilter_packet = models.ForeignKey(NetfilterPacket, on_delete=models.SET_NULL, null=True, blank=True)
+    netfilter_packet = models.ForeignKey(NetfilterPackets, on_delete=models.SET_NULL, null=True, blank=True)
     
     
     def __str__(self):

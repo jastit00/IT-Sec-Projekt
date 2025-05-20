@@ -34,7 +34,8 @@ class UsysConfig(models.Model):
     result = models.CharField(max_length=20)
     event_type = models.CharField(max_length=50, default='config change')  # NEU
     severity = models.CharField(max_length=20, default='normal')
-    
+    def __str__(self):
+        return f"{self.action} {self.key} at {self.timestamp} with value {self.value}"
 
 class UploadedLogFile(models.Model):
     filename = models.CharField(max_length=255)
@@ -49,14 +50,17 @@ class UploadedLogFile(models.Model):
     incidents_created_total = models.IntegerField(default=0)
 # dicts speichern ,  JSONField (ab Django 3.1+)
     incident_counts = models.JSONField(default=dict, blank=True)
+    def __str__(self):
+        return f"{self.filename} uploaded by {self.uploaded_by} at {self.uploaded_at}"
     
-class NetfilterPacket(models.Model):
+class NetfilterPackets(models.Model):
     timestamp = models.DateTimeField()
-    src_ip_address = models.GenericIPAddressField()
-    dst_ip_address= models.GenericIPAddressField()
+    source_ip = models.GenericIPAddressField()
+    destination_ip = models.GenericIPAddressField()
     protocol = models.CharField(max_length=10)
-    event_type = models.CharField(max_length=50, default='network packet')  # NEU
+    event_type = models.CharField(max_length=50, default='network packets')
+    count = models.IntegerField(default=0)   
     severity = models.CharField(max_length=20, default='normal')
     def __str__(self):
-        return f"{self.src_ip_address} to {self.dst_ip_address} at {self.timestamp}"
+        return f"{self.source_ip} to {self.destination_ip} at {self.timestamp}"
     
