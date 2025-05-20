@@ -1,29 +1,30 @@
 from rest_framework import serializers
-from .models import User_Login, User_Logout, Usys_Config
+from .models import UserLogin, UserLogout, UsysConfig, NetfilterPackets,UploadedLogFile
 from django.utils import timezone
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_Login
+        model = UserLogin
         fields = '__all__'
 
 class UserLogoutSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_Logout
+        model = UserLogout
         fields = '__all__'
 
 class UsysConfigSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Usys_Config
+        model = UsysConfig
         fields = '__all__'
-
-    def get_changedSettings(self, obj):
+        
+class NetfilterPacketsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetfilterPackets
+        fields = '__all__'
+def get_changedSettings(self, obj):
         return [f"{obj.table}:{obj.key}={obj.value}"]
-
-class LogFileSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    filename = serializers.CharField(read_only=True)
-    file_hash = serializers.CharField(max_length=64)
-    source = serializers.CharField(required=False)
-    uploaded_by = serializers.CharField(read_only=True)
-    uploaded_at = serializers.DateTimeField(read_only=True, default=timezone.now)
-    status = serializers.ChoiceField(choices=['success', 'error'], read_only=True)
+    
+ 
+class LogFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UploadedLogFile
+        fields = '__all__'

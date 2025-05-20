@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Incident
+from .models import Incident,DosIncident,DDosIncident
 from log_processor.serializers import UserLoginSerializer
 
 class IncidentSerializer(serializers.ModelSerializer):
@@ -7,4 +7,17 @@ class IncidentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Incident
+        fields = '__all__'
+
+class DosIncidentSerializer(serializers.ModelSerializer):
+    # related_logs = UserLoginSerializer(many=True, read_only=True)
+    class Meta:
+        model = DosIncident
+        fields = '__all__'
+
+
+class DDosIncidentSerializer(serializers.ModelSerializer):
+    # related_logs = UserLoginSerializer(many=True, read_only=True)
+    class Meta:
+        model = DDosIncident
         fields = '__all__'
