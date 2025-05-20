@@ -2,11 +2,9 @@ from datetime import timedelta
 #from django.shortcuts import render
 #from django.http import JsonResponse
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog,DDosIncident,DosIncident
+from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident
 from collections import defaultdict
 #from django.utils import timezone
-
-
 
 
 BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
@@ -42,23 +40,23 @@ def detect_incidents():
     bf_result = detect_bruteforce()
     cc_result = detect_critical_config_change()
     cl_result = detect_concurrent_logins()
-    dos_result = detect_dos_attack()
-    ddos_result = detect_ddos_attack()
+    #dos_result = detect_dos_attack()
+    #ddos_result = detect_ddos_attack()
 
     counts = {
         "bruteforce": bf_result["bruteforce"],
         "critical_config_change": cc_result["critical_config_change"],
-        "concurrent_logins": cl_result["concurrent_logins"],
-        "dos_attack": dos_result["dos_attacks"],
-        "ddos_attack": ddos_result["ddos_attacks"]
+        "concurrent_logins": cl_result["concurrent_logins"]
+        #"dos_attack": dos_result["dos_attacks"],
+        #"ddos_attack": ddos_result["ddos_attacks"]
     }
 
     all_new_incidents = (
         bf_result["incidents"] +
         cc_result["incidents"] +
-        cl_result["incidents"] +
-        dos_result["incidents"] +
-        ddos_result["incidents"]
+        cl_result["incidents"]# +
+        #dos_result["incidents"] +
+        #ddos_result["incidents"]
     )
 
     return {
@@ -66,25 +64,6 @@ def detect_incidents():
         "incidents": all_new_incidents
     }
 
-
-def format_timedelta(delta):
-    """
-    Converts a timedelta object into a short  string.
-    
-    Parameters:
-        delta (timedelta): The timedelta object to format.
-    
-    Returns:
-        str: a string of minutes and seconds.
-    """
-    seconds = int(delta.total_seconds())
-    minutes, seconds = divmod(seconds, 60)
-    if minutes and seconds:
-        return f"{minutes} minutes and {seconds} seconds"
-    elif minutes:
-        return f"{minutes} minutes"
-    else:
-        return f"{seconds} seconds"
 
 def detect_bruteforce():
     """
@@ -149,11 +128,6 @@ def detect_bruteforce():
                         incident_type="bruteforce"
                     )
 
-                    RelatedLog.objects.bulk_create([
-                        RelatedLog(incident=incident, user_login=attempt)
-                        for attempt in window_attempts
-                    ])
-
                     incidents_created += 1
                     new_incidents.append(incident)
                 start = current  # Move to the end of the current window
@@ -211,13 +185,9 @@ def detect_critical_config_change():
                 incident_type="config_change"
             )
             
-            RelatedLog.objects.bulk_create([
-                RelatedLog(incident=incident, usys_config=config_change)
-            ]) 
             new_incidents.append(incident)
             incidents_created += 1
              
-
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
 def detect_concurrent_logins():
@@ -390,3 +360,21 @@ def detect_ddos_attack():
     return {"ddos_attacks": incidents_created, "incidents": new_incidents}
 
 
+def format_timedelta(delta):
+    """
+    Converts a timedelta object into a short  string.
+    
+    Parameters:
+        delta (timedelta): The timedelta object to format.
+    
+    Returns:
+        str: a string of minutes and seconds.
+    """
+    seconds = int(delta.total_seconds())
+    minutes, seconds = divmod(seconds, 60)
+    if minutes and seconds:
+        return f"{minutes} minutes and {seconds} seconds"
+    elif minutes:
+        return f"{minutes} minutes"
+    else:
+        return f"{seconds} seconds"

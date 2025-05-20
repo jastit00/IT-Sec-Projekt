@@ -80,21 +80,21 @@ def process_log_file(file_path):
                         continue
 
                     username = extract_match(r'acct="([^"]*)"', line)
-                    ip_address = extract_match(r'addr=([^\s]*)', line)
+                    src_ip_address = extract_match(r'addr=([^\s]*)', line)
                     result = extract_match(r'res=([^\'\s]*)', line)
                     terminal = extract_match(r'terminal=([^\s]*)', line)
 
                     if not UserLogin.objects.filter(
                         timestamp=timestamp,
                         username=username,
-                        ip_address=ip_address,
+                        src_ip_address=src_ip_address,
                         result=result,
                         terminal=terminal
                     ).exists():
                         UserLogin.objects.create(
                             timestamp=timestamp,
                             username=username,
-                            ip_address=ip_address,
+                            src_ip_address=src_ip_address,
                             result=result,
                             terminal=terminal,
                             severity="normal" if result == "success" else "warning"
@@ -169,7 +169,7 @@ def process_log_file(file_path):
                     if not timestamp:
                         continue
                     
-                    # maybe tweak later (30s timeframe)
+                    # maybe tweak later (30s timeframe for packets)
                     second = 0 if timestamp.second < 30 else 30
                     timestamp_minute = timestamp.replace(second=second, microsecond=0)
                     
@@ -199,8 +199,7 @@ def process_log_file(file_path):
                 count=count
             )
             entries_created += 1  
-                    
-        
+                      
         incidents_created = detect_incidents()
 
         return {

@@ -44,7 +44,7 @@ class DDosIncident(models.Model):
     def __str__(self):
      return f"{self.reason} targeting {self.dst_ip_address} at {self.timestamp}"
 
-class LoginIncident(models.Model):
+class ConcurrentLoginIncident(models.Model):
     timestamp = models.DateTimeField()
     src_ip_address = models.GenericIPAddressField(null=True, blank=True)
     username = models.CharField(max_length=100)
