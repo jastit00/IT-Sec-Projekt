@@ -1,5 +1,4 @@
 #ignore keycloak
 
 frontend/keycloak-*/data/h2/*.mv.db
-node_modules
-.gitignore
+
