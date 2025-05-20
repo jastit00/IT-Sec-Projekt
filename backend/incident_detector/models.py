@@ -53,7 +53,7 @@ class LoginIncident(models.Model):
     severity = models.CharField(max_length=20, default='critical') 
     incident_type = models.CharField(max_length=20, default='concurrentLogin') 
     def __str__(self):
-       return f"{self.username} at {self.timestamp} from {self.ip_address}"
+       return f"{self.username} at {self.timestamp} from {self.src_ip_address}"
 
 class ConfigIncident(models.Model):
     timestamp = models.DateTimeField()
@@ -64,7 +64,7 @@ class ConfigIncident(models.Model):
     severity = models.CharField(max_length=20, default='critical') 
     incident_type = models.CharField(max_length=20, default='configchange') 
     def __str__(self):
-       return f"{self.username} at {self.timestamp} from {self.ip_address}"
+       return f"{self.username} at {self.timestamp} from {self.src_ip_address}"
 
 class BruteforceIncident(models.Model):
     timestamp = models.DateTimeField()
@@ -100,5 +100,5 @@ class RelatedLog(models.Model):
         elif self.usys_config:
             return f"Config change {self.usys_config.action} on {self.usys_config.key}"
         elif self.netfilter_packet:
-            return f"Packet from {self.netfilter_packet.source_ip} to {self.netfilter_packet.destination_ip}"
+            return f"Packet from {self.netfilter_packet.src_ip_address} to {self.netfilter_packet.dst_ip_address}"
         return "Related log"

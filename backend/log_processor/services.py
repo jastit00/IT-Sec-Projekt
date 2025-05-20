@@ -47,10 +47,17 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
         source=source,
         uploaded_by=uploaded_by_user,
         uploaded_at=timezone.now(),
-        status='success' if result.get('status') != 'error' else 'error'
+        status='success' if result.get('status') != 'error' else 'error',
+        entries_created=result.get('entries_created', 0),
+        incidents_created_total=result.get('incidents_created_total', 0),
+        incident_counts=result.get('incident_counts', {})  
     )
-    return {"status": "success", "uploaded_log_file": uploaded_log_file}
-
+    return {
+    "status": result.get("status", "success"),
+    "uploaded_log_file": uploaded_log_file,
+    "entries_created": result.get("entries_created", 0),
+    "incidents_created": result.get("incidents_created", 0)
+}
 
 
 def process_log_file(file_path):
@@ -65,7 +72,7 @@ def process_log_file(file_path):
         dict: A dictionary containing the status of the processing and the number of entries created.
     """
     entries_created = 0
-
+ 
     try:
         with open(file_path, 'r') as log_file:
             for line in log_file:
@@ -78,21 +85,21 @@ def process_log_file(file_path):
                         continue
 
                     username = extract_match(r'acct="([^"]*)"', line)
-                    ip_address = extract_match(r'addr=([^\s]*)', line)
+                    src_ip_address = extract_match(r'addr=([^\s]*)', line)
                     result = extract_match(r'res=([^\'\s]*)', line)
                     terminal = extract_match(r'terminal=([^\s]*)', line)
 
                     if not UserLogin.objects.filter(
                         timestamp=timestamp,
                         username=username,
-                        ip_address=ip_address,
+                        src_ip_address=src_ip_address,
                         result=result,
                         terminal=terminal
                     ).exists():
                         UserLogin.objects.create(
                             timestamp=timestamp,
                             username=username,
-                            ip_address=ip_address,
+                            src_ip_address=src_ip_address,
                             result=result,
                             terminal=terminal,
                             severity="normal" if result == "success" else "warning"
@@ -167,8 +174,8 @@ def process_log_file(file_path):
                     if not timestamp:
                         continue
 
-                    source_ip = extract_match(r'saddr=([^\s]*)', line)
-                    destination_ip = extract_match(r'daddr=([^\s]*)', line)
+                    src_ip_address = extract_match(r'saddr=([^\s]*)', line)
+                    dst_ip_address = extract_match(r'daddr=([^\s]*)', line)
                     protocol_number = extract_match(r'proto=([^\s]*)', line)
 
                     match protocol_number:
@@ -183,25 +190,28 @@ def process_log_file(file_path):
 
                     if not NetfilterPacket.objects.filter(
                         timestamp=timestamp,
-                        source_ip=source_ip,
-                        destination_ip=destination_ip,
+                        src_ip_address=src_ip_address,
+                        dst_ip_address=dst_ip_address,
                         protocol=protocol
                     ).exists():
                         NetfilterPacket.objects.create(
                             timestamp=timestamp,
-                            source_ip=source_ip,
-                            destination_ip=destination_ip,
+                            src_ip_address=src_ip_address,
+                            dst_ip_address=dst_ip_address,
                             protocol=protocol
                         )
                         entries_created += 1
 
-        incidents_created = detect_incidents()
+        
+        result = detect_incidents()
 
         return {
-            "status": "success",
-            "entries_created": entries_created,
-            "incidents_created": incidents_created
+    "status": "success",
+    "entries_created": entries_created,
+    "incidents_created_total": len(result["incidents"]),
+    "incident_counts": result["counts"]
         }
+
 
     except FileNotFoundError:
         return {

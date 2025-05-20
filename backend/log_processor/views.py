@@ -44,14 +44,18 @@ class LogFileUploadView(APIView):
 
         serializer = LogFileSerializer(result["uploaded_log_file"])
         data = serializer.data
-        filtered_data = {
-            'id': data.get('id'),
-            'status': data.get('status'),
-            'filename': data.get('filename'),
-        }
 
+        filtered_data = {
+        'id': data.get('id'),
+        'status': data.get('status'),
+        'filename': data.get('filename'),
+        'entries_created': data.get('entries_created', 0),               # aus Serializer, also DB
+        'incidents_created_total': data.get('incidents_created_total', 0), # aus Serializer, also DB
+        'incident_counts': data.get('incident_counts', {}),             # aus result, falls nicht im Model
+}
         logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
+
 
 @csrf_exempt
 @api_view(['GET'])
@@ -104,6 +108,7 @@ def unified_event_log(request):
     usys_configs = UsysConfig.objects.all()
     packet_input = NetfilterPacket.objects.all()
     ddos_incident=DDosIncident.objects.all()
+    dos_incident=DosIncident.objects.all()
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data
@@ -111,11 +116,12 @@ def unified_event_log(request):
     config_data = UsysConfigSerializer(usys_configs, many=True).data
     packet_input_data = NetfilterPacketSerializer(packet_input, many=True).data
     ddos_Incident_data = DDosIncidentSerializer(ddos_incident, many=True).data
+    dos_Incident_data = DosIncidentSerializer(dos_incident, many=True).data
     # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data
+    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data + dos_Incident_data
 
     # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address', 'action','result', 'severity','packet_input','incident_type',]
+    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address','dst_ip_address','action','result', 'severity','packet_input','incident_type','protocol',]
     filtered_events = filter_fields(all_events, fields_to_keep)
 
     # Sortieren von neu nach alt
