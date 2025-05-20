@@ -48,9 +48,19 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
         source=source,
         uploaded_by=uploaded_by_user,
         uploaded_at=timezone.now(),
-        status='success' if result.get('status') != 'error' else 'error'
+        status='success' if result.get('status') != 'error' else 'error',
+        entries_created=result.get('entries_created', 0),
+        incidents_created_total=result.get('incidents_created_total', 0),
+        incident_counts=result.get('incident_counts', {})
+       
     )
-    return {"status": "success", "uploaded_log_file": uploaded_log_file}
+    return {
+    "status": result.get("status", "success"),
+    "uploaded_log_file": uploaded_log_file,
+    "entries_created": result.get("entries_created", 0),
+    "incidents_created": result.get("incidents_created", 0)
+
+} 
 
 
 
@@ -200,13 +210,9 @@ def process_log_file(file_path):
             )
             entries_created += 1  
                       
-        incidents_created = detect_incidents()
+        result = detect_incidents()
 
-        return {
-            "status": "success",
-            "entries_created": entries_created,
-            "incidents_created": incidents_created
-        }
+        return {"status": "success","entries_created": entries_created,"incidents_created_total": len(result["incidents"]),"incident_counts": result["counts"]}
 
     except FileNotFoundError:
         return {
@@ -235,6 +241,7 @@ def extract_match(pattern, line, default=""):
     """
     match = re.search(pattern, line)
     return match.group(1) if match else default
+
 
 
 

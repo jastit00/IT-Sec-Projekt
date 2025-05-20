@@ -40,7 +40,7 @@ class DDosIncident(models.Model):
     packets=models.CharField(max_length=20) 
     protocol = models.CharField(max_length=10)
     reason = models.TextField()
-    sources = models.CharField(max_length=10)
+    sources = models.CharField(max_length=255)  # größer machen für mehrere IPs
     def __str__(self):
      return f"{self.reason} targeting {self.dst_ip_address} at {self.timestamp}"
 

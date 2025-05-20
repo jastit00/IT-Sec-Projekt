@@ -44,8 +44,6 @@ class UploadedLogFile(models.Model):
     uploaded_by = models.CharField(max_length=150, null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20)
-
-    
     entries_created = models.IntegerField(default=0)
     incidents_created_total = models.IntegerField(default=0)
 # dicts speichern ,  JSONField (ab Django 3.1+)
