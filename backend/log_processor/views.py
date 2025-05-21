@@ -121,7 +121,7 @@ def unified_event_log(request):
     all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data + dos_Incident_data
 
     # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address','dst_ip_address','action','result', 'severity','packet_input','incident_type','protocol',]
+    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address','dst_ip_address','action','result', 'severity','packet_input','incident_type','protocol','count']
     filtered_events = filter_fields(all_events, fields_to_keep)
 
     # Sortieren von neu nach alt
