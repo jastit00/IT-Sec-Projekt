@@ -37,14 +37,14 @@ CRITICAL_CONFIG_RULES = [
 def detect_incidents():
     bf_result = detect_bruteforce()
     cc_result = detect_critical_config_change()
-    #cl_result = detect_concurrent_logins()
+    cl_result = detect_concurrent_logins()
     dos_result = detect_dos_attack()
     ddos_result = detect_ddos_attack()
 
     counts = {
         "bruteforce": bf_result["bruteforce"],
         "critical_config_change": cc_result["critical_config_change"],
-       # "concurrent_logins": cl_result["concurrent_logins"],
+        "concurrent_logins": cl_result["concurrent_logins"],
         "dos_attack": dos_result["dos_attacks"],
         "ddos_attack": ddos_result["ddos_attacks"]
     }
@@ -52,7 +52,7 @@ def detect_incidents():
     all_new_incidents = (
         bf_result["incidents"] +
         cc_result["incidents"] +
-       # cl_result["incidents"] +
+        cl_result["incidents"] +
         dos_result["incidents"]+
         ddos_result["incidents"]
     )
@@ -191,35 +191,6 @@ def detect_critical_config_change():
              
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
-def detect_concurrent_logins():
-    """
-    Detects and logs simultaneous logins without a corresponding logout.
-
-    Returns:
-        dict: Number of simultaneous login incidents created.
-  
-    new_incidents=[]
-    all_successful_logins=UserLogin.objects.all().filter(result="success")
-    potential_used_accounts=[]
-    for login in all_successful_logins:
-        if (UserLogout.objects.all().filter(terminal=login.terminal).count())==0:
-            if login.username in potential_used_accounts:
-                if not ConcurrentLoginIncident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
-                    incident = Incident.objects.create(
-                        timestamp=login.timestamp,
-                        username=login.username,
-                        ip_address=login.ip_address,
-                        reason="Sucessful Simultaneous Login"
-                    ) # rest of attributes take default values
-                    RelatedLog.objects.bulk_create([RelatedLog.(incident=incident,user_login=login)])
-                    new_incidents.append(incident)
-            else:
-                potential_used_accounts.append(login.username)
-    return {"simultaneous_logins":len(simultaneous_logins_incidents), "incidents":new_incidents}
-
-"""
-
-
 
 def detect_dos_attack():
     """
@@ -279,10 +250,6 @@ def detect_dos_attack():
                 i += 1
 
     return {"dos_attacks": incidents_created, "incidents": new_incidents}
-
-
-
-
 
 
 
@@ -362,22 +329,61 @@ def detect_ddos_attack():
     }
 
 
+def detect_concurrent_logins():
+    """
+    Detects and logs simultaneous logins without a corresponding logout.
 
+    Returns:
+        dict: Number of simultaneous login incidents created.
+    """
+    incidents_created = 0
+    active_user_sessions = {}  # username -> IP
+    new_incidents = []
+    successful_logins = UserLogin.objects.filter(result="success").order_by("timestamp")
 
+    for login in successful_logins:
+        logout_found = UserLogout.objects.filter(
+            terminal=login.terminal,
+            timestamp__gt=login.timestamp
+        ).exists()
 
+        if not logout_found:
+            if login.username in active_user_sessions:
+                previous_ip = active_user_sessions[login.username]
 
+                # Prepare reason based on IP match
+                if login.src_ip_address == previous_ip:
+                    reason = f"{login.username} logged in from same IP {login.src_ip_address} without logout"
+                    severity = "medium"
+                else:
+                    reason = f"{login.username} logged in from {login.src_ip_address} (prev: {previous_ip}) without logout"
+                    severity = "high"
 
+                if not Incident.objects.filter(
+                    username=login.username,
+                    src_ip_address=login.src_ip_address,
+                    incident_type="concurrent_login"
+                ).exists():
+                    incident = Incident.objects.create(
+                        timestamp=login.timestamp,
+                        username=login.username,
+                        src_ip_address=login.src_ip_address,
+                        reason=reason,
+                        severity=severity,
+                        incident_type="concurrent_login"
+                    )
 
+                    RelatedLog.objects.bulk_create([
+                        RelatedLog(incident=incident, user_login=login)
+                    ])
 
+                    incidents_created += 1
+                    new_incidents.append(incident)
+            else:
+                # First time we've seen a login without logout for this user
+                active_user_sessions[login.username] = login.src_ip_address
 
-
-
-
-
-
-
-
-
+    return {"concurrent_logins": incidents_created, "incidents": new_incidents}
 
 def format_timedelta(delta):
     """
