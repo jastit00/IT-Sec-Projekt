@@ -1,6 +1,6 @@
 from datetime import timedelta
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident
+from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
 from collections import defaultdict
 
 
@@ -37,14 +37,14 @@ CRITICAL_CONFIG_RULES = [
 def detect_incidents():
     bf_result = detect_bruteforce()
     cc_result = detect_critical_config_change()
-    cl_result = detect_concurrent_logins()
+    #cl_result = detect_concurrent_logins()
     dos_result = detect_dos_attack()
     ddos_result = detect_ddos_attack()
 
     counts = {
         "bruteforce": bf_result["bruteforce"],
         "critical_config_change": cc_result["critical_config_change"],
-        "concurrent_logins": cl_result["concurrent_logins"],
+       # "concurrent_logins": cl_result["concurrent_logins"],
         "dos_attack": dos_result["dos_attacks"],
         "ddos_attack": ddos_result["ddos_attacks"]
     }
@@ -52,7 +52,7 @@ def detect_incidents():
     all_new_incidents = (
         bf_result["incidents"] +
         cc_result["incidents"] +
-        cl_result["incidents"] +
+       # cl_result["incidents"] +
         dos_result["incidents"]+
         ddos_result["incidents"]
     )
@@ -197,14 +197,14 @@ def detect_concurrent_logins():
 
     Returns:
         dict: Number of simultaneous login incidents created.
-    """
+  
     new_incidents=[]
-    all_successful_logins=User_Login.objects.all().filter(result="success")
+    all_successful_logins=UserLogin.objects.all().filter(result="success")
     potential_used_accounts=[]
     for login in all_successful_logins:
-        if (User_Logout.objects.all().filter(terminal=login.terminal).count())==0:
+        if (UserLogout.objects.all().filter(terminal=login.terminal).count())==0:
             if login.username in potential_used_accounts:
-                if not Incident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
+                if not ConcurrentLoginIncident.objects.filter(username=login.username, ip_address=login.ip_address, reason="Sucessful Simultaneous Login").exists():
                     incident = Incident.objects.create(
                         timestamp=login.timestamp,
                         username=login.username,
@@ -217,7 +217,7 @@ def detect_concurrent_logins():
                 potential_used_accounts.append(login.username)
     return {"simultaneous_logins":len(simultaneous_logins_incidents), "incidents":new_incidents}
 
-
+"""
 
 
 def detect_dos_attack():
