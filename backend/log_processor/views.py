@@ -109,6 +109,7 @@ def unified_event_log(request):
     packet_input = NetfilterPackets.objects.all()
     ddos_incident=DDosIncident.objects.all()
     dos_incident=DosIncident.objects.all()
+    
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data

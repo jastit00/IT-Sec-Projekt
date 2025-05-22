@@ -262,7 +262,7 @@ def detect_dos_attack():
     new_incidents = []
 
     for window in all_windows:
-        key = (window.source_ip, window.destination_ip, window.protocol)
+        key = (window.src_ip_address, window.dst_ip_address, window.protocol)
         packets_by_connection[key].append(window)
 
     for (src_ip, dst_ip, protocol), windows in packets_by_connection.items():
@@ -329,7 +329,7 @@ def detect_ddos_attack():
 
     # Gruppiere Pakete nach Ziel-IP und Protokoll
     for window in all_windows:
-        key = (window.destination_ip, window.protocol)
+        key = (window.dst_ip_address, window.protocol)
         windows_by_dst_proto[key].append(window)
 
     for (dst_ip, protocol), windows in windows_by_dst_proto.items():
@@ -344,7 +344,7 @@ def detect_ddos_attack():
             # Gruppiere nach Quell-IP
             traffic_by_source = defaultdict(int)
             for win in relevant_windows:
-                traffic_by_source[win.source_ip] += win.count
+                traffic_by_source[win.src_ip_address] += win.count
 
             # Zähle Quellen mit signifikantem Verkehr
             active_sources = [src for src, count in traffic_by_source.items() if count >= DDOS_PACKET_THRESHOLD]

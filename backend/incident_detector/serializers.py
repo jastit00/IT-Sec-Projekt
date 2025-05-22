@@ -21,3 +21,4 @@ class DDosIncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = DDosIncident
         fields = '__all__'
+        
