@@ -7,9 +7,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from log_processor.services import handle_uploaded_log_file  
 from log_processor.models import UserLogin, UsysConfig,UserLogout,NetfilterPackets
-from log_processor.serializers import LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketsSerializer
-from incident_detector.models import Incident,DosIncident,DDosIncident
-from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer,DDosIncidentSerializer
+from log_processor.serializers import LogFileSerializer, UserLoginSerializer,UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketsSerializer
+from incident_detector.models import Incident,DosIncident,DDosIncident,ConfigIncident,ConcurrentLoginIncident,BruteforceIncident
+from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer,DDosIncidentSerializer,ConfigIncidentSerializer,ConcurrentLoginIncidentSerializer,BruteforceIncidentSerializer
 
 
 
@@ -85,21 +85,6 @@ def processed_config_changes(request):
 
 @csrf_exempt
 @api_view(['GET'])
-def processed_incidents(request):
-    start = request.query_params.get('start')
-    end = request.query_params.get('end')
-    queryset = Incident.objects.all()
-    
-    if start:
-        queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
-    serializer = IncidentSerializer(queryset, many=True)
-
-    return Response(serializer.data)
-
-@csrf_exempt
-@api_view(['GET'])
 def unified_event_log(request):
     # Daten sammeln
     incidents = Incident.objects.all()
@@ -107,19 +92,29 @@ def unified_event_log(request):
     user_logouts = UserLogout.objects.all()
     usys_configs = UsysConfig.objects.all()
     packet_input = NetfilterPackets.objects.all()
+
     ddos_incident=DDosIncident.objects.all()
     dos_incident=DosIncident.objects.all()
-    
+    configsIncident=ConfigIncident.objects.all()
+    loginIncident=ConcurrentLoginIncident.objects.all()
+    bruteforceIncident=BruteforceIncident.objects.all()
+
+
     # Serialisieren
     incident_data = IncidentSerializer(incidents, many=True).data
     login_data = UserLoginSerializer(user_logins, many=True).data
     logout_data = UserLogoutSerializer(user_logouts, many=True).data
     config_data = UsysConfigSerializer(usys_configs, many=True).data
     packet_input_data = NetfilterPacketsSerializer(packet_input, many=True).data
+
     ddos_Incident_data = DDosIncidentSerializer(ddos_incident, many=True).data
     dos_Incident_data = DosIncidentSerializer(dos_incident, many=True).data
+    config_Incident_data = ConfigIncidentSerializer(configsIncident, many=True).data
+    loginIncident_data = ConcurrentLoginIncidentSerializer(loginIncident, many=True).data
+    bruteforceIncident = BruteforceIncidentSerializer(bruteforceIncident, many=True).data
+
     # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data + dos_Incident_data
+    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data + dos_Incident_data + config_Incident_data + loginIncident_data + bruteforceIncident
 
     # Nur gewünschte Felder behalten
     fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address','dst_ip_address','action','result', 'severity','packet_input','incident_type','protocol','count']

@@ -220,6 +220,7 @@ def detect_concurrent_logins():
 """
 
 
+
 def detect_dos_attack():
     """
     Detects potential DoS attacks based on aggregated packet counts in time windows.
@@ -357,6 +358,7 @@ def detect_ddos_attack():
     return {
         "ddos_attacks": incidents_created,
         "incidents": new_incidents
+        
     }
 
 
