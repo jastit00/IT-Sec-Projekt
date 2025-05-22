@@ -359,12 +359,12 @@ def detect_concurrent_logins():
                     reason = f"{login.username} logged in from {login.src_ip_address} (prev: {previous_ip}) without logout"
                     severity = "high"
 
-                if not Incident.objects.filter(
+                if not ConcurrentLoginIncident.objects.filter(
                     username=login.username,
                     src_ip_address=login.src_ip_address,
                     incident_type="concurrent_login"
                 ).exists():
-                    incident = Incident.objects.create(
+                    incident = ConcurrentLoginIncident.objects.create(
                         timestamp=login.timestamp,
                         username=login.username,
                         src_ip_address=login.src_ip_address,
@@ -372,10 +372,6 @@ def detect_concurrent_logins():
                         severity=severity,
                         incident_type="concurrent_login"
                     )
-
-                    RelatedLog.objects.bulk_create([
-                        RelatedLog(incident=incident, user_login=login)
-                    ])
 
                     incidents_created += 1
                     new_incidents.append(incident)

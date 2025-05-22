@@ -2,7 +2,7 @@ import os
 import requests
 
 # Pfad zum Ordner mit den Log-Dateien
-log_dir = r"C:\Users\Vincent\Proton Drive\vincent.kehl\My files\Studium\04.Semester\ITSec-Projekt\IT-Sec-Projekt\logs"  # anpassen
+log_dir = r"tmp"  # anpassen
 
 upload_url = "http://localhost:8000/api/logfiles/"
 
