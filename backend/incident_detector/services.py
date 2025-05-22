@@ -1,6 +1,6 @@
 from datetime import timedelta
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
+from incident_detector.models import Incident, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
 from collections import defaultdict
 
 
@@ -332,6 +332,7 @@ def detect_ddos_attack():
 def detect_concurrent_logins():
     """
     Detects and logs simultaneous logins without a corresponding logout.
+
     Returns:
         dict: Number of simultaneous login incidents created.
     """
@@ -341,10 +342,8 @@ def detect_concurrent_logins():
     for login in successful_logins:
         if (UserLogout.objects.filter(terminal=login.terminal).count())==0:
             if login.username in potential_used_accounts:
-                if not Incident.objects.filter(username=login.username,src_ip_address=login.src_ip_address,incident_type="concurrent_login").exists():
-                    incident = Incident.objects.create(timestamp=login.timestamp,username=login.username,src_ip_address=login.src_ip_address,reason="user logged in again without previous logout",severity="high",incident_type="concurrent_login")
-
-                    RelatedLog.objects.bulk_create([RelatedLog(incident=incident, user_login=login)])
+                if not ConcurrentLoginIncident.objects.filter(src_ip_address=login.src_ip_address,username=login.username,incident_type="concurrentLogin").exists():
+                    incident = ConcurrentLoginIncident.objects.create(timestamp=login.timestamp,username=login.username,src_ip_address=login.src_ip_address,reason="user logged in again without previous logout")
                     new_incidents.append(incident)
             else:
                 potential_used_accounts.append(login.username)
