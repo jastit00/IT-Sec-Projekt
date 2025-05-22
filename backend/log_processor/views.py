@@ -1,19 +1,35 @@
 import logging
+
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from log_processor.services import handle_uploaded_log_file  
-from log_processor.models import UserLogin, UsysConfig,UserLogout,NetfilterPackets
-from log_processor.serializers import LogFileSerializer, UserLoginSerializer,UsysConfigSerializer,UserLogoutSerializer,NetfilterPacketsSerializer
-from incident_detector.models import Incident,DosIncident,DDosIncident,ConfigIncident,ConcurrentLoginIncident,BruteforceIncident
-from incident_detector.serializers import IncidentSerializer,DosIncidentSerializer,DDosIncidentSerializer,ConfigIncidentSerializer,ConcurrentLoginIncidentSerializer,BruteforceIncidentSerializer
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from incident_detector.models import (
+    Incident, DosIncident, DDosIncident, ConfigIncident,
+    ConcurrentLoginIncident, BruteforceIncident
+)
+from incident_detector.serializers import (
+    IncidentSerializer, DosIncidentSerializer, DDosIncidentSerializer,
+    ConfigIncidentSerializer, ConcurrentLoginIncidentSerializer,
+    BruteforceIncidentSerializer
+)
+from log_processor.models import (
+    UserLogin, UsysConfig, UserLogout, NetfilterPackets
+)
+from log_processor.serializers import (
+    LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,
+    UserLogoutSerializer, NetfilterPacketsSerializer
+)
+from log_processor.services import handle_uploaded_log_file
 
 
 logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
+
+
+
 
 
 class LogFileUploadView(APIView):
@@ -45,125 +61,50 @@ class LogFileUploadView(APIView):
         serializer = LogFileSerializer(result["uploaded_log_file"])
         data = serializer.data
 
+
+
         filtered_data = {
         'id': data.get('id'),
         'status': data.get('status'),
         'filename': data.get('filename'),
-        'entries_created': data.get('entries_created', 0),               # aus Serializer, also DB
-        'incidents_created_total': data.get('incidents_created_total', 0), # aus Serializer, also DB
-        'incident_counts': data.get('incident_counts', {}),             # aus result, falls nicht im Model
+        'entries_created': data.get('entries_created', 0),            
+        'incidents_created_total': data.get('incidents_created_total', 0), 
+        'incident_counts': data.get('incident_counts', {}),           
 }
         logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
         return Response(filtered_data, status=status.HTTP_200_OK)
 
 
-@csrf_exempt
+
+
+
 @api_view(['GET'])
 def processed_logins(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    queryset = UserLogin.objects.all()
-    if start:
-        queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
-    serializer = UserLoginSerializer(queryset, many=True)
-    return Response(serializer.data)
+    data = get_filtered_queryset(
+        model=UserLogin,
+        serializer_class=UserLoginSerializer,
+        start=start,
+        end=end
+    )
+    return Response(data)
 
-@csrf_exempt
+
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    queryset = UsysConfig.objects.all()
-    if start:
-        queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
-    serializer = UsysConfigSerializer(queryset, many=True)
-    return Response(serializer.data)
-
-@csrf_exempt
-@api_view(['GET'])
-def unified_event_log(request):
-    # Daten sammeln
-    incidents = Incident.objects.all()
-    user_logins = UserLogin.objects.all()
-    user_logouts = UserLogout.objects.all()
-    usys_configs = UsysConfig.objects.all()
-    packet_input = NetfilterPackets.objects.all()
-
-    ddos_incident=DDosIncident.objects.all()
-    dos_incident=DosIncident.objects.all()
-    configsIncident=ConfigIncident.objects.all()
-    loginIncident=ConcurrentLoginIncident.objects.all()
-    bruteforceIncident=BruteforceIncident.objects.all()
-
-
-    # Serialisieren
-    incident_data = IncidentSerializer(incidents, many=True).data
-    login_data = UserLoginSerializer(user_logins, many=True).data
-    logout_data = UserLogoutSerializer(user_logouts, many=True).data
-    config_data = UsysConfigSerializer(usys_configs, many=True).data
-    packet_input_data = NetfilterPacketsSerializer(packet_input, many=True).data
-
-    ddos_Incident_data = DDosIncidentSerializer(ddos_incident, many=True).data
-    dos_Incident_data = DosIncidentSerializer(dos_incident, many=True).data
-    config_Incident_data = ConfigIncidentSerializer(configsIncident, many=True).data
-    loginIncident_data = ConcurrentLoginIncidentSerializer(loginIncident, many=True).data
-    bruteforceIncident = BruteforceIncidentSerializer(bruteforceIncident, many=True).data
-
-    # Alle Daten zusammenführen
-    all_events = incident_data + login_data + logout_data + config_data + packet_input_data + ddos_Incident_data + dos_Incident_data + config_Incident_data + loginIncident_data + bruteforceIncident
-
-    # Nur gewünschte Felder behalten
-    fields_to_keep = ['timestamp', 'event_type', 'reason','src_ip_address','dst_ip_address','action','result', 'severity','packet_input','incident_type','protocol','count']
-    filtered_events = filter_fields(all_events, fields_to_keep)
-
-    # Sortieren von neu nach alt
-    sorted_events = sorted(
-        filtered_events,
-        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
-        reverse=True
+    fields_to_keep = ['timestamp', 'action','terminal', 'result', 'event_type', 'severity']
+    data = get_filtered_queryset(
+        model=UsysConfig,
+        serializer_class=UsysConfigSerializer,
+        fields_to_keep=fields_to_keep,
+        start=start,
+        end=end
     )
+    return Response(data)
 
-    return Response(sorted_events)
-def filter_fields(data, fields_to_keep):
-
-#Filtert die Liste der Daten, sodass nur die angegebenen Felder beibehalten werden.
-    
-    return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
-
-
-
-@api_view(['GET'])
-def dos_packets(request):
-    start = request.query_params.get('start')
-    end = request.query_params.get('end')
-
-    queryset = DosIncident.objects.all()
-
-    if start:
-        queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
-
-    serializer = DosIncidentSerializer(queryset, many=True)
-
-    fields_to_keep = ['timestamp', 'src_ip_address', 'dst_ip_address', 'protocol', 'packets','timeDelta']
-    
-    filtered_events = [
-        {k: item[k] for k in fields_to_keep if k in item}
-        for item in serializer.data
-    ]
-
-    sorted_events = sorted(
-        filtered_events,
-        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
-        reverse=True
-    )
-
-    return Response(sorted_events)
 
 
 
@@ -172,27 +113,94 @@ def ddos_packets(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
 
-    queryset = DDosIncident.objects.all()
+    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets', 'timeDelta', 'sources']
 
-    if start:
-        queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
+    data = get_filtered_queryset(
+        model=DDosIncident,
+        serializer_class=DDosIncidentSerializer,
+        fields_to_keep=fields_to_keep,
+        start=start,
+        end=end
+    )
+    return Response(data)
 
-    serializer = DDosIncidentSerializer(queryset, many=True)
 
-    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets','timeDelta','sources']
-    
-    filtered_events = [
-        {k: item[k] for k in fields_to_keep if k in item}
-        for item in serializer.data
+
+
+@api_view(['GET'])
+def dos_packets(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+
+    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets', 'timeDelta', 'src_ip_address']
+
+    data = get_filtered_queryset(
+        model=DosIncident,
+        serializer_class=DosIncidentSerializer,
+        fields_to_keep=fields_to_keep,
+        start=start,
+        end=end
+    )
+    return Response(data)
+
+
+
+@csrf_exempt
+@api_view(['GET'])
+def unified_event_log(request):
+    models_and_serializers = [
+        (Incident, IncidentSerializer),
+        (UserLogin, UserLoginSerializer),
+        (UserLogout, UserLogoutSerializer),
+        (UsysConfig, UsysConfigSerializer),
+        (NetfilterPackets, NetfilterPacketsSerializer),
+        (DDosIncident, DDosIncidentSerializer),
+        (DosIncident, DosIncidentSerializer),
+        (ConfigIncident, ConfigIncidentSerializer),
+        (ConcurrentLoginIncident, ConcurrentLoginIncidentSerializer),
+        (BruteforceIncident, BruteforceIncidentSerializer),
     ]
 
+    all_events = []
+    for model, serializer in models_and_serializers:
+        queryset = model.objects.all() 
+        serialized = serializer(queryset, many=True).data
+        all_events.extend(serialized)
+
+    fields_to_keep = [
+        'timestamp', 'event_type', 'reason', 'src_ip_address', 'dst_ip_address',
+        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count'
+    ]
+
+    filtered_events = filter_fields(all_events, fields_to_keep)
     sorted_events = sorted(
         filtered_events,
         key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
         reverse=True
     )
-
     return Response(sorted_events)
 
+
+
+
+def filter_fields(data, fields_to_keep):
+    return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
+
+
+
+def get_filtered_queryset(model, serializer_class, start=None, end=None, fields_to_keep=None):
+    queryset = model.objects.all()
+    if start:
+        queryset = queryset.filter(timestamp__gte=start)
+    if end:
+        queryset = queryset.filter(timestamp__lte=end)
+
+    queryset = queryset.order_by('-timestamp')
+
+    serializer = serializer_class(queryset, many=True)
+    data = serializer.data
+
+    if fields_to_keep:
+        return filter_fields(data, fields_to_keep)
+
+    return data
