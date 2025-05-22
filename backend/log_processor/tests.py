@@ -1,7 +1,7 @@
 import os
 from django.test import TestCase
 from rest_framework.test import APIClient
-from .models import Usys_Config
+from .models import UsysConfig
 from .services import process_log_file
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -27,7 +27,7 @@ class UsysConfigLogTest(TestCase):
         self.assertEqual(result["status"], "success")
         self.assertEqual(result["entries_created"], 1)
 
-        entry = Usys_Config.objects.get(table="system_settings")
+        entry = UsysConfig.objects.get(table="system_settings")
         self.assertEqual(entry.key, "password_policy")
         self.assertEqual(entry.value, "none")
         self.assertEqual(entry.result, "success")
@@ -36,7 +36,7 @@ class UsysConfigLogTest(TestCase):
         process_log_file(self.test_log_path)
         result = process_log_file(self.test_log_path)
         self.assertEqual(result["entries_created"], 0)
-        self.assertEqual(Usys_Config.objects.count(), 1)
+        self.assertEqual(UsysConfig.objects.count(), 1)
 
     def test_log_file_not_found(self):
         non_existing_log_path = "non_existing_log.log"
@@ -54,8 +54,8 @@ class UsysConfigLogTest(TestCase):
         self.assertEqual(result["status"], "success")
         self.assertEqual(result["entries_created"], 2)
 
-        entry_1 = Usys_Config.objects.get(table="system_settings", key="password_policy")
-        entry_2 = Usys_Config.objects.get(table="config", key="session_timeout")
+        entry_1 = UsysConfig.objects.get(table="system_settings", key="password_policy")
+        entry_2 = UsysConfig.objects.get(table="config", key="session_timeout")
         self.assertEqual(entry_1.value, "none")
         self.assertEqual(entry_2.value, "30")
 

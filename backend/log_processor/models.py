@@ -53,12 +53,12 @@ class UploadedLogFile(models.Model):
     
 class NetfilterPackets(models.Model):
     timestamp = models.DateTimeField()
-    source_ip = models.GenericIPAddressField()
-    destination_ip = models.GenericIPAddressField()
+    src_ip_address = models.GenericIPAddressField()
+    dst_ip_address = models.GenericIPAddressField()
     protocol = models.CharField(max_length=10)
     event_type = models.CharField(max_length=50, default='network packets')
     count = models.IntegerField(default=0)   
     severity = models.CharField(max_length=20, default='normal')
     def __str__(self):
-        return f"{self.source_ip} to {self.destination_ip} at {self.timestamp}"
+        return f"{self.src_ip_address} to {self.dst_ip_address} at {self.timestamp}"
     

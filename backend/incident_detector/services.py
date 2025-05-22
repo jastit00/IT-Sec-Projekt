@@ -1,10 +1,8 @@
 from datetime import timedelta
-#from django.shortcuts import render
-#from django.http import JsonResponse
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident
+from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident
 from collections import defaultdict
-#from django.utils import timezone
+
 
 
 BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
@@ -113,19 +111,22 @@ def detect_bruteforce():
                     reason = f"{len(window_attempts)} failed attempts in {format_timedelta(BRUTE_FORCE_TIME_DELTA)}"
 
                 # Check if a similar incident was already recorded near this time
-                if not Incident.objects.filter(
+                if not BruteforceIncident.objects.filter(
                     username=username,
                     src_ip_address=src_ip_address,
                     incident_type="bruteforce",
                     timestamp=event_time
                 ).exists():
-                    incident = Incident.objects.create(
+                    incident = BruteforceIncident.objects.create(
                         timestamp=event_time,
                         username=username,
                         src_ip_address=src_ip_address,
                         reason=reason,
                         severity=severity,
-                        incident_type="bruteforce"
+                        successful = str(len(successful)),
+                        timeDelta=BRUTE_FORCE_TIME_DELTA,
+                        attempts=str( len(window_attempts)),
+
                     )
 
                     incidents_created += 1
@@ -170,19 +171,19 @@ def detect_critical_config_change():
         severity = "high" if config_change.result == "success" else "critical"
         reason = f"{config_change.action} on {config_change.key} (critical config, result: {config_change.result}, user: {config_change.terminal})"
 
-        if not Incident.objects.filter(
+        if not ConfigIncident.objects.filter(
             timestamp=config_change.timestamp,
             username=config_change.terminal,
             src_ip_address=src_ip_address,
             incident_type="config_change"
         ).exists():
-            incident = Incident.objects.create(
+            incident = ConfigIncident.objects.create(
                 timestamp=config_change.timestamp,
                 username=config_change.terminal,
                 src_ip_address=src_ip_address,
                 reason=reason,
                 severity=severity,
-                incident_type="config_change"
+            
             )
             
             new_incidents.append(incident)
@@ -231,7 +232,7 @@ def detect_dos_attack():
     new_incidents = []
 
     for window in all_windows:
-        key = (window.source_ip, window.destination_ip, window.protocol)
+        key = (window.src_ip_address, window.dst_ip_address, window.protocol)
         packets_by_connection[key].append(window)
 
     for (src_ip, dst_ip, protocol), windows in packets_by_connection.items():
@@ -298,7 +299,7 @@ def detect_ddos_attack():
 
     # Gruppiere Pakete nach Ziel-IP und Protokoll
     for window in all_windows:
-        key = (window.destination_ip, window.protocol)
+        key = (window.dst_ip_address, window.protocol)
         windows_by_dst_proto[key].append(window)
 
     for (dst_ip, protocol), windows in windows_by_dst_proto.items():
@@ -313,7 +314,7 @@ def detect_ddos_attack():
             # Gruppiere nach Quell-IP
             traffic_by_source = defaultdict(int)
             for win in relevant_windows:
-                traffic_by_source[win.source_ip] += win.count
+                traffic_by_source[win.src_ip_address] += win.count
 
             # Zähle Quellen mit signifikantem Verkehr
             active_sources = [src for src, count in traffic_by_source.items() if count >= DDOS_PACKET_THRESHOLD]
