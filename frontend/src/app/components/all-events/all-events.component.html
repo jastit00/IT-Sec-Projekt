@@ -1,31 +1,61 @@
-<h2>All Events</h2>
-<table class="events-table">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Event</th>
-      <th>Status</th>
-      <th>IPs</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (event of events; track event.id) {
-    <tr>
-      <td>{{ event.date }} <span class="timestamp">{{ event.relativeTime }}</span></td>
-      <td>{{ event.event }}</td>
-      <td><span class="status {{ event.status }}">{{ event.status }}</span></td>
-      <td>
-        @if (event.ips && event.ips.length > 0) {
-          @for(ip of event.ips; track ip) {
-            <span class="ip-badge">{{ ip }}</span>
+<div class="events-container">
+  <div class="controls">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search events...</mat-label>
+      <input matInput [(ngModel)]="searchTerm" (input)="filterEvents()"
+             placeholder="Search by date, event, status, IP, description">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="sort-field">
+      <mat-label>Order by</mat-label>
+      <mat-select [(ngModel)]="sortBy" (selectionChange)="sortEvents()">
+        <mat-option value="">No ordering</mat-option>
+        <mat-option value="normal">Normal Events</mat-option>
+        <mat-option value="warning">Warning Events</mat-option>
+        <mat-option value="critical">Critical Events</mat-option>
+        <mat-option value="login">Login Events</mat-option>
+        <mat-option value="logout">Logout Events</mat-option>
+        <mat-option value="config change">Config Change Events</mat-option>
+        <mat-option value="incident">Incident Events</mat-option>
+        <mat-option value="network packets">Network Packets Events</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="sort-direction-field">
+      <mat-label>Sort by</mat-label>
+      <mat-select [(ngModel)]="sortDirection" (selectionChange)="sortEvents()">
+        <mat-option value="asc">Ascending</mat-option>
+        <mat-option value="desc">Descending</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <table class="events-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Event</th>
+        <th>Status</th>
+        <th>IPs</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (event of filteredEvents; track event.id) {
+      <tr>
+        <td class="event-date">{{ event.date }}</td>
+        <td>{{ event.event }}</td>
+        <td><span class="status {{ event.status }}">{{ event.status }}</span></td>
+        <td>
+          @if (event.ips && event.ips.length > 0) {
+            @for(ip of event.ips; track ip) {
+              <span class="ip-badge">{{ ip }}</span>
+            }
+          } @else {
+            <span class="no-ips">No IPs</span>
           }
-        } @else {
-          <span class="no-ips">Keine</span>
-        }
-      </td>
-      <td>{{ event.description }}</td>
-    </tr>
-    }
-  </tbody>
-</table>
+        </td>
+        <td>{{ event.description }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>

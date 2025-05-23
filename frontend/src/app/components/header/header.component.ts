@@ -103,7 +103,7 @@ export class HeaderComponent implements OnInit {
 
   // Get count of critical events
   getCriticalEventsCount(): number {
-    return this.eventService.events.filter(event => event.status === 'Kritisch').length;
+    return this.eventService.events.filter(event => event.status === 'Critical').length;
   }
   
   // Check if there are any critical events
