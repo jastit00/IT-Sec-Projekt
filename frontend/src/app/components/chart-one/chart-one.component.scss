@@ -3,12 +3,19 @@
     padding-top: 0;
     margin-top: 0;
   }
+
+  .title-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
   
 
    .sticky-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: relative;
   margin-bottom: 1rem;
   z-index: 4;
@@ -21,6 +28,7 @@
     background-color: red;
     border-radius: 50%;
     animation: pulse 1.5s infinite ease-in-out;
+    flex-shrink: 0;
   }
 
   @keyframes pulse {
@@ -45,6 +53,8 @@
     font-size: 24px;
     padding: 5px;
     color: #333;
+    position: absolute;
+    right: 0;
   }
   
   .settings-button:hover {
