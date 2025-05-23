@@ -27,6 +27,7 @@
   </div>
     </h5>
     <div class="chart-wrapper">
+      <div *ngIf="!hasData" class="placeholder-overlay">No data found</div>
       <p-chart [type]="dateForm.get('chartType')?.value" [data]="data" [options]="options" class="h-[30rem]"></p-chart>
     </div>
   </div>

@@ -20,6 +20,7 @@ export class ChartOneComponent implements OnInit {
 
  showSettings = false;
  dateForm!: FormGroup;
+ hasData = false;
 
   data: any = {
     labels: [],
@@ -64,9 +65,16 @@ ngOnInit(): void {
       const ipCountMap: { [ip: string]: number } = {};
   
       logins.forEach(entry => {
-        const ip = entry.ip_address;
+        const ip = entry.src_ip_address;
         ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
       });
+
+      if(Object.values(ipCountMap).length ===0){
+        this.hasData = false;
+      }
+      else {
+        this.hasData = true;
+      }
 
       this.data = {
         labels: Object.keys(ipCountMap),

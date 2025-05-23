@@ -19,6 +19,7 @@
   </div>
     </h5> 
   <div class="table-scroll-container">
+    <div *ngIf="!hasData" class="placeholder-overlay">No data found</div>
     <mat-table [dataSource]="dataSource" class="mat-elevation-z8 full-width-table">
       <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
         <mat-header-cell *matHeaderCellDef sticky> {{ column }} </mat-header-cell>

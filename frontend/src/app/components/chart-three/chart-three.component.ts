@@ -23,12 +23,13 @@ export class ChartThreeComponent implements OnInit{
   showSettings = false;
   dateForm!: FormGroup;
   availableDstIps: string[] = [];
+  hasData = false;
   
   data = {
-    labels: ['Ip1', 'Ip2', 'Ip3', 'Ip4', 'Ip5'],
+    labels: [''],
     datasets: [{
       label: 'forwarded packets by source IP',
-      data: [0, 25, 50, 75, 100], //stimmen noch nicht
+      data: [0],
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
@@ -79,10 +80,13 @@ export class ChartThreeComponent implements OnInit{
 
     const packetMap: { [srcIp: string]: number } = {};
 
+    
+
+
     entries.forEach(entry => {
       if (entry.dst_ip_address === TARGET_DST_IP) {
         const srcIp = entry.src_ip_address;
-        const packets = parseInt(entry.packets, 10);  // Wichtig: von string zu number
+        const packets = parseInt(entry.packets, 10);  
 
         if (!isNaN(packets)) {
           packetMap[srcIp] = (packetMap[srcIp] || 0) + packets;
@@ -92,6 +96,14 @@ export class ChartThreeComponent implements OnInit{
 
     const labels = Object.keys(packetMap);
     const dataValues = Object.values(packetMap);
+
+    if(dataValues.length===0){
+        this.hasData = false;
+      }
+      else {
+        this.hasData = true;
+        console.log(this.hasData);
+      }
 
     this.data = {
       labels,

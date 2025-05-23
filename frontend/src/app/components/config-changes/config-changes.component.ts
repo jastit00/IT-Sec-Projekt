@@ -19,6 +19,7 @@ export class ConfigChangesComponent implements OnInit {
 
   showSettings = false;
   dateForm!: FormGroup;
+  hasData = false;
 
 
   displayedColumns: string[] = ['id', 'timestamp', 'table', 'action', 'user', 'result', 'description'];
@@ -52,6 +53,14 @@ export class ConfigChangesComponent implements OnInit {
 
 
     call.subscribe((entries: any[]) => {
+
+      if(entries.length ===0){
+        this.hasData = false;
+      }
+      else {
+        this.hasData = true;
+      }
+
       this.dataSource = entries.map((entry) => ({
         id: entry.id,
         timestamp: new Date(entry.timestamp).toLocaleString(), 
