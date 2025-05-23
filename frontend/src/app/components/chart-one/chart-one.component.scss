@@ -11,6 +11,7 @@
   justify-content: space-between;
   position: relative;
   margin-bottom: 1rem;
+  z-index: 4;
 }
   
   .reddot {
@@ -128,4 +129,18 @@
   }
 }
   
-  
+
+.placeholder-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #555;
+  z-index: 3;
+}

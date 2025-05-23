@@ -19,6 +19,8 @@ export class ChartTwoComponent {
   
   showSettings = false;
   dateForm!: FormGroup;
+  hasData = false;
+
 
   data: any = {
     labels: [],
@@ -34,7 +36,7 @@ export class ChartTwoComponent {
   this.dateForm = this.fb.group({
       start: [null],
       end: [null],
-      chartType: ['bar']
+      chartType: ['pie']
     });
   
   this.loadData();
@@ -62,15 +64,22 @@ export class ChartTwoComponent {
   
       logins.forEach(entry => {
         if (entry.result === 'failed') {
-        const ip = entry.ip_address;
+        const ip = entry.src_ip_address;
         ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
         }
       });
+
+      if(Object.values(ipCountMap).length ===0){
+        this.hasData = false;
+      }
+      else {
+        this.hasData = true;
+      }
   
       this.data = {
         labels: Object.keys(ipCountMap),
         datasets: [{
-          label: 'Login-Versuche pro IP',
+          label: 'failed logins by IP',
           data: Object.values(ipCountMap),
           
         }]
