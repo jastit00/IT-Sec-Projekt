@@ -84,7 +84,7 @@ export class EventService {
       return {
         id: backendEvent.id ?? Math.floor(Math.random() * 10000), // Ensure id is always a number, generate random if undefined
         date: formattedDate,
-        event: backendEvent.event_type,
+        event: this.getDisplayEventType(backendEvent), 
         status: status,
         ips: ips,
         description: description
@@ -94,17 +94,18 @@ export class EventService {
 
   //description based on event type
   private generateDescription(event: Events): string {
-    const eventType = event.event_type.toLowerCase();
+    const eventType = this.getDisplayEventType(event).toLowerCase();
     
     switch (eventType) {
       case 'network packet':
       case 'network packets':
-        // Network packets description
         const packetInfo = [];
         if (event.protocol) packetInfo.push(`Protocol: ${event.protocol}`);
+        if (event.count) packetInfo.push(`Count: ${event.count}`);
         if (event.packets) packetInfo.push(`Packets: ${event.packets}`);
         if (event.timeDelta) packetInfo.push(`Time Window: ${event.timeDelta}`);
         if (event.dst_ip_address) packetInfo.push(`Destination: ${event.dst_ip_address}`);
+        if (event.reason) packetInfo.push(`Reason: ${event.reason}`);
         return packetInfo.length > 0 ? packetInfo.join(' | ') : '';
         
       case 'logout':
@@ -133,32 +134,49 @@ export class EventService {
         // For incidents, show incident_type + src_ip_address + reason
         const incidentInfo = [];
         if (event.incident_type) {
-          // Translate common incident types
           const incidentTypeText = event.incident_type.toLowerCase() === 'dos' ? 'DoS Attack' : event.incident_type;
           incidentInfo.push(`Type: ${incidentTypeText}`);
         }
+        if (event.src_ip_address) incidentInfo.push(`Source IP: ${event.src_ip_address}`);
         if (event.reason) incidentInfo.push(`Reason: ${event.reason}`);
         return incidentInfo.join(' | ');
         
       case 'config change':
-        // For config changes, show action + result
+        // For config changes (including incident events with configchange type)
         const configInfo = [];
-        if (event.action) {
-          const actionText = event.action.toLowerCase() === 'update' ? 'Update' : event.action;
-          configInfo.push(`Action: ${actionText}`);
-        }
-        if (event.key && event.value) configInfo.push(`${event.key}: ${event.value}`);
-        if (event.terminal) configInfo.push(`User: ${event.terminal}`);
-        if (event.result) {
-          const resultText = event.result === 'failed' ? 'Failed' : 
-                           event.result === 'success' ? 'Successful' : event.result;
-          configInfo.push(`Status: ${resultText}`);
+        
+        // If it's an incident with configchange, show the reason and source IP
+        if (event.event_type === 'incident' && event.incident_type === 'configchange') {
+          if (event.src_ip_address) configInfo.push(`Source IP: ${event.src_ip_address}`);
+          if (event.reason) configInfo.push(`Details: ${event.reason}`);
+        } else {
+          // Regular config change events
+          if (event.action) {
+            const actionText = event.action.toLowerCase() === 'update' ? 'Update' : event.action;
+            configInfo.push(`Action: ${actionText}`);
+          }
+          if (event.key && event.value) configInfo.push(`${event.key}: ${event.value}`);
+          if (event.terminal) configInfo.push(`User: ${event.terminal}`);
+          if (event.result) {
+            const resultText = event.result === 'failed' ? 'Failed' : 
+                             event.result === 'success' ? 'Successful' : event.result;
+            configInfo.push(`Status: ${resultText}`);
+          }
         }
         return configInfo.join(' | ');
         
       default:
         return '';
     }
+  }
+
+  // Helper method to determine display event type
+  private getDisplayEventType(event: Events): string {
+    // If it's an incident with configchange type, display it as Config Change
+    if (event.event_type === 'incident' && event.incident_type === 'configchange') {
+      return 'Config Change';
+    }
+    return event.event_type;
   }
 
   //date formatting with time and seconds (English format)

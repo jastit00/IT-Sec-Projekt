@@ -2,14 +2,20 @@
   <div class="controls">
     <mat-form-field appearance="outline" class="search-field">
       <mat-label>Search events...</mat-label>
-      <input matInput [(ngModel)]="searchTerm" (input)="filterEvents()"
-             placeholder="Search by date, event, status, IP, description">
+      <input matInput 
+             [(ngModel)]="searchTerm" 
+             (input)="filterEvents()"
+             (keypress)="onKeyPress($event)"
+             placeholder="Search by date, event, status, IP, description"
+             maxlength="100"
+             autocomplete="off"
+             spellcheck="false">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
     <mat-form-field appearance="outline" class="sort-field">
-      <mat-label>Order by</mat-label>
+      <mat-label>Sort by</mat-label>
       <mat-select [(ngModel)]="sortBy" (selectionChange)="sortEvents()">
-        <mat-option value="">No ordering</mat-option>
+        <mat-option value="">No sorting</mat-option>
         <mat-option value="normal">Normal Events</mat-option>
         <mat-option value="warning">Warning Events</mat-option>
         <mat-option value="critical">Critical Events</mat-option>
@@ -21,7 +27,7 @@
       </mat-select>
     </mat-form-field>
     <mat-form-field appearance="outline" class="sort-direction-field">
-      <mat-label>Sort by</mat-label>
+      <mat-label>Order by</mat-label>
       <mat-select [(ngModel)]="sortDirection" (selectionChange)="sortEvents()">
         <mat-option value="asc">Ascending</mat-option>
         <mat-option value="desc">Descending</mat-option>

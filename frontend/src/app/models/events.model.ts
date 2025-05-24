@@ -20,4 +20,5 @@ export interface Events {
   timeDelta: string;
   source_ips: string[];
   details: any;
+  count: number;
 }

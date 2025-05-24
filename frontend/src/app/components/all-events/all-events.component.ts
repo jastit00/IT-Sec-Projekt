@@ -24,13 +24,23 @@ import { EventService, SecurityEvent } from '../../services/event-service';
 export class AllEventsComponent {
   events: SecurityEvent[] = [];
   filteredEvents: SecurityEvent[] = [];
-  searchTerm: string = '';
+  private _searchTerm: string = '';
   sortBy: string = '';
   sortDirection: string = '';
+
+  private readonly FORBIDDEN_CHARS = /[<>"';[\]{}()\\\/]/g;
 
   constructor(private eventService: EventService) {
     this.events = this.eventService.getAllEvents();
     this.filteredEvents = [...this.events];
+  }
+
+  get searchTerm(): string {
+    return this._searchTerm;
+  }
+
+  set searchTerm(value: string) {
+    this._searchTerm = value ? value.replace(this.FORBIDDEN_CHARS, '').trim() : '';
   }
 
   filterEvents() {
@@ -53,7 +63,6 @@ export class AllEventsComponent {
         return matchesSort && matchesSearch;
       });
     }
-
     // Dann nach sortDirection sortieren
     if (this.sortDirection && this.filteredEvents.length > 0) {
       this.filteredEvents.sort((a, b) => {
@@ -84,13 +93,21 @@ export class AllEventsComponent {
   }
 
   private matchesSearchTerm(event: SecurityEvent): boolean {
-    if (!this.searchTerm.trim()) return true;
+    if (!this._searchTerm.trim()) return true;
     
-    const search = this.searchTerm.toLowerCase();
+    const search = this._searchTerm.toLowerCase();
     return event.date.toLowerCase().includes(search) ||
            event.event.toLowerCase().includes(search) ||
            event.status.toLowerCase().includes(search) ||
            event.description.toLowerCase().includes(search) ||
            event.ips?.some(ip => ip.toLowerCase().includes(search));
+  }
+
+  onKeyPress(event: KeyboardEvent) {
+    const forbiddenChars = '<>"\;[]{}()/';
+    if (forbiddenChars.includes(event.key)) {
+      event.preventDefault();
+      console.log("test forbidden characters:", event.key);
+    }
   }
 }
