@@ -101,10 +101,12 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(UserLogin.objects.count(), 4)
         
     def test_detect_bruteforce_attempt(self):
-        self.create_logins(13)
+        # create the specific entries from file clear_simple_bruteforce.log
+        self.entry_creator.make_entries('clear_simple_bruteforce.log')
+        # test
         result = detect_bruteforce()
         self.assertEqual(result["bruteforce"], 1)
-        self.assertEqual(Incident.objects.count(), 1)
+        self.assertEqual(BruteforceIncident.objects.count(), 1)
 
     def test_ignore_attempts_outside_time_window(self):
         self.create_logins(13, minutes_apart=1)  # 13 mins apart > 5
