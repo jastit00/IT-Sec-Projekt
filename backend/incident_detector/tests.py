@@ -159,13 +159,8 @@ class ConcurrentLoginsDetectionTest(TestCase):
         self.assertEqual(ConcurrentLoginIncident.objects.count(),3)
 
     def test_multiple_attack_mixed_w_logout(self):
-        # create the specific entries
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="109.108.107.10", terminal="cdi8", result="success")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="109.108.108.10", terminal="cdj8", result="success")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="110.120.30.254", terminal="cdh9", result="success")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="200.168.10.10", terminal="cdc8", result="success")
-        UserLogout.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", terminal="cdc8")
-        
+        # create the specific entries from file mix_logins.log
+        self.entry_creator.make_entries('mix_logins.log')
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],2)
