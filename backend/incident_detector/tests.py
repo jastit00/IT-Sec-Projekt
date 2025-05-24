@@ -174,3 +174,12 @@ class ConcurrentLoginsDetectionTest(TestCase):
         self.assertEqual(result["concurrent_logins"],0)
         self.assertEqual(UserLogin.objects.count(),1)
         self.assertEqual(UserLogout.objects.count(),1)
+
+    def test_no_attack_several_pairs_login_logout(self):
+        # create the specific entries from file many_valid_logins.log
+        self.entry_creator.make_entries('many_valid_logins.log')
+        # test
+        result=detect_concurrent_logins()
+        self.assertEqual(result["concurrent_logins"],0)
+        self.assertEqual(UserLogin.objects.count(),3)
+        self.assertEqual(UserLogout.objects.count(),3)
