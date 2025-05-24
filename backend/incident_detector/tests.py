@@ -90,12 +90,16 @@ class CreateEntries():
 
 
 class BruteForceDetectionTests(TestCase):
+    entry_creator=CreateEntries()
     def test_no_bruteforce_if_too_few_attempts(self):
-        self.create_logins(5)
+        # create the specific entries from file not_enough_tries.log
+        self.entry_creator.make_entries('not_enough_tries.log')
+        # test
         result = detect_bruteforce()
         self.assertEqual(result["bruteforce"], 0)
-        self.assertEqual(Incident.objects.count(), 0)
-
+        self.assertEqual(BruteforceIncident.objects.count(), 0)
+        self.assertEqual(UserLogin.objects.count(), 4)
+        
     def test_detect_bruteforce_attempt(self):
         self.create_logins(13)
         result = detect_bruteforce()
