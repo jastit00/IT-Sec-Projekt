@@ -16,7 +16,7 @@ export class ChartVisibilityService {
 
   // Default chart configuration
   private defaultCharts: Chart[] = [
-    { id: 'chart1', name: 'Diagramm 1', visible: true },
+    { id: 'chart1', name: 'test', visible: true },
     { id: 'chart2', name: 'Diagramm 2', visible: true },
     { id: 'chart3', name: 'Diagramm 3', visible: true },
     { id: 'chart4', name: 'Diagramm 4', visible: true },
