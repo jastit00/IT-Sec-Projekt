@@ -90,21 +90,6 @@ class CreateEntries():
 
 
 class BruteForceDetectionTests(TestCase):
-
-    def setUp(self):
-        self.now = timezone.now()
-
-    def create_logins(self, count, minutes_apart=0.3, success_on_last=False):
-        username = "testuser"
-        ip = "192.168.0.1"
-        for i in range(count):
-            User_Login.objects.create(
-                username=username,
-                  ip_address=ip,
-                result="success" if (success_on_last and i == count - 1) else "fail",
-                timestamp=self.now + timedelta(minutes=i * minutes_apart)
-            )
-
     def test_no_bruteforce_if_too_few_attempts(self):
         self.create_logins(5)
         result = detect_bruteforce()
