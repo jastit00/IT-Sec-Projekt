@@ -27,7 +27,7 @@ export class ChartTwoComponent {
     datasets: [{
       label: 'Login-Versuche pro IP',
       data: [],
-      backgroundColor: ['#D2383A', '#FEC672', '#056F54', '#93CE78', '#1346A4', '#B4E7DE', '#F6F2E9']
+      backgroundColor: ['#F94144', '#F3722C', '#F8961E', '#F9844A', '#F9C74F', '#90BE6D', '#43AA8B', '#4D908E', '#577590', '#277DA1']
     }]
   };
   
