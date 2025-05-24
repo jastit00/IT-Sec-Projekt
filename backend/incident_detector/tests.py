@@ -141,16 +141,10 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(Incident.objects.count(), 1)
 
 class ConcurrentLoginsDetectionTest(TestCase):
-    
+    entry_creator=CreateEntries()
     def test_single_clear_attack_detected(self):
-        # create the specific entries
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="192.168.0.40", terminal="cda8", result="success")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="testuser", src_ip_address="192.168.0.38", terminal="abcd", result="success")
-        UserLogout.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", terminal="cda8")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", src_ip_address="192.168.0.40", terminal="cda9", result="success")
-        UserLogout.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="admin", terminal="cda9")
-        UserLogin.objects.create(timestamp="2025-03-27 11:49:54.508+01", username="testuser", src_ip_address="192.168.0.39", terminal="abc0", result="success")
-        
+        # create the specific entries from file logins_test.log
+        self.entry_creator.make_entries('logins_test.log')
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],1)
