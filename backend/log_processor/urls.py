@@ -1,5 +1,7 @@
 from django.urls import path
+
 from . import views
+
 
 urlpatterns = [
     path('logfiles/', views.LogFileUploadView.as_view(), name='upload-log-file'),
@@ -9,4 +11,3 @@ urlpatterns = [
     path('logfiles/dos-packets/', views.dos_packets, name='dos-packets'),
     path('logfiles/ddos-packets/', views.ddos_packets, name='ddos-packets'),
 ]
-
