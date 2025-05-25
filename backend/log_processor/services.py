@@ -49,7 +49,7 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
         uploaded_by=uploaded_by_user,
         uploaded_at=timezone.now(),
         status='success' if result.get('status') != 'error' else 'error',
-        entries_created=result.get('entries_created', 0),
+        entries_created=(result.get('entries_created', 0)+result.get('incidents_created_total', 0)),
         incidents_created_total=result.get('incidents_created_total', 0),
         incident_counts=result.get('incident_counts', {})
        
@@ -183,8 +183,8 @@ def process_log_file(file_path):
                     second = 0 if timestamp.second < 30 else 30
                     timestamp_minute = timestamp.replace(second=second, microsecond=0)
                     
-                    source_ip = extract_match(r'saddr=([^\s]*)', line)
-                    destination_ip = extract_match(r'daddr=([^\s]*)', line)
+                    src_ip_address = extract_match(r'saddr=([^\s]*)', line)
+                    dst_ip_address = extract_match(r'daddr=([^\s]*)', line)
                     protocol_number = extract_match(r'proto=([^\s]*)', line)
 
                     match protocol_number:
@@ -197,14 +197,14 @@ def process_log_file(file_path):
                         case _:
                             protocol = f"not defined ({protocol_number})" if protocol_number else "not defined"
                     
-                    key = (timestamp_minute, source_ip, destination_ip, protocol)
+                    key = (timestamp_minute, src_ip_address, dst_ip_address, protocol)
                     packet_counts[key] += 1
         
-        for (timestamp_minute, source_ip, destination_ip, protocol), count in packet_counts.items():
+        for (timestamp_minute, src_ip_address, dst_ip_address, protocol), count in packet_counts.items():
             NetfilterPackets.objects.create(
                 timestamp=timestamp_minute,
-                source_ip=source_ip,
-                destination_ip=destination_ip,
+                src_ip_address=src_ip_address,
+                dst_ip_address=dst_ip_address,
                 protocol=protocol,
                 count=count
             )

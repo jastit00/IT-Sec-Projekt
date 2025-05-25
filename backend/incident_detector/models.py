@@ -76,7 +76,7 @@ class BruteforceIncident(models.Model):
     successful= models.CharField(max_length=20)
     event_type = models.CharField(max_length=50, default='incident')  
     severity = models.CharField(max_length=20, default='critical') 
-    incident_type = models.CharField(max_length=20, default='configchange') 
+    incident_type = models.CharField(max_length=20, default='bruteforce')
     def __str__(self):
        return f"{self.username} at {self.timestamp} from {self.src_ip_address}"
 

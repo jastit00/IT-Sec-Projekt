@@ -1,10 +1,8 @@
 from datetime import timedelta
-#from django.shortcuts import render
-#from django.http import JsonResponse
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, RelatedLog, DDosIncident, DosIncident
+from incident_detector.models import Incident, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
 from collections import defaultdict
-#from django.utils import timezone
+
 
 
 BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
@@ -113,19 +111,22 @@ def detect_bruteforce():
                     reason = f"{len(window_attempts)} failed attempts in {format_timedelta(BRUTE_FORCE_TIME_DELTA)}"
 
                 # Check if a similar incident was already recorded near this time
-                if not Incident.objects.filter(
+                if not BruteforceIncident.objects.filter(
                     username=username,
                     src_ip_address=src_ip_address,
                     incident_type="bruteforce",
                     timestamp=event_time
                 ).exists():
-                    incident = Incident.objects.create(
+                    incident = BruteforceIncident.objects.create(
                         timestamp=event_time,
                         username=username,
                         src_ip_address=src_ip_address,
                         reason=reason,
                         severity=severity,
-                        incident_type="bruteforce"
+                        successful = str(len(successful)),
+                        timeDelta=BRUTE_FORCE_TIME_DELTA,
+                        attempts=str( len(window_attempts)),
+
                     )
 
                     incidents_created += 1
@@ -170,83 +171,25 @@ def detect_critical_config_change():
         severity = "high" if config_change.result == "success" else "critical"
         reason = f"{config_change.action} on {config_change.key} (critical config, result: {config_change.result}, user: {config_change.terminal})"
 
-        if not Incident.objects.filter(
+        if not ConfigIncident.objects.filter(
             timestamp=config_change.timestamp,
             username=config_change.terminal,
             src_ip_address=src_ip_address,
             incident_type="config_change"
         ).exists():
-            incident = Incident.objects.create(
+            incident = ConfigIncident.objects.create(
                 timestamp=config_change.timestamp,
                 username=config_change.terminal,
                 src_ip_address=src_ip_address,
                 reason=reason,
                 severity=severity,
-                incident_type="config_change"
+            
             )
             
             new_incidents.append(incident)
             incidents_created += 1
              
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
-
-def detect_concurrent_logins():
-    """
-    Detects and logs simultaneous logins without a corresponding logout.
-
-    Returns:
-        dict: Number of simultaneous login incidents created.
-    """
-    incidents_created = 0
-    active_user_sessions = {}  # username -> IP
-    new_incidents = []
-    successful_logins = UserLogin.objects.filter(result="success").order_by("timestamp")
-
-    for login in successful_logins:
-        logout_found = UserLogout.objects.filter(
-            terminal=login.terminal,
-            timestamp__gt=login.timestamp
-        ).exists()
-
-        if not logout_found:
-            if login.username in active_user_sessions:
-                previous_ip = active_user_sessions[login.username]
-
-                # Prepare reason based on IP match
-                if login.src_ip_address == previous_ip:
-                    reason = f"{login.username} logged in from same IP {login.src_ip_address} without logout"
-                    severity = "medium"
-                else:
-                    reason = f"{login.username} logged in from {login.src_ip_address} (prev: {previous_ip}) without logout"
-                    severity = "high"
-
-                if not Incident.objects.filter(
-                    username=login.username,
-                    src_ip_address=login.src_ip_address,
-                    incident_type="concurrent_login"
-                ).exists():
-                    incident = Incident.objects.create(
-                        timestamp=login.timestamp,
-                        username=login.username,
-                        src_ip_address=login.src_ip_address,
-                        reason=reason,
-                        severity=severity,
-                        incident_type="concurrent_login"
-                    )
-
-                    RelatedLog.objects.bulk_create([
-                        RelatedLog(incident=incident, user_login=login)
-                    ])
-
-                    incidents_created += 1
-                    new_incidents.append(incident)
-            else:
-                # First time we've seen a login without logout for this user
-                active_user_sessions[login.username] = login.src_ip_address
-
-    return {"concurrent_logins": incidents_created, "incidents": new_incidents}
-
-
 
 
 def detect_dos_attack():
@@ -261,7 +204,7 @@ def detect_dos_attack():
     new_incidents = []
 
     for window in all_windows:
-        key = (window.source_ip, window.destination_ip, window.protocol)
+        key = (window.src_ip_address, window.dst_ip_address, window.protocol)
         packets_by_connection[key].append(window)
 
     for (src_ip, dst_ip, protocol), windows in packets_by_connection.items():
@@ -310,10 +253,6 @@ def detect_dos_attack():
 
 
 
-
-
-
-
 def detect_ddos_attack():
     """
     Detects potential DDoS attacks based on multiple sources sending high packet counts
@@ -328,7 +267,7 @@ def detect_ddos_attack():
 
     # Gruppiere Pakete nach Ziel-IP und Protokoll
     for window in all_windows:
-        key = (window.destination_ip, window.protocol)
+        key = (window.dst_ip_address, window.protocol)
         windows_by_dst_proto[key].append(window)
 
     for (dst_ip, protocol), windows in windows_by_dst_proto.items():
@@ -343,7 +282,7 @@ def detect_ddos_attack():
             # Gruppiere nach Quell-IP
             traffic_by_source = defaultdict(int)
             for win in relevant_windows:
-                traffic_by_source[win.source_ip] += win.count
+                traffic_by_source[win.src_ip_address] += win.count
 
             # Zähle Quellen mit signifikantem Verkehr
             active_sources = [src for src, count in traffic_by_source.items() if count >= DDOS_PACKET_THRESHOLD]
@@ -386,25 +325,30 @@ def detect_ddos_attack():
     return {
         "ddos_attacks": incidents_created,
         "incidents": new_incidents
+        
     }
 
 
+def detect_concurrent_logins():
+    """
+    Detects and logs simultaneous logins without a corresponding logout.
 
+    Returns:
+        dict: Number of simultaneous login incidents created.
+    """
+    new_incidents = []
+    potential_used_accounts=[]
+    successful_logins = UserLogin.objects.all().filter(result="success")
+    for login in successful_logins:
+        if (UserLogout.objects.filter(terminal=login.terminal).count())==0:
+            if login.username in potential_used_accounts:
+                if not ConcurrentLoginIncident.objects.filter(src_ip_address=login.src_ip_address,username=login.username,incident_type="concurrentLogin").exists():
+                    incident = ConcurrentLoginIncident.objects.create(timestamp=login.timestamp,username=login.username,src_ip_address=login.src_ip_address,reason="user logged in again without previous logout")
+                    new_incidents.append(incident)
+            else:
+                potential_used_accounts.append(login.username)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return {"concurrent_logins": len(new_incidents), "incidents": new_incidents}
 
 def format_timedelta(delta):
     """
