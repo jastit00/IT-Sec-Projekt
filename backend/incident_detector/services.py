@@ -1,6 +1,6 @@
 from datetime import timedelta
 from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
+from incident_detector.models import DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident, RelatedLog
 from collections import defaultdict
 
 
@@ -131,6 +131,18 @@ def detect_bruteforce():
 
                     incidents_created += 1
                     new_incidents.append(incident)
+                    
+                    # map login stuff to incident using relatedlog
+                    related_logs = [
+                        RelatedLog(
+                            bruteforce_incident=incident,
+                            user_login=login_attempt
+                        )
+                        for login_attempt in window_attempts
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
+                    
+                    
                 start = current  # Move to the end of the current window
             else:
                 start += 1  # Not enough attempts — shift window forward
@@ -182,13 +194,17 @@ def detect_critical_config_change():
                 username=config_change.terminal,
                 src_ip_address=src_ip_address,
                 reason=reason,
-                severity=severity,
-            
+                severity=severity, 
             )
             
             new_incidents.append(incident)
             incidents_created += 1
-             
+            
+            RelatedLog.objects.create(
+                config_incident=incident,
+                usys_config=config_change
+            )
+                  
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
 
@@ -243,7 +259,16 @@ def detect_dos_attack():
                     last_incident_time[(src_ip, dst_ip)] = relevant_windows[-1].timestamp
                     incidents_created += 1
                     new_incidents.append(incident)
-
+                
+                    related_logs = [
+                        RelatedLog(
+                            dos_incident=incident,
+                            netfilter_packet=packet
+                        )
+                        for packet in relevant_windows
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
+                
                 # i um alle Fenster innerhalb dieses Zeitraums weiterschieben
                 i += len(relevant_windows)
             else:
@@ -317,6 +342,14 @@ def detect_ddos_attack():
                     incidents_created += 1
                     new_incidents.append(incident)
 
+                    related_logs = [
+                        RelatedLog(
+                            dos_incident=incident,
+                            netfilter_packet=packet
+                        )
+                        for packet in relevant_windows
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
                 # i um alle Fenster innerhalb dieses Zeitraums weiterschieben
                 i += len(relevant_windows)
             else:
@@ -345,6 +378,11 @@ def detect_concurrent_logins():
                 if not ConcurrentLoginIncident.objects.filter(src_ip_address=login.src_ip_address,username=login.username,incident_type="concurrentLogin").exists():
                     incident = ConcurrentLoginIncident.objects.create(timestamp=login.timestamp,username=login.username,src_ip_address=login.src_ip_address,reason="user logged in again without previous logout")
                     new_incidents.append(incident)
+                    
+                    RelatedLog.objects.create(
+                        concurrent_login_incident=incident,
+                        user_login=login
+                    )
             else:
                 potential_used_accounts.append(login.username)
 

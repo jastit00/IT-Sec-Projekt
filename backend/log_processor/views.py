@@ -8,11 +8,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from incident_detector.models import (
-    Incident, DosIncident, DDosIncident, ConfigIncident,
+    DosIncident, DDosIncident, ConfigIncident,
     ConcurrentLoginIncident, BruteforceIncident
 )
 from incident_detector.serializers import (
-    IncidentSerializer, DosIncidentSerializer, DDosIncidentSerializer,
+    DosIncidentSerializer, DDosIncidentSerializer,
     ConfigIncidentSerializer, ConcurrentLoginIncidentSerializer,
     BruteforceIncidentSerializer
 )
@@ -149,7 +149,6 @@ def dos_packets(request):
 @api_view(['GET'])
 def unified_event_log(request):
     models_and_serializers = [
-        (Incident, IncidentSerializer),
         (UserLogin, UserLoginSerializer),
         (UserLogout, UserLogoutSerializer),
         (UsysConfig, UsysConfigSerializer),
