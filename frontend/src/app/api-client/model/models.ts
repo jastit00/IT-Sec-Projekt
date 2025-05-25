@@ -1,3 +1,4 @@
+export * from './ddosPackets';
 export * from './dosPackets';
 export * from './events';
 export * from './logEntryConfigChanges';

@@ -5,6 +5,11 @@
       width: 100%;
       border-spacing: 8px;
     }
+
+    td {
+        white-space: nowrap;
+        width: 250px;
+    }
     td:first-child {
       font-weight: bold;
       width: 100px;

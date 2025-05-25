@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Logfile API
-  version: 1.0.6
+  version: 1.0.7
   description: API zum Abrufen von Logdateien aus der Datenbank
 servers:
   - url: http://localhost:8000/api
@@ -96,7 +96,7 @@ paths:
   
   
 
-  /logfiles/processed-incidents:
+  /logfiles/incidents:
     get:
       summary: Liste ausgewerteter Incidents aus Datenbank
       parameters:
@@ -238,6 +238,48 @@ paths:
           
         '500' :
           description: server kaputt        
+          
+          
+  /logfiles/ddos-packets:
+    get:
+      summary: verdächtige HTTP Pakete, gruppiert nach IP-Adresse
+      
+      parameters:
+        
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+            
+      responses:
+        '200':
+          description: verdächtige Pakete, gruppiert nach IP-Adresse
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DdosPackets'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt    
   
 components:
   schemas:
@@ -383,6 +425,36 @@ components:
           
         Count:
           type: integer
+          
+    DdosPackets:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+
+        dst_ip_address:
+          type: string
+          format: ipv4
+          
+        protocol:
+          type: string
+          
+        timeDelta:
+          type: string
+          
+        Count:
+          type: integer
+          
+        Sources:
+          type: string
+          
+          
+        
+          
+        
         
         
           
+          
+    

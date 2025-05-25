@@ -4,12 +4,15 @@ import { ChartOneComponent } from '../components/chart-one/chart-one.component';
 import { ChartTwoComponent } from '../components/chart-two/chart-two.component';
 import { ChartThreeComponent } from '../components/chart-three/chart-three.component';
 import { ChartFourComponent } from '../components/chart-four/chart-four.component';
+import { ChartFiveComponent } from '../components/chart-five/chart-five.component';
 import { ChartSixComponent } from '../components/chart-six/chart-six.component'; // Neue Komponente importieren
+import { ConfigChangesComponent } from '../components/config-changes/config-changes.component';
+import { ChartEightComponent } from '../components/chart-eight/chart-eight.component';
 import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChartVisibilityService } from '../services/chart-visibility.service';
 import { Subscription } from 'rxjs';
-import { ConfigChangesComponent } from '../components/config-changes/config-changes.component';
+
 
 @Component({
   selector: 'app-home',
@@ -23,8 +26,10 @@ import { ConfigChangesComponent } from '../components/config-changes/config-chan
     ChartTwoComponent,
     ChartThreeComponent,
     ChartFourComponent,
+    ChartFiveComponent,
     ChartSixComponent,
-    ConfigChangesComponent // ChartSixComponent zu den Imports hinzufügen
+    ConfigChangesComponent, // ChartSixComponent zu den Imports hinzufügen
+    ChartEightComponent,
   ]
 })
 export class HomeComponent implements OnInit, OnDestroy {

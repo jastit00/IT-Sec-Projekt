@@ -8,6 +8,7 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/ddosPackets.ts
 model/dosPackets.ts
 model/events.ts
 model/logEntryConfigChanges.ts

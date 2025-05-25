@@ -6,14 +6,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
-  selector: 'app-chart-six',
+  selector: 'app-chart-eight',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-six.component.html',
-  styleUrls: ['./chart-six.component.scss']
+  templateUrl: './chart-eight.component.html',
+  styleUrls: ['./chart-eight.component.scss']
 })
 
-export class ChartSixComponent implements OnInit {
+export class ChartEightComponent implements OnInit {
   private defaultService = inject(DefaultService);
   private updateService = inject(ChartUpdateService);
   private fb = inject(FormBuilder);
@@ -25,7 +25,7 @@ export class ChartSixComponent implements OnInit {
   data: any = {
     labels: [],
     datasets: [{
-      label: 'ddos by source ip',
+      label: 'attempted logins by IP',
       data: [],
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
@@ -37,6 +37,7 @@ ngOnInit(): void {
       end: [null],
       chartType: ['pie']
     });
+
   this.loadData();
   this.updateService.updateChart$.subscribe(() => {
     
@@ -49,50 +50,41 @@ ngOnInit(): void {
   
 
  loadData(start?: string, end?: string) {
-    
+
     const observe = 'body';
     const reportProgress = false;
-     const labels: string[] = [];
+  
     const call = (start && end)
     
 
-    ? this.defaultService.logfilesDdosPacketsGet(start, end, observe, reportProgress)
-    : this.defaultService.logfilesDdosPacketsGet();
+    ? this.defaultService.logfilesConfigChangesGet(start, end, observe, reportProgress)
+    : this.defaultService.logfilesConfigChangesGet();
 
 
-    call.subscribe((entries: any[]) => {
-       
+    call.subscribe((logins: any[]) => {
+      const typeCountMap: { [type: string]: number } = {};
+  
+      logins.forEach(entry => {
+        const type = entry.table;
+        typeCountMap[type] = (typeCountMap[type] || 0) + 1;
+      });
 
-      if(entries.length === 0){
+      if(Object.values(typeCountMap).length ===0){
         this.hasData = false;
       }
       else {
         this.hasData = true;
       }
-      
-      const labels: string[] = [];
-      const dataValues: number[] = [];
-
-      entries.forEach(entry => {
-        
-        const dst = entry.dst_ip_address;
-        
-        const packetCount = parseInt(entry.packets, 10);
-        
-        labels.push(dst);
-        dataValues.push(packetCount);
-      
 
       this.data = {
-        labels,
+        labels: Object.keys(typeCountMap),
         datasets: [{
-          label: 'number of packets',
-          data: dataValues,
+          label: 'times edited',
+          data: Object.values(typeCountMap),
           backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
           
         }]
       };
-      });
     });
   }
 
@@ -153,3 +145,5 @@ onReset() {
 }  
 
 }
+
+

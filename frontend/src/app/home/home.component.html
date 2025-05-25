@@ -15,11 +15,15 @@
         <app-chart-three />
       } @else if (isChart(id, 'chart4')) {
         <app-chart-four/>
+      }@else if (isChart(id, 'chart5')) {
+        <app-chart-five/>
       } @else if (isChart(id, 'chart6')) {
         <app-chart-six/>
       } @else if (isChart(id, 'config-changes')) {
         <app-config-changes />
-      }
+      } @else if (isChart(id, 'chart8')) {
+        <app-chart-eight />
+      } 
       <!-- Resize -->
       <div class="resize-handle resize-e" (mousedown)="onResizeStart($event, 'horizontal')"></div>
       <div class="resize-handle resize-s" (mousedown)="onResizeStart($event, 'vertical')"></div>

@@ -32,7 +32,7 @@
 
         <ng-container *ngFor="let key of getIncidentKeys(data.incident_counts)">
         <tr *ngIf="data.incident_counts[key] > 0">
-          <td style="padding-left: 20px;">- {{ key }}:</td>
+          <td>- {{ key }}:</td>
           <td>{{ data.incident_counts[key] }}</td>
         </tr>
         </ng-container>
