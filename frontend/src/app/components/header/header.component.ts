@@ -1,5 +1,5 @@
 import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { keycloak, logout } from '../../auth/keycloak.service';
+import { keycloak, logout, updatefunction } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
@@ -111,6 +111,8 @@ export class HeaderComponent implements OnInit {
           // Use preferred_username, full name, or just 'User' if nothing is available
           this.username.set(preferredUsername || name || 'User');
           console.log('Keycloak username set:', this.username());
+          console.log('Keycloak username set:', keycloak.token);
+          //updatefunction(this.username());
         } else {
           // If token isn't parsed yet, get username directly from keycloak instance
           keycloak.loadUserProfile().then(profile => {
@@ -133,7 +135,7 @@ export class HeaderComponent implements OnInit {
 
   // Get count of critical events
   getCriticalEventsCount(): number {
-    return this.eventService.events.filter(event => event.status === 'Kritisch').length;
+    return this.eventService.events.filter(event => event.status === 'Critical').length;
   }
   
   // Check if there are any critical events

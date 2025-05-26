@@ -20,3 +20,19 @@ export function logout(): void {
   });
 }
 
+export function updatefunction(userId: string){
+  
+    fetch('http://localhost:8080/dashboard/auth/admin/realms/FinalRealm/users/5bff8e57-8cbd-4ddd-acbf-932eef0944a4', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + keycloak.token
+    },
+    body: JSON.stringify({
+      attributes: {
+        key: ['test3'],
+      }
+    })
+  });
+}
+
