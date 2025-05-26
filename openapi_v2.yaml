@@ -52,7 +52,66 @@ paths:
           
         '500' :
           description: server kaputt
+    
+    
+  /incidents-config/:
+    post:
+      summary: Upload einer Logdatei
+      description: |
+        Upload einer Auditlogdatei
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              
+              properties:
+                brute_force:
+                  type: object
+                  properties:
+                    attempt_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+                dos:
+                  type: object
+                  properties:
+                    packet_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+                ddos:
+                  type: object
+                  properties:
+                    packet_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+                    min_sources:
+                      type: integer
+                
+                
+                
+      responses:
+        '200':
+          description: Datei erfolgreich hochgeladen 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogFile'
+    
+        '401':
+          description: nicht authentifiziert
           
+        '500' :
+          description: server kaputt   
           
   
                 

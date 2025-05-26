@@ -11,6 +11,10 @@ index.ts
 model/ddosPackets.ts
 model/dosPackets.ts
 model/events.ts
+model/incidentsConfigPostRequest.ts
+model/incidentsConfigPostRequestBruteForce.ts
+model/incidentsConfigPostRequestDdos.ts
+model/incidentsConfigPostRequestDos.ts
 model/logEntryConfigChanges.ts
 model/logEntryIncidents.ts
 model/logEntryLogin.ts

@@ -23,6 +23,8 @@ import { DosPackets } from '../model/dosPackets';
 // @ts-ignore
 import { Events } from '../model/events';
 // @ts-ignore
+import { IncidentsConfigPostRequest } from '../model/incidentsConfigPostRequest';
+// @ts-ignore
 import { LogEntryConfigChanges } from '../model/logEntryConfigChanges';
 // @ts-ignore
 import { LogEntryIncidents } from '../model/logEntryIncidents';
@@ -45,6 +47,71 @@ export class DefaultService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Upload einer Logdatei
+     * Upload einer Auditlogdatei 
+     * @param incidentsConfigPostRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<LogFile>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<LogFile>>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<LogFile>>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (incidentsConfigPostRequest === null || incidentsConfigPostRequest === undefined) {
+            throw new Error('Required parameter incidentsConfigPostRequest was null or undefined when calling incidentsConfigPost.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/incidents-config/`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<LogFile>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: incidentsConfigPostRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                transferCache: localVarTransferCache,
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
