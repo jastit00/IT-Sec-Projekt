@@ -102,7 +102,7 @@ ngOnInit(): void {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',  // Legende unter dem Diagramm
+        position: 'bottom',  // Legende unter dem Diagram
         align: 'center',    // Zentrierte Ausrichtung der Legende
         labels: {
           boxWidth: 25,     // Breite des Farb-Kastens
