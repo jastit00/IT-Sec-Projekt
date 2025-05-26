@@ -48,8 +48,8 @@
   <form [formGroup]="settingsForm" (ngSubmit)="submitSettings()">
 
     <div formGroupName="brute_force">
-      <details open>
-        <summary><strong>Brute Force</strong></summary>
+      <details>
+        <summary class="formdesc"><strong>Brute Force</strong></summary>
         <label>Attempt Threshold:
           <input type="number" formControlName="attempt_threshold" />
         </label>
@@ -64,7 +64,7 @@
 
     <div formGroupName="dos">
       <details>
-        <summary><strong>DoS</strong></summary>
+        <summary class="formdesc"><strong>DoS</strong></summary>
         <label>Packet Threshold:
           <input type="number" formControlName="packet_threshold" />
         </label>
@@ -79,7 +79,7 @@
 
     <div formGroupName="ddos">
       <details>
-        <summary><strong>DDoS</strong></summary>
+        <summary class="formdesc"><strong>DDoS</strong></summary>
         <label>Packet Threshold:
           <input type="number" formControlName="packet_threshold" />
         </label>
