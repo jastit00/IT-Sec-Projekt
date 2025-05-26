@@ -102,7 +102,7 @@ export class ChartThreeComponent implements OnInit{
       }
       else {
         this.hasData = true;
-        console.log(this.hasData);
+        
       }
 
     this.data = {

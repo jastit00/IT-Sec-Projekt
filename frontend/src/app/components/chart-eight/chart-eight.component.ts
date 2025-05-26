@@ -6,14 +6,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ChartUpdateService } from '../../services/chart-update.service';
 
 @Component({
-  selector: 'app-chart-four',
+  selector: 'app-chart-eight',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-four.component.html',
-  styleUrls: ['./chart-four.component.scss']
+  templateUrl: './chart-eight.component.html',
+  styleUrls: ['./chart-eight.component.scss']
 })
 
-export class ChartFourComponent implements OnInit {
+export class ChartEightComponent implements OnInit {
   private defaultService = inject(DefaultService);
   private updateService = inject(ChartUpdateService);
   private fb = inject(FormBuilder);
@@ -25,9 +25,9 @@ export class ChartFourComponent implements OnInit {
   data: any = {
     labels: [],
     datasets: [{
-      label: 'number of incidents',
+      label: 'attempted logins by IP',
       data: [],
-      backgroundColor: ['#F94144', '#F3722C', '#F8961E', '#F9844A', '#F9C74F', '#90BE6D', '#43AA8B', '#4D908E', '#577590', '#277DA1']
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }]
   };
 ngOnInit(): void {
@@ -57,15 +57,15 @@ ngOnInit(): void {
     const call = (start && end)
     
 
-    ? this.defaultService.logfilesIncidentsGet(start, end, observe, reportProgress)
-    : this.defaultService.logfilesIncidentsGet();
+    ? this.defaultService.logfilesConfigChangesGet(start, end, observe, reportProgress)
+    : this.defaultService.logfilesConfigChangesGet();
 
 
     call.subscribe((logins: any[]) => {
       const typeCountMap: { [type: string]: number } = {};
   
       logins.forEach(entry => {
-        const type = entry.incident_type;
+        const type = entry.table;
         typeCountMap[type] = (typeCountMap[type] || 0) + 1;
       });
 
@@ -79,9 +79,10 @@ ngOnInit(): void {
       this.data = {
         labels: Object.keys(typeCountMap),
         datasets: [{
-          //label: 'Login-Versuche pro IP',
+          label: 'times edited',
           data: Object.values(typeCountMap),
-          backgroundColor: ['#F94144', '#F3722C', '#F8961E', '#F9844A', '#F9C74F', '#90BE6D', '#43AA8B', '#4D908E', '#577590', '#277DA1']
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+          
         }]
       };
     });
@@ -144,3 +145,5 @@ onReset() {
 }  
 
 }
+
+

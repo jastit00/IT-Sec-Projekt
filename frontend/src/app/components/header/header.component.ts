@@ -9,10 +9,12 @@ import { UploadResultDialogComponent } from '../upload-result-dialog/upload-resu
 import { BadgeModule } from 'primeng/badge';
 import { EventService } from '../../services/event-service';
 import { ChartUpdateService } from '../../services/chart-update.service';
+import { ReactiveFormsModule, FormGroup, FormBuilder  } from '@angular/forms';
+
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule],
+  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -32,6 +34,12 @@ export class HeaderComponent implements OnInit {
   private dialog = inject(MatDialog);
   private eventService = inject(EventService);
   private updateService = inject(ChartUpdateService);
+  private fb = inject(FormBuilder);
+
+  showSettingsForm = false;
+ settingsForm!: FormGroup;
+   
+
 
   constructor() {
 
@@ -65,6 +73,28 @@ export class HeaderComponent implements OnInit {
     // Set username from Keycloak when component initializes
     this.initUsername();
     console.log('HeaderComponent initialized, attempting to get Keycloak username');
+    this.settingsForm = this.fb.group({
+      brute_force: this.fb.group({
+        attempt_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+      }),
+      dos: this.fb.group({
+        packet_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+      }),
+      ddos: this.fb.group({
+        packet_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+        min_sources: [0],
+      }),
+    });
+
+
+
+
   }
 
   // Initialize username from Keycloak
@@ -185,4 +215,28 @@ export class HeaderComponent implements OnInit {
       }
     }
   }
-}
+
+  onSettingsClick(){
+    this.showSettingsForm = !this.showSettingsForm;
+  }
+ submitSettings() {
+
+
+
+
+
+
+
+    this.defaultService.incidentsConfigPost(this.settingsForm.value).subscribe({
+      next: response => {
+        console.log('Einstellungen erfolgreich gesendet:', response);
+        
+        this.showSettingsForm = false;
+        this.updateService.triggerChartUpdate();
+      },
+      error: err => {
+        console.error('Fehler beim Senden der Einstellungen:', err);
+        
+    }});
+  
+  }}

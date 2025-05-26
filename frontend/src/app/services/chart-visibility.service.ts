@@ -16,12 +16,14 @@ export class ChartVisibilityService {
 
   // Default chart configuration
   private defaultCharts: Chart[] = [
-    { id: 'chart1', name: 'Diagramm 1', visible: true },
+    { id: 'chart1', name: 'test', visible: true },
     { id: 'chart2', name: 'Diagramm 2', visible: true },
     { id: 'chart3', name: 'Diagramm 3', visible: true },
     { id: 'chart4', name: 'Diagramm 4', visible: true },
+    { id: 'chart5', name: 'Diagramm 5', visible: true },
     { id: 'chart6', name: 'Diagramm 6', visible: false },
-    { id: 'config-changes', name: 'Diagramm 7', visible: false }, // Default auf false gesetzt, da Max = 4
+    { id: 'config-changes', name: 'Diagramm 7', visible: false },
+    { id: 'chart8', name: 'Diagramm 8', visible: false }, // Default auf false gesetzt, da Max = 4
   ];
 
   // BehaviorSubject to track chart visibility state
