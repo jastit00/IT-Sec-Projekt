@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.utils import timezone
-from .models import UserLogin, UserLogout, Incident, ConcurrentLoginIncident
+from .models import UserLogin, UserLogout, Incident, ConcurrentLoginIncident, BruteforceIncident
 from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins
 
 from django.conf import settings
@@ -117,10 +117,13 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(UserLogin.objects.count(),17)
 
     def test_successful_last_attempt_changes_reason(self):
-        self.create_logins(13, success_on_last=True)
-        detect_bruteforce()
-        incident = Incident.objects.first()
-        self.assertIn("Successful", incident.reason)
+        # create the specific entries from file successful_bruteforce.log
+        self.entry_creator.make_entries('successful_bruteforce.log')
+        # test
+        result=detect_bruteforce()
+        incident = BruteforceIncident.objects.first()
+        self.assertIn("20 attempts in 2 minutes, 1 successful", incident.reason)
+        self.assertEqual(result["bruteforce"],1)
 
     def test_detect_incidents_wrapper(self):
         self.create_logins(13)
