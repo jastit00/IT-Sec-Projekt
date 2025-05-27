@@ -126,10 +126,11 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(result["bruteforce"],1)
 
     def test_detect_incidents_wrapper(self):
-        self.create_logins(13)
+        # create the specific entries from file several_clear_bruteforce.log
+        self.entry_creator.make_entries('several_clear_bruteforce.log')
+        # test
         result = detect_incidents()
-        self.assertIn("incidents", result)
-        self.assertEqual(result["incidents"]["bruteforce"], 1)
+        self.assertEqual(result["counts"]["bruteforce"], 2)
 
     def test_duplicate_incident_is_not_created(self):
         self.create_logins(13)
