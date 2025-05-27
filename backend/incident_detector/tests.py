@@ -131,13 +131,13 @@ class BruteForceDetectionTests(TestCase):
         # test
         result = detect_incidents()
         self.assertEqual(result["counts"]["bruteforce"], 2)
-
+    
     def test_duplicate_incident_is_not_created(self):
-        self.create_logins(13)
+        self.entry_creator.make_entries('clear_simple_bruteforce.log')
         detect_bruteforce()
         detect_bruteforce()  # call twice
-        self.assertEqual(Incident.objects.count(), 1)
-
+        self.assertEqual(BruteforceIncident.objects.count(), 1)
+       
 class ConcurrentLoginsDetectionTest(TestCase):
     entry_creator=CreateEntries()
     def test_single_clear_attack_detected(self):
