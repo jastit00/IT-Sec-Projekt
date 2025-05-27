@@ -127,20 +127,19 @@ def processed_logins(request):
     return Response(data)
 
 
+
+
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    fields_to_keep = ['timestamp', 'action','terminal', 'result', 'event_type', 'severity']
-    data = get_filtered_queryset(
-        model=UsysConfig,
-        serializer_class=UsysConfigSerializer,
-        fields_to_keep=fields_to_keep,
-        start=start,
-        end=end
-    )
-    return Response(data)
-
+    queryset = UsysConfig.objects.all()
+    if start:
+        queryset = queryset.filter(timestamp__gte=start)
+    if end:
+        queryset = queryset.filter(timestamp__lte=end)
+    serializer = UsysConfigSerializer(queryset, many=True)
+    return Response(serializer.data)
 
 
 
@@ -203,7 +202,7 @@ def unified_event_log(request):
 
     fields_to_keep = [
         'timestamp', 'event_type', 'reason', 'src_ip_address', 'dst_ip_address',
-        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count',
+        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count','table',
     ]
 
     filtered_events = filter_fields(all_events, fields_to_keep)
