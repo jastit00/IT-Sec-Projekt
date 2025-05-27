@@ -13,10 +13,10 @@ DOS_TIME_DELTA = timedelta(seconds=10)             # Zeitfenster zur Erkennung e
 DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # Mindestabstand, bis erneut ein Angriff für dieselbe Quelle/Ziel erkannt wird
 DOS_PACKET_THRESHOLD = 100       
 
-DDOS_PACKET_THRESHOLD = 10
+DDOS_PACKET_THRESHOLD = 100
 DDOS_TIME_DELTA = timedelta(seconds=2)
 DDOS_REPEAT_THRESHOLD = timedelta(seconds=60)
-DDOS_MIN_SOURCES = 2
+DDOS_MIN_SOURCES = 5
 
 # vars for critical config change detection
 CRITICAL_CONFIG_RULES = [
