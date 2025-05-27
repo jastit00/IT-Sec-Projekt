@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChartVisibilityService } from '../services/chart-visibility.service';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { PresetIdService } from '../services/preset-id.service';
 
 
 @Component({
@@ -43,11 +45,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   startY = 0;
   startWidth = 0;
   startHeight = 0;
+
+  constructor(
+    private presetIdService: PresetIdService,
+    private route: ActivatedRoute
+  ) {}
   
   private chartVisibilityService = inject(ChartVisibilityService);
   private subscription: Subscription | null = null;
 
   ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const presetId = params.get('presetId') || '1';
+      this.presetIdService.setPresetId(presetId);
+    });
     // Initial state
     this.updateVisibleCharts();
     

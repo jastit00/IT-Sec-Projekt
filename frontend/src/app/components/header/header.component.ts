@@ -1,6 +1,6 @@
 import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { keycloak, logout, updatefunction } from '../../auth/keycloak.service';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
@@ -10,6 +10,7 @@ import { BadgeModule } from 'primeng/badge';
 import { EventService } from '../../services/event-service';
 import { ChartUpdateService } from '../../services/chart-update.service';
 import { ReactiveFormsModule, FormGroup, FormBuilder  } from '@angular/forms';
+import { PresetIdService } from '../../services/preset-id.service';
 
 
 @Component({
@@ -18,10 +19,14 @@ import { ReactiveFormsModule, FormGroup, FormBuilder  } from '@angular/forms';
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
+
 export class HeaderComponent implements OnInit {
   title = signal('Security Event Detection');
   username = signal('User'); // Default value until Keycloak data is loaded
   showDashboard1Menu = false;
+  showDashboard2Menu = false;
+  showDashboard3Menu = false;
+   // default
   // Chart configuration
   charts: Chart[] = [];
   // Flag to track if max charts are reached
@@ -35,14 +40,13 @@ export class HeaderComponent implements OnInit {
   private eventService = inject(EventService);
   private updateService = inject(ChartUpdateService);
   private fb = inject(FormBuilder);
+  /*private route = inject(ActivatedRoute);
+  private router = inject(Router);*/
 
   showSettingsForm = false;
- settingsForm!: FormGroup;
-   
+  settingsForm!: FormGroup;
 
-
-  constructor() {
-
+  constructor(private presetIdService: PresetIdService) {
     // Initialize charts from the service
     this.charts = this.chartVisibilityService.getAllCharts();
     
@@ -91,11 +95,13 @@ export class HeaderComponent implements OnInit {
         min_sources: [0],
       }),
     });
-
-
-
-
   }
+
+  setDashboard(id: string) {
+    this.presetIdService.setPresetId(id);
+    console.log('PresetId gesetzt auf:', id);
+  }
+
 
   // Initialize username from Keycloak
   private initUsername() {
@@ -219,24 +225,14 @@ export class HeaderComponent implements OnInit {
   onSettingsClick(){
     this.showSettingsForm = !this.showSettingsForm;
   }
- submitSettings() {
-
-
-
-
-
-
-
+  submitSettings() {
     this.defaultService.incidentsConfigPost(this.settingsForm.value).subscribe({
       next: response => {
         console.log('Einstellungen erfolgreich gesendet:', response);
-        
         this.showSettingsForm = false;
         this.updateService.triggerChartUpdate();
       },
       error: err => {
         console.error('Fehler beim Senden der Einstellungen:', err);
-        
     }});
-  
   }}

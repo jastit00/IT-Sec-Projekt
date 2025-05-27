@@ -7,7 +7,9 @@
      <div class="dropdown">
        <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">Dashboard</button>
        <div class="dropdown-content">
-         <div class="dropdown-item" (mouseenter)="showDashboard1Menu = true" (mouseleave)="showDashboard1Menu = false">
+         <div class="dropdown-item" 
+              (mouseenter)="setDashboard('1'); showDashboard1Menu = true"
+              (mouseleave)="showDashboard1Menu = false">
            <a routerLink="/dashboard/1" [class.disabled-link]="isMaxChartsReached">Dashboard 1</a>
            <div class="submenu" *ngIf="showDashboard1Menu">
              <div class="chart-toggle-item" *ngFor="let chart of charts">
@@ -20,8 +22,36 @@
              </div>
            </div>
          </div>
-         <a routerLink="/dashboard/2" [class.disabled-link]="isMaxChartsReached">Dashboard 2</a>
-         <a routerLink="/dashboard/3" [class.disabled-link]="isMaxChartsReached">Dashboard 3</a>
+         <div class="dropdown-item" 
+              (mouseenter)="setDashboard('2'); showDashboard2Menu = true"
+              (mouseleave)="showDashboard2Menu = false">
+           <a routerLink="/dashboard/2" [class.disabled-link]="isMaxChartsReached">Dashboard 2</a>
+           <div class="submenu" *ngIf="showDashboard2Menu">
+             <div class="chart-toggle-item" *ngFor="let chart of charts">
+               <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
+                 <input type="checkbox" [checked]="chart.visible"
+                        (change)="toggleChart(chart.id)"
+                        [disabled]="!chart.visible && isMaxChartsReached">
+                 <span class="chart-label">{{ chart.name }}</span>
+               </label>
+             </div>
+           </div>
+         </div>
+         <div class="dropdown-item" 
+              (mouseenter)="setDashboard('3'); showDashboard3Menu = true"
+              (mouseleave)="showDashboard3Menu = false">
+           <a routerLink="/dashboard/3" [class.disabled-link]="isMaxChartsReached">Dashboard 3</a>
+           <div class="submenu" *ngIf="showDashboard3Menu">
+             <div class="chart-toggle-item" *ngFor="let chart of charts">
+               <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
+                 <input type="checkbox" [checked]="chart.visible"
+                        (change)="toggleChart(chart.id)"
+                        [disabled]="!chart.visible && isMaxChartsReached">
+                 <span class="chart-label">{{ chart.name }}</span>
+               </label>
+             </div>
+           </div>
+         </div>
        </div>
      </div>
      <button routerLink="/all-events">All Events</button>
