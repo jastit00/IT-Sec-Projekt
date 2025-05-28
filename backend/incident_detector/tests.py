@@ -1,7 +1,9 @@
 from django.test import TestCase
 from django.utils import timezone
-from .models import UserLogin, UserLogout, Incident, ConcurrentLoginIncident, BruteforceIncident
-from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins
+from log_processor.models import UserLogin, UserLogout, UsysConfig
+from .models import BruteforceIncident, ConcurrentLoginIncident, ConfigIncident
+from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins, detect_critical_config_change
+from datetime import timedelta
 
 from django.conf import settings
 import os
