@@ -320,3 +320,12 @@ class DoSDetectionTest(TestCase):
         result=detect_dos_attack()
         self.assertEqual(result["dos_attacks"],0)
         self.assertEqual(NetfilterPackets.objects.count(),1)
+
+    def test_multiples_dos_attacks_from_same_ip(self):
+        # creating the specific entries from file double_dos_attack_same_ip.log
+        self.entry_creator.make_entries('double_dos_attack_same_ip.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],2)
+        self.assertEqual(DosIncident.objects.all()[0].dst_ip_address,'192.168.0.88')
+        self.assertEqual(DosIncident.objects.all()[1].dst_ip_address,'192.124.0.59')
