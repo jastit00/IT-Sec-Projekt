@@ -1,8 +1,8 @@
 from django.test import TestCase
 from django.utils import timezone
-from log_processor.models import UserLogin, UserLogout, UsysConfig
-from .models import BruteforceIncident, ConcurrentLoginIncident, ConfigIncident
-from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins, detect_critical_config_change
+from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPackets
+from .models import BruteforceIncident, ConcurrentLoginIncident, ConfigIncident, DosIncident, DDosIncident
+from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins, detect_critical_config_change, detect_dos_attack, detect_ddos_attack
 from datetime import timedelta
 
 from django.conf import settings
@@ -293,3 +293,14 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(result["critical_config_change"],0)
         self.assertEqual(UserLogin.objects.count(),0)
         self.assertEqual(UsysConfig.objects.count(), 53)
+
+class DoSDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_single_clear_dos_attack_detected(self):
+        # create the specific entries from file single_clear_dos_attack.log
+        self.entry_creator.make_entries('single_clear_dos_attack.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],1)
+        self.assertEqual(NetfilterPackets.objects.count(),1)
+        self.assertEqual(DosIncident.objects.first().src_ip_address,'172.16.0.2')
