@@ -329,3 +329,12 @@ class DoSDetectionTest(TestCase):
         self.assertEqual(result["dos_attacks"],2)
         self.assertEqual(DosIncident.objects.all()[0].dst_ip_address,'192.168.0.88')
         self.assertEqual(DosIncident.objects.all()[1].dst_ip_address,'192.124.0.59')
+
+    def test_very_long_dos_attack_two_incidents_generated(self):
+        # creating the specific entries from file very_long_dos_attack.log
+        self.entry_creator.make_entries('very_long_dos_attack.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],2)
+        self.assertEqual(NetfilterPackets.objects.count(),8)
+        # from first entry till lats enry there is approx. 3 minutes and 42 seconds-> 3min = 6*30sec; 42 = 30sec+rest
