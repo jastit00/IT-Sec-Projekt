@@ -108,12 +108,12 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(result["bruteforce"], 1)
         self.assertEqual(BruteforceIncident.objects.count(), 1)
 
-    def test_ignore_attempts_outside_time_window(self):
+    def test_spaced_attemps_still_detected(self):
         # create the specific entries from file spaced_tries.log
         self.entry_creator.make_entries('spaced_tries.log')
         # test
         result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 0)
+        self.assertEqual(result["bruteforce"], 1)
         self.assertEqual(UserLogin.objects.count(),17)
 
     def test_successful_last_attempt_changes_reason(self):
