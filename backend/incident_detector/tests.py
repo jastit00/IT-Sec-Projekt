@@ -312,3 +312,11 @@ class DoSDetectionTest(TestCase):
         result=detect_dos_attack()
         self.assertEqual(result["dos_attacks"],0)
         self.assertEqual(NetfilterPackets.objects.count(),144)
+
+    def test_not_enogh_packets_to_recognice_attack(self):
+        # creating the specific entries from file dos_attack_not_enough_packets.log
+        self.entry_creator.make_entries('dos_attack_not_enough_packets.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],0)
+        self.assertEqual(NetfilterPackets.objects.count(),1)
