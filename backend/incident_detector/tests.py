@@ -258,3 +258,11 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(UserLogin.objects.first().result,'failed')
         for incident in ConfigIncident.objects.all():
             self.assertEqual(incident.src_ip_address, None)
+            
+    def test_almost_critical_config_change(self):
+        # create the specific entries from almost_critical_config_change.log
+        self.entry_creator.make_entries('almost_critical_config_change.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],0)
+        self.assertEqual(UsysConfig.objects.count(),6)
