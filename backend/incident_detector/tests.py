@@ -192,3 +192,13 @@ class ConcurrentLoginsDetectionTest(TestCase):
         self.assertEqual(result["concurrent_logins"],3)
         self.assertEqual(UserLogin.objects.count(),9)
         self.assertEqual(UserLogout.objects.count(),3)
+
+class ConfigChangeDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_single_critical_change_w_previous_user_login(self):
+        # create the specific entries from file config_change_user_login.log
+        self.entry_creator.make_entries('config_change_user_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],1)
+        self.assertEqual(ConfigIncident.objects.first().src_ip_address,UserLogin.objects.first().src_ip_address)
