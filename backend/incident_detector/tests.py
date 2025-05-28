@@ -248,3 +248,13 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(result["critical_config_change"],6)
         for incident in ConfigIncident.objects.filter(username='testuser'):
             self.assertEqual(incident.src_ip_address, None)
+
+    def test_multiple_config_change_with_invalid_login(self):
+        # create the specific entries from many_config_changes_no_valid_login.log
+        self.entry_creator.make_entries('many_config_changes_no_valid_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        self.assertEqual(UserLogin.objects.first().result,'failed')
+        for incident in ConfigIncident.objects.all():
+            self.assertEqual(incident.src_ip_address, None)
