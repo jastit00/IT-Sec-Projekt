@@ -239,3 +239,12 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(ConfigIncident.objects.filter(username='testuser').count(),5)
         self.assertEqual(ConfigIncident.objects.filter(username='badguy').count(),2)
         self.assertEqual(ConfigIncident.objects.filter(username='anotherone').count(),2)
+
+    def test_multiple_config_change_with_later_login(self):
+        # create the specific entries from many_config_changes_no_proper_login.log
+        self.entry_creator.make_entries('many_config_changes_late_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        for incident in ConfigIncident.objects.filter(username='testuser'):
+            self.assertEqual(incident.src_ip_address, None)
