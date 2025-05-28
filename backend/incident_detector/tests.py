@@ -266,3 +266,12 @@ class ConfigChangeDetectionTest(TestCase):
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],0)
         self.assertEqual(UsysConfig.objects.count(),6)
+
+    def test_change_of_severity(self):
+        # create the specific entries from many_config_changes_mix_severity.log
+        self.entry_creator.make_entries('many_config_changes_mix_severity.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],4)
+        self.assertEqual(ConfigIncident.objects.all()[0].severity,'critical')
+        self.assertEqual(ConfigIncident.objects.all()[1].severity,'high')
