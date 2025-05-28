@@ -275,3 +275,12 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(result["critical_config_change"],4)
         self.assertEqual(ConfigIncident.objects.all()[0].severity,'critical')
         self.assertEqual(ConfigIncident.objects.all()[1].severity,'high')
+
+    def test_multiple_config_changes_from_different_users_mix_valid_logins(self):
+        # create the specific entries from many_config_changes_mix_logins.log
+        self.entry_creator.make_entries('many_config_changes_mix_logins.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        self.assertEqual(result["incidents"][0].src_ip_address,None)
+        self.assertEqual(result["incidents"][2].src_ip_address,UserLogin.objects.order_by('timestamp').first().src_ip_address)
