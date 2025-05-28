@@ -220,6 +220,16 @@ class ConfigChangeDetectionTest(TestCase):
         self.assertEqual(result["critical_config_change"],1)
         self.assertEqual(ConfigIncident.objects.first().src_ip_address, None)
 
+    def test_multiple_config_change_from_single_user(self):
+        # create the specific entries from file many_config_changes_single_login.log
+        self.entry_creator.make_entries('many_config_changes_single_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],5)
+        self.assertEqual(UsysConfig.objects.count(),7)
+        for incident in ConfigIncident.objects.all():
+            self.assertEqual(incident.src_ip_address,UserLogin.objects.first().src_ip_address)
+            
     def test_multiple_config_changes_from_several_users(self):
         # create the specific entries from file many_config_changes_many_users.log
         self.entry_creator.make_entries('many_config_changes_many_users.log')
