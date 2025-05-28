@@ -304,3 +304,11 @@ class DoSDetectionTest(TestCase):
         self.assertEqual(result["dos_attacks"],1)
         self.assertEqual(NetfilterPackets.objects.count(),1)
         self.assertEqual(DosIncident.objects.first().src_ip_address,'172.16.0.2')
+
+    def test_unrecognized_attack_spaced_in_30s(self):
+        # creating the specific entries from file extenden_dos_attack_spaced.log
+        self.entry_creator.make_entries('extenden_dos_attack_spaced.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],0)
+        self.assertEqual(NetfilterPackets.objects.count(),144)
