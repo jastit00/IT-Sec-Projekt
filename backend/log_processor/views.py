@@ -1,68 +1,246 @@
-from django.conf import settings 
-import os
-from datetime import datetime
-from django.shortcuts import render#import libary
-from django.http import JsonResponse
-from .models import User_Login
-from incident_detector.services import detect_incidents
+import logging
 
-# Create your views here.
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-# this is the log path change it later to get the log file from frontend
-LOG_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'logs', 'brute_force_example.log')
+from incident_detector.models import (
+    BruteforceIncident,
+    ConfigIncident,
+    ConcurrentLoginIncident,
+    DDosIncident,
+    DosIncident,
+)
+from incident_detector.serializers import (
+    BruteforceIncidentSerializer,
+    ConfigIncidentSerializer,
+    ConcurrentLoginIncidentSerializer,
+    DDosIncidentSerializer,
+    DosIncidentSerializer,
+    IncidentDetectorConfigSerializer,
+)
 
-# function to process the log file and create database entries
-def process_log(request):
-    try:
-        with open(LOG_FILE_PATH, 'r') as log_file:
-            lines = log_file.readlines()
-            entries_created = 0 # Counter for created entries
+from log_processor.models import (
+    NetfilterPackets,
+    UsysConfig,
+    UserLogin,
+    UserLogout,
+)
 
-            for line in lines:
-                if "type=USER_LOGIN" in line:    
+from log_processor.serializers import (
+     LogFileSerializer,
+     NetfilterPacketsSerializer,
+     UsysConfigSerializer,
+     UserLoginSerializer,
+     UserLogoutSerializer,
+     
+)
+from incident_detector.services import update_config
+from log_processor.services import handle_uploaded_log_file
+logger = logging.getLogger(__name__)
 
-                    # Split the line into parts based on whitespaces
-                    parts = line.split()
+# Default-Werte für Config
 
-                    # extract relevant data (no srftime because DB field is DateTimeField)
-                    timestamp = datetime.fromtimestamp(float(parts[1].replace("msg=audit(", "").split(":")[0])) #.strftime("%d.%m.%Y, %H:%M:%S")
-                    username = parts[7].replace("acct=", "").strip('"')
-                    ipAddress = parts[10].replace("addr=", "")
-                    result = parts[12].replace("res=", "").strip("'")
-                        
-                    # Create database entry here
-                    if not User_Login.objects.filter(timestamp=timestamp, username=username, ipAddress=ipAddress, result=result).exists():
-                        User_Login.objects.create(
-                            log_type="USER_LOGIN",
-                            timestamp=timestamp,
-                            username=username,
-                            ipAddress=ipAddress,
-                            result=result
-                        )
-                        entries_created += 1
-                
-                #############################################
-                # TODO
-                # Placeholder            
-                #else if "OTHER_TYPE" in line:
-                #    other log stuff
-                #    ....
-                #############################################
-            
-            # call the incident detection function
-            incidents_created = detect_incidents()
-            
-            # Return a JsonResponse with status, number of entries created, and debug info
-            return JsonResponse({
-                "status": "success",
-                "entries_created": entries_created,
-                "incidents_created": incidents_created  
-            })
-    
-    # error if log file not found
-    except FileNotFoundError:
-        return JsonResponse({"status": "error", "message": "Log file not found."}, status=404)
-    # error if other stuff goes wrong
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-        
+
+
+
+from incident_detector.services import get_current_config, save_new_config
+from incident_detector.serializers import IncidentDetectorConfigSerializer
+
+class LogFileUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get('file')
+        source = request.data.get('source', 'unknown')
+        uploaded_by_user = request.data.get('uploaded_by_user', 'anonym')
+
+        if not uploaded_file:
+            logger.warning("Upload attempt without file.")
+            return Response({"status": "error", "message": "Please upload a file"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not uploaded_file.name.endswith('.log'):
+            logger.warning("Upload attempt with invalid file type.")
+            return Response({"status": "error", "message": "Only .log files are allowed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            result = handle_uploaded_log_file(uploaded_file, source, uploaded_by_user)
+        except Exception as e:
+            logger.exception("Error while processing log file.")
+            return Response({"status": "error", "message": "Failed to process audit log file."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if result["status"] == "duplicate":
+            logger.warning(f"Duplicate file upload attempt: {uploaded_file.name}")
+            return Response({"status": "error", "message": "Diese Datei wurde bereits hochgeladen."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = LogFileSerializer(result["uploaded_log_file"])
+        data = serializer.data
+
+
+
+        filtered_data = {
+        'id': data.get('id'),
+        'status': data.get('status'),
+        'filename': data.get('filename'),
+        'entries_created': data.get('entries_created', 0),            
+        'incidents_created_total': data.get('incidents_created_total', 0), 
+        'incident_counts': data.get('incident_counts', {}),           
+}
+        logger.info(f"Audit log uploaded by {uploaded_by_user}: {uploaded_file.name}")
+        return Response(filtered_data, status=status.HTTP_200_OK)
+
+
+class IncidentConfigAPIView(APIView):
+    def post(self, request):
+        serializer = IncidentDetectorConfigSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        new_config = serializer.validated_data
+
+        current_config, _ = get_current_config()
+
+        if current_config == new_config:
+            return Response({"message": "Config unchanged"}, status=status.HTTP_200_OK)
+
+       
+        result = update_config(new_config)
+
+        last_updated = save_new_config(new_config)  
+
+        return Response({
+            "message": result["message"],
+            "last_updated": last_updated,
+            "changed": result.get("changed", False),
+            "total_incidents": result.get("total_incidents", 0),
+            "result": result.get("result", {}),
+            "config": result.get("config", {}),
+        }, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+def processed_logins(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+    data = get_filtered_queryset(
+        model=UserLogin,
+        serializer_class=UserLoginSerializer,
+        start=start,
+        end=end
+    )
+    return Response(data)
+
+
+
+@api_view(['GET'])
+def processed_config_changes(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+    queryset = UsysConfig.objects.all()
+    if start:
+        queryset = queryset.filter(timestampgte=start)
+    if end:
+        queryset = queryset.filter(timestamplte=end)
+    serializer = UsysConfigSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+
+
+@api_view(['GET'])
+def ddos_packets(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+
+    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets', 'timeDelta', 'sources']
+
+    data = get_filtered_queryset(
+        model=DDosIncident,
+        serializer_class=DDosIncidentSerializer,
+        fields_to_keep=fields_to_keep,
+        start=start,
+        end=end
+    )
+    return Response(data)
+
+
+
+
+@api_view(['GET'])
+def dos_packets(request):
+    start = request.query_params.get('start')
+    end = request.query_params.get('end')
+
+    fields_to_keep = ['timestamp', 'dst_ip_address', 'protocol', 'packets', 'timeDelta', 'src_ip_address']
+
+    data = get_filtered_queryset(
+        model=DosIncident,
+        serializer_class=DosIncidentSerializer,
+        fields_to_keep=fields_to_keep,
+        start=start,
+        end=end
+    )
+    return Response(data)
+
+
+
+@api_view(['GET'])
+def unified_event_log(request):
+    models_and_serializers = [
+        (UserLogin, UserLoginSerializer),
+        (UserLogout, UserLogoutSerializer),
+        (UsysConfig, UsysConfigSerializer),
+        (NetfilterPackets, NetfilterPacketsSerializer),
+        (DDosIncident, DDosIncidentSerializer),
+        (DosIncident, DosIncidentSerializer),
+        (ConfigIncident, ConfigIncidentSerializer),
+        (ConcurrentLoginIncident, ConcurrentLoginIncidentSerializer),
+        (BruteforceIncident, BruteforceIncidentSerializer),
+    ]
+
+    all_events = []
+    for model, serializer in models_and_serializers:
+        queryset = model.objects.all() 
+        serialized = serializer(queryset, many=True).data
+        all_events.extend(serialized)
+
+    fields_to_keep = [
+        'timestamp', 'event_type', 'reason', 'src_ip_address', 'dst_ip_address',
+        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count','table',
+    ]
+
+    filtered_events = filter_fields(all_events, fields_to_keep)
+    sorted_events = sorted(
+        filtered_events,
+        key=lambda x: x.get('timestamp') or '0000-00-00T00:00:00',
+        reverse=True
+    )
+    return Response(sorted_events)
+
+
+
+def filter_fields(data, fields_to_keep):
+    return [{k: item[k] for k in fields_to_keep if k in item} for item in data]
+
+
+
+def get_filtered_queryset(model, serializer_class, start=None, end=None, fields_to_keep=None):
+    queryset = model.objects.all()
+    if start:
+        queryset = queryset.filter(timestamp__gte=start)
+    if end:
+        queryset = queryset.filter(timestamp__lte=end)
+
+    queryset = queryset.order_by('-timestamp')
+
+    serializer = serializer_class(queryset, many=True)
+    data = serializer.data
+
+    if fields_to_keep:
+        return filter_fields(data, fields_to_keep)
+
+    return data

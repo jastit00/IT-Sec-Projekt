@@ -1,0 +1,14 @@
+type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.509:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.510:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.511:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.512:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.513:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.514:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.515:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.516:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.517:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.518:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.519:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.520:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.521:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=cda8 res=fail'UID="root" AUID="unset"
