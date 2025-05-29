@@ -1,6 +1,5 @@
 import logging
 
-
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -30,6 +29,7 @@ from log_processor.models import (
     UserLogin,
     UserLogout,
 )
+
 from log_processor.serializers import (
      LogFileSerializer,
      NetfilterPacketsSerializer,
@@ -38,35 +38,17 @@ from log_processor.serializers import (
      UserLogoutSerializer,
      
 )
-from incident_detector.services import load_config
+from incident_detector.services import update_config
 from log_processor.services import handle_uploaded_log_file
 logger = logging.getLogger(__name__)
+
 # Default-Werte für Config
-CURRENT_CONFIG = None
-
-
-class IncidentConfigAPIView(APIView):
-    def post(self, request):
-        global CURRENT_CONFIG
-
-        serializer = IncidentDetectorConfigSerializer(data=request.data)
-        if not serializer.is_valid():
-            logger.warning("Ungültige Config-Daten empfangen.")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        new_config = serializer.validated_data
-
-        if CURRENT_CONFIG == new_config:
-            logger.info("Config unverändert erhalten.")
-            return Response({"message": "Config unchanged"}, status=status.HTTP_200_OK)
-
-        CURRENT_CONFIG = new_config
-        result = load_config(CURRENT_CONFIG)
-        return Response(result, status=status.HTTP_200_OK)
 
 
 
 
+from incident_detector.services import get_current_config, save_new_config
+from incident_detector.serializers import IncidentDetectorConfigSerializer
 
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -111,6 +93,32 @@ class LogFileUploadView(APIView):
         return Response(filtered_data, status=status.HTTP_200_OK)
 
 
+class IncidentConfigAPIView(APIView):
+    def post(self, request):
+        serializer = IncidentDetectorConfigSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        new_config = serializer.validated_data
+
+        current_config, _ = get_current_config()
+
+        if current_config == new_config:
+            return Response({"message": "Config unchanged"}, status=status.HTTP_200_OK)
+
+       
+        result = update_config(new_config)
+
+        last_updated = save_new_config(new_config)  
+
+        return Response({
+            "message": result["message"],
+            "last_updated": last_updated,
+            "changed": result.get("changed", False),
+            "total_incidents": result.get("total_incidents", 0),
+            "result": result.get("result", {}),
+            "config": result.get("config", {}),
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -128,18 +136,18 @@ def processed_logins(request):
 
 
 
-
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
     queryset = UsysConfig.objects.all()
     if start:
-        queryset = queryset.filter(timestamp__gte=start)
+        queryset = queryset.filter(timestampgte=start)
     if end:
-        queryset = queryset.filter(timestamp__lte=end)
+        queryset = queryset.filter(timestamplte=end)
     serializer = UsysConfigSerializer(queryset, many=True)
     return Response(serializer.data)
+
 
 
 
@@ -212,12 +220,6 @@ def unified_event_log(request):
         reverse=True
     )
     return Response(sorted_events)
-
-
-
-
-
-
 
 
 

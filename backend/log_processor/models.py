@@ -62,3 +62,11 @@ class NetfilterPackets(models.Model):
     def __str__(self):
         return f"{self.src_ip_address} to {self.dst_ip_address} at {self.timestamp}"
     
+
+class DetectionConfig(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    data = models.JSONField()   # oder TextField mit JSON, je nach DB
+    updated_at = models.DateTimeField(auto_now=True)  # speichert automatisch die letzte Änderung
+
+    def __str__(self):
+        return f"{self.key} updated at {self.updated_at}"
