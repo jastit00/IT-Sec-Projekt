@@ -40,3 +40,38 @@ class BruteforceIncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = BruteforceIncident
         fields = '__all__'
+
+
+class BruteForceConfigSerializer(serializers.Serializer):
+    attempt_threshold = serializers.IntegerField(default=10)
+    time_delta = serializers.IntegerField(default=120)  # Sekunden
+    repeat_threshold = serializers.IntegerField(default=600)  # Sekunden
+
+class DoSConfigSerializer(serializers.Serializer):
+    packet_threshold = serializers.IntegerField(default=100)
+    time_delta = serializers.IntegerField(default=10)  # Sekunden
+    repeat_threshold = serializers.IntegerField(default=120)  # Sekunden
+
+class DDoSConfigSerializer(serializers.Serializer):
+    packet_threshold = serializers.IntegerField(default=10)
+    time_delta = serializers.IntegerField(default=2)  # Sekunden
+    repeat_threshold = serializers.IntegerField(default=60)  # Sekunden
+    min_sources = serializers.IntegerField(default=2)
+
+class IncidentDetectorConfigSerializer(serializers.Serializer):
+    brute_force = BruteForceConfigSerializer(required=False, default={
+        'attempt_threshold': 10,
+        'time_delta': 120,
+        'repeat_threshold': 600,
+    })
+    dos = DoSConfigSerializer(required=False, default={
+        'packet_threshold': 100,
+        'time_delta': 10,
+        'repeat_threshold': 120,
+    })
+    ddos = DDoSConfigSerializer(required=False, default={
+        'packet_threshold': 10,
+        'time_delta': 2,
+        'repeat_threshold': 60,
+        'min_sources': 2,
+    })

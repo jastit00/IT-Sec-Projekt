@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import UserLogin, UserLogout, UsysConfig, NetfilterPackets,UploadedLogFile
-from django.utils import timezone
+from .models import UserLogin, UserLogout, UsysConfig, NetfilterPackets,UploadedLogFile,DetectionConfig
+
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLogin
@@ -28,3 +28,4 @@ class LogFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadedLogFile
         fields = '__all__'
+        

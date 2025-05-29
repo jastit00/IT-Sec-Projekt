@@ -1,25 +1,49 @@
-from datetime import timedelta
+import copy
+import logging
 from collections import defaultdict
+from datetime import timedelta
 
-from log_processor.models import UserLogin, UserLogout, UsysConfig , NetfilterPackets, UploadedLogFile
-from incident_detector.models import Incident, DDosIncident, DosIncident,BruteforceIncident,ConfigIncident,ConcurrentLoginIncident
+from django.forms.models import model_to_dict
+from django.utils.timezone import now
 
+from incident_detector.models import (
+    BruteforceIncident,
+    ConfigIncident,
+    ConcurrentLoginIncident,
+    DDosIncident,
+    DosIncident,
+    
+)
+from log_processor.models import (
+    NetfilterPackets,
+    UsysConfig,
+    UserLogin,
+    UserLogout,
+    DetectionConfig
+)
 
+logger = logging.getLogger(__name__)
 
-BRUTE_FORCE_ATTEMPT_THRESHOLD = 10
-BRUTE_FORCE_TIME_DELTA = timedelta(minutes=2)
-BRUTE_FORCE_REPEAT_THRESHOLD = timedelta(minutes=10)
+# --- Default Configs ---
+BRUTE_FORCE_DEFAULT = {
+    'attempt_threshold': 10,
+    'time_delta': 120,
+    'repeat_threshold': 600,
+}
 
-DOS_TIME_DELTA = timedelta(seconds=10)             # time window to detect attack
-DOS_REPEAT_THRESHOLD = timedelta(minutes=2)        # time between DoS incidents
-DOS_PACKET_THRESHOLD = 100       
+DOS_DEFAULT = {
+    'packet_threshold': 100,
+    'time_delta': 10,
+    'repeat_threshold': 120,
+}
 
-DDOS_PACKET_THRESHOLD = 10
-DDOS_TIME_DELTA = timedelta(seconds=2)
-DDOS_REPEAT_THRESHOLD = timedelta(seconds=60)
-DDOS_MIN_SOURCES = 2
+DDOS_DEFAULT = {
+    'packet_threshold': 10,
+    'time_delta': 2,
+    'repeat_threshold': 60,
+    'min_sources': 2,
+}
 
-# vars for critical config change detection
 CRITICAL_CONFIG_RULES = [
     {
         "table": "config",
@@ -33,35 +57,151 @@ CRITICAL_CONFIG_RULES = [
     },
 ]
 
+def get_current_config():
+    try:
+        obj = DetectionConfig.objects.get(key="current")
+        return obj.data, obj.updated_at
+    except DetectionConfig.DoesNotExist:
+        default = {
+            "brute_force": BRUTE_FORCE_DEFAULT,
+            "dos": DOS_DEFAULT,
+            "ddos": DDOS_DEFAULT,
+        }
+        obj = DetectionConfig.objects.create(key="current", data=default)
+        return obj.data, obj.updated_at
+
+def save_new_config(new_config):
+    obj, created = DetectionConfig.objects.update_or_create(
+        key="current",
+        defaults={"data": new_config}
+    )
+    # Optional: hier Incidents löschen / neu erzeugen
+    return obj.updated_at
+
+def convert_if_needed(value):
+    if not isinstance(value, timedelta):
+        return timedelta(seconds=value)
+    return value
+
+def load_config(config):
+    """
+    Wandelt JSON-konforme Config in passende Typen um.
+    Gibt die fertige Config zurück (kein globaler State mehr).
+    """
+    config = copy.deepcopy(config)
+
+    config["brute_force"]["time_delta"] = convert_if_needed(config["brute_force"]["time_delta"])
+    config["brute_force"]["repeat_threshold"] = convert_if_needed(config["brute_force"]["repeat_threshold"])
+    config["dos"]["time_delta"] = convert_if_needed(config["dos"]["time_delta"])
+    config["dos"]["repeat_threshold"] = convert_if_needed(config["dos"]["repeat_threshold"])
+    config["ddos"]["time_delta"] = convert_if_needed(config["ddos"]["time_delta"])
+    config["ddos"]["repeat_threshold"] = convert_if_needed(config["ddos"]["repeat_threshold"])
+
+    return config
 
 
-def detect_incidents():
-    bf_result = detect_bruteforce()
-    cc_result = detect_critical_config_change()
-    cl_result = detect_concurrent_logins()
-    dos_result = detect_dos_attack()
-    ddos_result = detect_ddos_attack()
+
+
+
+def update_config(new_config):
+    """
+    Speichert neue Config, löscht bei Änderungen entsprechende Incidents,
+    lädt die Config neu und startet Incident Detection mit der neuen Config.
+    """
+    # Alte Config aus DB holen
+    old_config_raw, _ = get_current_config()
+    old_config = load_config(old_config_raw)
+    new_config_loaded = load_config(new_config)
+
+    changes = {
+        "brute_force": old_config["brute_force"] != new_config_loaded["brute_force"],
+        "dos": old_config["dos"] != new_config_loaded["dos"],
+        "ddos": old_config["ddos"] != new_config_loaded["ddos"],
+    }
+
+    if not any(changes.values()):
+        return {"message": "Config values are the same. No update performed.", "changed": False}
+
+    # Config speichern
+    save_new_config(new_config)
+
+    # Lösche Incidents bei geänderten Kategorien
+    if changes["brute_force"]:
+        BruteforceIncident.objects.all().delete()
+    if changes["dos"]:
+        DosIncident.objects.all().delete()
+    if changes["ddos"]:
+        DDosIncident.objects.all().delete()
+
+    changed_categories = [cat for cat, changed in changes.items() if changed]
+
+    # Incident Detection mit neuer Config starten
+    result = detect_incidents(categories=changed_categories, config=new_config_loaded)
+
+    return {
+        "message": "Config updated; incidents deleted and re-detected where needed.",
+        "changed": True,
+        "total_incidents": sum(result["counts"].values()),
+        "result": result,
+        "config": new_config_loaded,
+    }
+
+def detect_incidents(categories=None, config=None):
+    """
+    Führt die Incident Detection für gegebene Kategorien und Config aus.
+    Lädt Config falls nicht gegeben.
+    """
+    if categories is None:
+        categories = ["brute_force", "critical_config_change", "concurrent_logins", "dos", "ddos"]
+
+    if config is None:
+        config_raw, _ = get_current_config()
+        config = load_config(config_raw)
+
+    bf_result = {"brute_force": 0, "incidents": []}
+    cc_result = {"critical_config_change": 0, "incidents": []}
+    cl_result = {"concurrent_logins": 0, "incidents": []}
+    dos_result = {"dos": 0, "incidents": []}
+    ddos_result = {"ddos": 0, "incidents": []}
+
+    if "brute_force" in categories:
+        bf_result = detect_bruteforce(config["brute_force"])
+
+    if "critical_config_change" in categories:
+        cc_result = detect_critical_config_change()
+
+    if "concurrent_logins" in categories:
+        cl_result = detect_concurrent_logins()
+
+    if "dos" in categories:
+        dos_result = detect_dos_attack(config["dos"])
+
+    if "ddos" in categories:
+        ddos_result = detect_ddos_attack(config["ddos"])
 
     counts = {
-        "bruteforce": bf_result["bruteforce"],
+        "brute_force": bf_result["brute_force"],
         "critical_config_change": cc_result["critical_config_change"],
         "concurrent_logins": cl_result["concurrent_logins"],
-        "dos_attack": dos_result["dos_attacks"],
-        "ddos_attack": ddos_result["ddos_attacks"]
+        "dos": dos_result["dos"],
+        "ddos": ddos_result["ddos"]
     }
 
     all_new_incidents = (
         bf_result["incidents"] +
         cc_result["incidents"] +
         cl_result["incidents"] +
-        dos_result["incidents"]+
+        dos_result["incidents"] +
         ddos_result["incidents"]
     )
+    all_new_incidents_serialized = [model_to_dict(inc) for inc in all_new_incidents]
 
-    return {"counts": counts,"incidents": all_new_incidents}
+    return {
+        "counts": counts,
+        "incidents": all_new_incidents_serialized,
+    }
 
-
-def detect_bruteforce():
+def detect_bruteforce(config):
     """
     Purpose:
     Detects and logs incidents for brute force attacks.
@@ -72,7 +212,13 @@ def detect_bruteforce():
     Returns:
         dict {"bruteforce": <number of incidents created>, "incidents": <list with all the new created incidents>}
     """
-    all_logins = UserLogin.objects.all().order_by("timestamp")
+
+    BRUTE_FORCE_ATTEMPT_THRESHOLD = config['attempt_threshold']
+    BRUTE_FORCE_TIME_DELTA = config['time_delta']
+    REPEAT_THRESHOLD = config['repeat_threshold']
+
+
+    all_logins = UserLogin.objects.all().order_by('timestamp')
     incidents_created = 0
     new_incidents = []
 
@@ -116,7 +262,9 @@ def detect_bruteforce():
                     username=username,
                     src_ip_address=src_ip_address,
                     incident_type="bruteforce",
-                    timestamp=event_time
+                    timestamp__gte=event_time - REPEAT_THRESHOLD,
+                    timestamp__lte=event_time + REPEAT_THRESHOLD,
+                   
                 ).exists():
                     incident = BruteforceIncident.objects.create(
                         timestamp=event_time,
@@ -137,7 +285,7 @@ def detect_bruteforce():
                 # Not enough attempts — shift window forward
                 start += 1
 
-    return {"bruteforce": incidents_created, "incidents": new_incidents}
+    return {"brute_force": incidents_created, "incidents": new_incidents}
 
 def detect_critical_config_change():
     """
@@ -150,7 +298,8 @@ def detect_critical_config_change():
     Returns:
         dict {"critical_config_change": <number of incidents created>, "incidents": <list with all the new created incidents>}
     """
-    all_config_changes = UsysConfig.objects.all().order_by("timestamp")
+    
+    all_config_changes = UsysConfig.objects.all().order_by('timestamp')
     incidents_created = 0
     new_incidents = []
     for config_change in all_config_changes:
@@ -197,19 +346,16 @@ def detect_critical_config_change():
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
 
-def detect_dos_attack():
+def detect_dos_attack(config):
     """
-    Purpose:
-    Detects and logs incidents for possible DoS attacks.
-    
-    How:
-    Counts number of packets sent by the same source IP address to same destination IP adddress within a set time window.
-    Each NetfilterPackets entry already represents a 30s window with 'count' value.
-    
-    Returns:
-    dict {"dos_attacks": <number of incidents created>, "incidents": <list with all the new created incidents>}
+    Detects potential DoS attacks based on aggregated packet counts in time windows.
+    Assumes each NetfilterPackets entry already represents a 30s window with 'count' value.
     """
-    all_windows = NetfilterPackets.objects.all().order_by("timestamp")
+    DOS_PACKET_THRESHOLD = config['packet_threshold']
+    DOS_TIME_DELTA = config['time_delta']
+    DOS_REPEAT_THRESHOLD = config['repeat_threshold']
+
+    all_windows = NetfilterPackets.objects.all().order_by('timestamp')
     packets_by_connection = defaultdict(list)
     last_incident_time = {}
     incidents_created = 0
@@ -261,22 +407,21 @@ def detect_dos_attack():
             else:
                 i += 1
 
-    return {"dos_attacks": incidents_created, "incidents": new_incidents}
+    return {"dos": incidents_created, "incidents": new_incidents}
 
 
 
-def detect_ddos_attack():
+def detect_ddos_attack(config):
     """
-    Purpose:
-    Detects and logs incidents for potential DDoS attacks.
-    
-    How:
-    Counts how many packets were sent to the same destination IP address within a set time window.
-    Each NetfilterPackets entry in the db, represents a 30s window with a 'count' value.
-    
-    Returns:
-    dict {"ddos_attacks": <number of incidents created>, "incidents": <list with all the new created incidents>}
+    Detects potential DDoS attacks based on multiple sources sending high packet counts
+    to the same destination within a short time window.
+    Each NetfilterPackets entry represents a 30s window with a 'count' value.
     """
+    DDOS_PACKET_THRESHOLD = config['packet_threshold']
+    DDOS_TIME_DELTA = config['time_delta']
+    DDOS_REPEAT_THRESHOLD = config['repeat_threshold']
+    DDOS_MIN_SOURCES = config['min_sources']
+
     all_windows = NetfilterPackets.objects.all().order_by('timestamp')
     windows_by_dst_proto = defaultdict(list)
     last_incident_time = {}
@@ -313,6 +458,7 @@ def detect_ddos_attack():
                     dst_ip_address=dst_ip,
                     timestamp__range=(window_start, window_end),
                     incident_type="ddos",
+                    
                 ).exists()
 
                 if not existing_incident and (not last_time or window_start > last_time + DDOS_REPEAT_THRESHOLD):
@@ -340,7 +486,11 @@ def detect_ddos_attack():
             else:
                 i += 1
 
-    return {"ddos_attacks": incidents_created, "incidents": new_incidents}
+    return {
+        "ddos": incidents_created,
+        "incidents": new_incidents
+        
+    }
 
 
 def detect_concurrent_logins():
@@ -378,11 +528,11 @@ def detect_concurrent_logins():
                     )
 
                     new_incidents.append(incident)
-                    potential_used_accounts[login.username]=login.terminal
-        else:
-            potential_used_accounts[login.username]=login.terminal
+            else:
+                potential_used_accounts.append(login.username)
 
-    return {"concurrent_logins":len(new_incidents), "incidents":new_incidents}
+    return {"concurrent_logins": len(new_incidents), "incidents": new_incidents}
+
 
 def format_timedelta(delta):
     """
@@ -403,3 +553,4 @@ def format_timedelta(delta):
         return f"{minutes} minutes"
     else:
         return f"{seconds} seconds"
+
