@@ -11,7 +11,7 @@ class UserLogin(models.Model):
     event_type = models.CharField(max_length=16, default='login',)  
     severity = models.CharField(max_length=16, default='normal') 
     def __str__(self):
-        return f"Login from {self.username} at {self.timestamp} from {self.src_ip_address} on terminal {terminal}"
+        return f"Login from {self.username} at {self.timestamp} from {self.src_ip_address} on terminal {self.terminal}"
 
 class UserLogout(models.Model):
     timestamp = models.DateTimeField()
@@ -21,7 +21,7 @@ class UserLogout(models.Model):
     event_type = models.CharField(max_length=16, default='logout')
     severity = models.CharField(max_length=16, default='normal')
     def __str__(self):
-        return f"Logout from {self.username} at {self.timestamp} on terminal {terminal}"
+        return f"Logout from {self.username} at {self.timestamp} on terminal {self.terminal}"
 
 class UsysConfig(models.Model):
     timestamp = models.DateTimeField()
