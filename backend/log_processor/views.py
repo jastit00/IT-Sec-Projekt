@@ -8,29 +8,47 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from incident_detector.models import (
-    DosIncident, DDosIncident, ConfigIncident,
-    ConcurrentLoginIncident, BruteforceIncident
+    BruteforceIncident,
+    ConfigIncident,
+    ConcurrentLoginIncident,
+    DDosIncident,
+    DosIncident,
 )
 from incident_detector.serializers import (
-    DosIncidentSerializer, DDosIncidentSerializer,
-    ConfigIncidentSerializer, ConcurrentLoginIncidentSerializer,
-    BruteforceIncidentSerializer
+    BruteforceIncidentSerializer,
+    ConfigIncidentSerializer,
+    ConcurrentLoginIncidentSerializer,
+    DDosIncidentSerializer,
+    DosIncidentSerializer,
+    IncidentDetectorConfigSerializer,
 )
+
 from log_processor.models import (
-    UserLogin, UsysConfig, UserLogout, NetfilterPackets
+    NetfilterPackets,
+    UsysConfig,
+    UserLogin,
+    UserLogout,
 )
+
 from log_processor.serializers import (
-    LogFileSerializer, UserLoginSerializer, UsysConfigSerializer,
-    UserLogoutSerializer, NetfilterPacketsSerializer
+     LogFileSerializer,
+     NetfilterPacketsSerializer,
+     UsysConfigSerializer,
+     UserLoginSerializer,
+     UserLogoutSerializer,
+     
 )
+from incident_detector.services import update_config
 from log_processor.services import handle_uploaded_log_file
+logger = logging.getLogger(__name__)
+
+# Default-Werte für Config
 
 
-logger = logging.getLogger(__name__)#für den ligger name falls was schief geht einfacher einsehbar wo
 
 
-
-
+from incident_detector.services import get_current_config, save_new_config
+from incident_detector.serializers import IncidentDetectorConfigSerializer
 
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -75,6 +93,32 @@ class LogFileUploadView(APIView):
         return Response(filtered_data, status=status.HTTP_200_OK)
 
 
+class IncidentConfigAPIView(APIView):
+    def post(self, request):
+        serializer = IncidentDetectorConfigSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        new_config = serializer.validated_data
+
+        current_config, _ = get_current_config()
+
+        if current_config == new_config:
+            return Response({"message": "Config unchanged"}, status=status.HTTP_200_OK)
+
+       
+        result = update_config(new_config)
+
+        last_updated = save_new_config(new_config)  
+
+        return Response({
+            "message": result["message"],
+            "last_updated": last_updated,
+            "changed": result.get("changed", False),
+            "total_incidents": result.get("total_incidents", 0),
+            "result": result.get("result", {}),
+            "config": result.get("config", {}),
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -91,19 +135,18 @@ def processed_logins(request):
     return Response(data)
 
 
+
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    fields_to_keep = ['timestamp', 'action','terminal', 'result', 'event_type', 'severity']
-    data = get_filtered_queryset(
-        model=UsysConfig,
-        serializer_class=UsysConfigSerializer,
-        fields_to_keep=fields_to_keep,
-        start=start,
-        end=end
-    )
-    return Response(data)
+    queryset = UsysConfig.objects.all()
+    if start:
+        queryset = queryset.filter(timestampgte=start)
+    if end:
+        queryset = queryset.filter(timestamplte=end)
+    serializer = UsysConfigSerializer(queryset, many=True)
+    return Response(serializer.data)
 
 
 
@@ -145,7 +188,6 @@ def dos_packets(request):
 
 
 
-@csrf_exempt
 @api_view(['GET'])
 def unified_event_log(request):
     models_and_serializers = [
@@ -168,7 +210,7 @@ def unified_event_log(request):
 
     fields_to_keep = [
         'timestamp', 'event_type', 'reason', 'src_ip_address', 'dst_ip_address',
-        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count'
+        'action', 'result', 'severity', 'packet_input', 'incident_type', 'protocol', 'count','table',
     ]
 
     filtered_events = filter_fields(all_events, fields_to_keep)
@@ -178,7 +220,6 @@ def unified_event_log(request):
         reverse=True
     )
     return Response(sorted_events)
-
 
 
 

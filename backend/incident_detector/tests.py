@@ -1,7 +1,9 @@
 from django.test import TestCase
 from django.utils import timezone
-from .models import UserLogin, UserLogout, Incident, ConcurrentLoginIncident
-from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins
+from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPackets
+from .models import BruteforceIncident, ConcurrentLoginIncident, ConfigIncident, DosIncident, DDosIncident
+from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins, detect_critical_config_change, detect_dos_attack, detect_ddos_attack
+from datetime import timedelta
 
 from django.conf import settings
 import os
@@ -108,32 +110,36 @@ class BruteForceDetectionTests(TestCase):
         self.assertEqual(result["bruteforce"], 1)
         self.assertEqual(BruteforceIncident.objects.count(), 1)
 
-    def test_ignore_attempts_outside_time_window(self):
+    def test_spaced_attemps_still_detected(self):
         # create the specific entries from file spaced_tries.log
         self.entry_creator.make_entries('spaced_tries.log')
         # test
         result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 0)
+        self.assertEqual(result["bruteforce"], 1)
         self.assertEqual(UserLogin.objects.count(),17)
 
     def test_successful_last_attempt_changes_reason(self):
-        self.create_logins(13, success_on_last=True)
-        detect_bruteforce()
-        incident = Incident.objects.first()
-        self.assertIn("Successful", incident.reason)
+        # create the specific entries from file successful_bruteforce.log
+        self.entry_creator.make_entries('successful_bruteforce.log')
+        # test
+        result=detect_bruteforce()
+        incident = BruteforceIncident.objects.first()
+        self.assertIn("20 attempts in 2 minutes, 1 successful", incident.reason)
+        self.assertEqual(result["bruteforce"],1)
 
     def test_detect_incidents_wrapper(self):
-        self.create_logins(13)
+        # create the specific entries from file several_clear_bruteforce.log
+        self.entry_creator.make_entries('several_clear_bruteforce.log')
+        # test
         result = detect_incidents()
-        self.assertIn("incidents", result)
-        self.assertEqual(result["incidents"]["bruteforce"], 1)
-
+        self.assertEqual(result["counts"]["bruteforce"], 2)
+    
     def test_duplicate_incident_is_not_created(self):
-        self.create_logins(13)
+        self.entry_creator.make_entries('clear_simple_bruteforce.log')
         detect_bruteforce()
         detect_bruteforce()  # call twice
-        self.assertEqual(Incident.objects.count(), 1)
-
+        self.assertEqual(BruteforceIncident.objects.count(), 1)
+       
 class ConcurrentLoginsDetectionTest(TestCase):
     entry_creator=CreateEntries()
     def test_single_clear_attack_detected(self):
@@ -186,3 +192,149 @@ class ConcurrentLoginsDetectionTest(TestCase):
         self.assertEqual(result["concurrent_logins"],3)
         self.assertEqual(UserLogin.objects.count(),9)
         self.assertEqual(UserLogout.objects.count(),3)
+
+class ConfigChangeDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_single_critical_change_w_previous_user_login(self):
+        # create the specific entries from file config_change_user_login.log
+        self.entry_creator.make_entries('config_change_user_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],1)
+        self.assertEqual(ConfigIncident.objects.first().src_ip_address,UserLogin.objects.first().src_ip_address)
+
+    def test_multiple_config_change_from_single_user(self):
+        # create the specific entries from file many_config_changes_single_login.log
+        self.entry_creator.make_entries('many_config_changes_single_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],5)
+        self.assertEqual(UsysConfig.objects.count(),7)
+        for incident in ConfigIncident.objects.all():
+            self.assertEqual(incident.src_ip_address,UserLogin.objects.first().src_ip_address)
+    def test_single_critical_change_no_previous_login(self):
+        # create the specific entries from file config_change_alone.log
+        self.entry_creator.make_entries('config_change_alone.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],1)
+        self.assertEqual(ConfigIncident.objects.first().src_ip_address, None)
+
+    def test_multiple_config_change_from_single_user(self):
+        # create the specific entries from file many_config_changes_single_login.log
+        self.entry_creator.make_entries('many_config_changes_single_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],5)
+        self.assertEqual(UsysConfig.objects.count(),7)
+        for incident in ConfigIncident.objects.all():
+            self.assertEqual(incident.src_ip_address,UserLogin.objects.first().src_ip_address)
+            
+    def test_multiple_config_changes_from_several_users(self):
+        # create the specific entries from file many_config_changes_many_users.log
+        self.entry_creator.make_entries('many_config_changes_many_users.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],9)
+        self.assertEqual(ConfigIncident.objects.filter(username='testuser').count(),5)
+        self.assertEqual(ConfigIncident.objects.filter(username='badguy').count(),2)
+        self.assertEqual(ConfigIncident.objects.filter(username='anotherone').count(),2)
+
+    def test_multiple_config_change_with_later_login(self):
+        # create the specific entries from many_config_changes_no_proper_login.log
+        self.entry_creator.make_entries('many_config_changes_late_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        for incident in ConfigIncident.objects.filter(username='testuser'):
+            self.assertEqual(incident.src_ip_address, None)
+
+    def test_multiple_config_change_with_invalid_login(self):
+        # create the specific entries from many_config_changes_no_valid_login.log
+        self.entry_creator.make_entries('many_config_changes_no_valid_login.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        self.assertEqual(UserLogin.objects.first().result,'failed')
+        for incident in ConfigIncident.objects.all():
+            self.assertEqual(incident.src_ip_address, None)
+            
+    def test_almost_critical_config_change(self):
+        # create the specific entries from almost_critical_config_change.log
+        self.entry_creator.make_entries('almost_critical_config_change.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],0)
+        self.assertEqual(UsysConfig.objects.count(),6)
+
+    def test_change_of_severity(self):
+        # create the specific entries from many_config_changes_mix_severity.log
+        self.entry_creator.make_entries('many_config_changes_mix_severity.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],4)
+        self.assertEqual(ConfigIncident.objects.all()[0].severity,'critical')
+        self.assertEqual(ConfigIncident.objects.all()[1].severity,'high')
+
+    def test_multiple_config_changes_from_different_users_mix_valid_logins(self):
+        # create the specific entries from many_config_changes_mix_logins.log
+        self.entry_creator.make_entries('many_config_changes_mix_logins.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],6)
+        self.assertEqual(result["incidents"][0].src_ip_address,None)
+        self.assertEqual(result["incidents"][2].src_ip_address,UserLogin.objects.order_by('timestamp').first().src_ip_address)
+
+    def test_no_critical_changes_performed(self):
+        # create the specific entries from file valid_config_changes.log
+        self.entry_creator.make_entries('valid_config_changes.log')
+        # test
+        result=detect_critical_config_change()
+        self.assertEqual(result["critical_config_change"],0)
+        self.assertEqual(UserLogin.objects.count(),0)
+        self.assertEqual(UsysConfig.objects.count(), 53)
+
+class DoSDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_single_clear_dos_attack_detected(self):
+        # create the specific entries from file single_clear_dos_attack.log
+        self.entry_creator.make_entries('single_clear_dos_attack.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],1)
+        self.assertEqual(NetfilterPackets.objects.count(),1)
+        self.assertEqual(DosIncident.objects.first().src_ip_address,'172.16.0.2')
+
+    def test_unrecognized_attack_spaced_in_30s(self):
+        # creating the specific entries from file extenden_dos_attack_spaced.log
+        self.entry_creator.make_entries('extenden_dos_attack_spaced.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],0)
+        self.assertEqual(NetfilterPackets.objects.count(),144)
+
+    def test_not_enogh_packets_to_recognice_attack(self):
+        # creating the specific entries from file dos_attack_not_enough_packets.log
+        self.entry_creator.make_entries('dos_attack_not_enough_packets.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],0)
+        self.assertEqual(NetfilterPackets.objects.count(),1)
+
+    def test_multiples_dos_attacks_from_same_ip(self):
+        # creating the specific entries from file double_dos_attack_same_ip.log
+        self.entry_creator.make_entries('double_dos_attack_same_ip.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],2)
+        self.assertEqual(DosIncident.objects.all()[0].dst_ip_address,'192.168.0.88')
+        self.assertEqual(DosIncident.objects.all()[1].dst_ip_address,'192.124.0.59')
+
+    def test_very_long_dos_attack_two_incidents_generated(self):
+        # creating the specific entries from file very_long_dos_attack.log
+        self.entry_creator.make_entries('very_long_dos_attack.log')
+        # test
+        result=detect_dos_attack()
+        self.assertEqual(result["dos_attacks"],2)
+        self.assertEqual(NetfilterPackets.objects.count(),8)
+        # from first entry till lats enry there is approx. 3 minutes and 42 seconds-> 3min = 6*30sec; 42 = 30sec+rest
