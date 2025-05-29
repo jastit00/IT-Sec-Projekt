@@ -528,8 +528,8 @@ def detect_concurrent_logins():
                     )
 
                     new_incidents.append(incident)
-            else:
-                potential_used_accounts.append(login.username)
+                else:
+                    potential_used_accounts.append(login.username)
 
     return {"concurrent_logins": len(new_incidents), "incidents": new_incidents}
 
