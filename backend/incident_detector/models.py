@@ -82,8 +82,6 @@ class BruteforceIncident(models.Model):
 
 
 
-
-
 class RelatedLog(models.Model):
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name='related_logs_set')
     log_file = models.ForeignKey(UploadedLogFile, on_delete=models.CASCADE, related_name='related_logs_set',null=True)
