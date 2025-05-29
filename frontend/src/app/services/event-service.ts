@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of, tap, finalize } from 'rxjs';
 //Import API
 import { DefaultService } from '../api-client';
+import { ChartUpdateService } from './chart-update.service';
 //and Events interface
 import { Events } from '../models/events.model';
 
@@ -23,6 +24,7 @@ export class EventService {
   // Use inject instead of constructor injection
   private defaultService = inject(DefaultService);
   private httpClient = inject(HttpClient);
+  private updateService = inject(ChartUpdateService);
   private apiBaseUrl = 'http://localhost:8000/api'; // base URL
   
   //current events from API call
@@ -32,6 +34,11 @@ export class EventService {
   constructor() {
     // Load data on initialization
     this.loadEventsFromBackend().subscribe(); // Direct subscribe, otherwise it won't load
+
+    this.updateService.updateChart$.subscribe(() => {
+    this.refreshEvents()
+    
+  });
   }
 
   //method to load data from backend
