@@ -279,8 +279,19 @@ def detect_bruteforce(config):
 
                     incidents_created += 1
                     new_incidents.append(incident)
-                # Move to the end of the current window
-                start = current  
+                    
+                    # map login stuff to incident using relatedlog
+                    related_logs = [
+                        RelatedLog(
+                            bruteforce_incident=incident,
+                            user_login=login_attempt
+                        )
+                        for login_attempt in window_attempts
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
+                    
+                    
+                start = current  # Move to the end of the current window
             else:
                 # Not enough attempts — shift window forward
                 start += 1
@@ -342,7 +353,12 @@ def detect_critical_config_change():
             
             new_incidents.append(incident)
             incidents_created += 1
-             
+            
+            RelatedLog.objects.create(
+                config_incident=incident,
+                usys_config=config_change
+            )
+                  
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
 
@@ -401,8 +417,17 @@ def detect_dos_attack(config):
                     last_incident_time[(src_ip, dst_ip)] = relevant_windows[-1].timestamp
                     incidents_created += 1
                     new_incidents.append(incident)
-
-                # slide time window
+                
+                    related_logs = [
+                        RelatedLog(
+                            dos_incident=incident,
+                            netfilter_packet=packet
+                        )
+                        for packet in relevant_windows
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
+                
+                # i um alle Fenster innerhalb dieses Zeitraums weiterschieben
                 i += len(relevant_windows)
             else:
                 i += 1
@@ -481,7 +506,15 @@ def detect_ddos_attack(config):
                     incidents_created += 1
                     new_incidents.append(incident)
 
-                # slide time window
+                    related_logs = [
+                        RelatedLog(
+                            dos_incident=incident,
+                            netfilter_packet=packet
+                        )
+                        for packet in relevant_windows
+                    ]
+                    RelatedLog.objects.bulk_create(related_logs)
+                # i um alle Fenster innerhalb dieses Zeitraums weiterschieben
                 i += len(relevant_windows)
             else:
                 i += 1
@@ -528,6 +561,11 @@ def detect_concurrent_logins():
                     )
 
                     new_incidents.append(incident)
+                    
+                    RelatedLog.objects.create(
+                        concurrent_login_incident=incident,
+                        user_login=login
+                    )
                 else:
                     potential_used_accounts.append(login.username)
 
