@@ -1,75 +1,89 @@
 .events-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
 }
 
 .events-table th, 
 .events-table td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: left;
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
 }
 
 .events-table th {
-    background-color: #f2f2f2;
-    color: #333;
+  background-color: #f2f2f2;
+  color: #333;
 }
 
 .events-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
 
 .events-table tr:hover {
-    background-color: #f1f1f1;
+  background-color: #f1f1f1;
 }
+
 .status {
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
-.status-critical {
-    background-color: #e74c3c;
-    color: white;
+.Critical {
+  background-color: #e74c3c;
+  color: white;
 }
 
-.status-warning {
-    background-color: #f39c12;
-    color: white;
+.Warning {
+  background-color: #f39c12;
+  color: white;
 }
 
-.status-normal {
-    background-color: #2ecc71;
-    color: white;
+.Normal {
+  background-color: #2ecc71;
+  color: white;
 }
-
 
 .timestamp {
-    font-size: 0.85em;
-    color: #7f8c8d;
-    font-style: italic;
-    margin-left: 5px;
-  }
-  
-  .ip-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
-  
-  .ip-badge {
-    display: inline-block;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    padding: 2px 6px;
-    font-family: monospace;
-    font-size: 0.9em;
-  }
-  
-  .no-ips {
-    color: #95a5a6;
-    font-style: italic;
-  }
-  
+  font-size: 0.85em;
+  color: #7f8c8d;
+  font-style: italic;
+  margin-left: 5px;
+}
+
+.ip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ip-badge {
+  display: inline-block;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.no-ips {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.search-field {
+  flex: 1;
+  height: 10px;
+  width: 500px;
+  margin-bottom: 50px;
+}
+

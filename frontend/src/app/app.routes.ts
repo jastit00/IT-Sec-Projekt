@@ -7,12 +7,12 @@ import { NotFoundComponent } from './components/not-found/not-found.component';
 import { TeapotComponent } from './components/teapot/teapot.component';
 
 export const routes: Routes = [
-    { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },
+    { path: 'dashboard/:presetId', component: HomeComponent, canActivate: [authGuard] },
     { path: 'critical-events', component: CriticalEventsComponent, canActivate: [authGuard] },
     { path: 'all-events', component: AllEventsComponent, canActivate: [authGuard] },
     { path: 'not-found', component: NotFoundComponent },
     { path: 'hidden-backdoor', component: TeapotComponent },
-    { path: 'dashboard/1', redirectTo: 'dashboard' },
-    { path: 'dashboard/2', redirectTo: 'dashboard' },
+    { path: 'dashboard', redirectTo: 'dashboard/1', pathMatch: 'full' },
+    { path: '', redirectTo: 'dashboard', pathMatch: 'full'},
     { path: '**', redirectTo: 'not-found' }
 ];

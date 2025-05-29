@@ -1,7 +1,7 @@
 <div class="chart-container">
   <h5 class="sticky-title">
    <div class="title-content">
-     <span class="reddot"></span>Potential DOS connections
+     <span class="reddot"></span>Configurationchanges by type
    </div>
       <button class="settings-button" (click)="onSettingsClick()">
         <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor"> <!-- SVG Zahnrad von w3-->
@@ -37,3 +37,4 @@
       <p-chart [type]="dateForm.get('chartType')?.value" [data]="data" [options]="options" class="h-[30rem]"></p-chart>
     </div>
   </div>
+  

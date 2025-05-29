@@ -19,13 +19,15 @@ export class ChartTwoComponent {
   
   showSettings = false;
   dateForm!: FormGroup;
+  hasData = false;
+
 
   data: any = {
     labels: [],
     datasets: [{
       label: 'Login-Versuche pro IP',
       data: [],
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+      backgroundColor: ['#F94144', '#F3722C', '#F8961E', '#F9844A', '#F9C74F', '#90BE6D', '#43AA8B', '#4D908E', '#577590', '#277DA1']
     }]
   };
   
@@ -34,7 +36,7 @@ export class ChartTwoComponent {
   this.dateForm = this.fb.group({
       start: [null],
       end: [null],
-      chartType: ['bar']
+      chartType: ['pie']
     });
   
   this.loadData();
@@ -62,15 +64,22 @@ export class ChartTwoComponent {
   
       logins.forEach(entry => {
         if (entry.result === 'failed') {
-        const ip = entry.ip_address;
+        const ip = entry.src_ip_address;
         ipCountMap[ip] = (ipCountMap[ip] || 0) + 1;
         }
       });
+
+      if(Object.values(ipCountMap).length ===0){
+        this.hasData = false;
+      }
+      else {
+        this.hasData = true;
+      }
   
       this.data = {
         labels: Object.keys(ipCountMap),
         datasets: [{
-          label: 'Login-Versuche pro IP',
+          label: 'failed logins by IP',
           data: Object.values(ipCountMap),
           
         }]

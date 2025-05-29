@@ -1,6 +1,6 @@
 import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { keycloak, logout } from '../../auth/keycloak.service';
-import { RouterLink } from '@angular/router';
+import { keycloak, logout, updatefunction } from '../../auth/keycloak.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
@@ -9,17 +9,24 @@ import { UploadResultDialogComponent } from '../upload-result-dialog/upload-resu
 import { BadgeModule } from 'primeng/badge';
 import { EventService } from '../../services/event-service';
 import { ChartUpdateService } from '../../services/chart-update.service';
+import { ReactiveFormsModule, FormGroup, FormBuilder  } from '@angular/forms';
+import { PresetIdService } from '../../services/preset-id.service';
+
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule],
+  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
+
 export class HeaderComponent implements OnInit {
   title = signal('Security Event Detection');
   username = signal('User'); // Default value until Keycloak data is loaded
   showDashboard1Menu = false;
+  showDashboard2Menu = false;
+  showDashboard3Menu = false;
+   // default
   // Chart configuration
   charts: Chart[] = [];
   // Flag to track if max charts are reached
@@ -32,9 +39,14 @@ export class HeaderComponent implements OnInit {
   private dialog = inject(MatDialog);
   private eventService = inject(EventService);
   private updateService = inject(ChartUpdateService);
+  private fb = inject(FormBuilder);
+  /*private route = inject(ActivatedRoute);
+  private router = inject(Router);*/
 
-  constructor() {
+  showSettingsForm = false;
+  settingsForm!: FormGroup;
 
+  constructor(private presetIdService: PresetIdService) {
     // Initialize charts from the service
     this.charts = this.chartVisibilityService.getAllCharts();
     
@@ -65,7 +77,31 @@ export class HeaderComponent implements OnInit {
     // Set username from Keycloak when component initializes
     this.initUsername();
     console.log('HeaderComponent initialized, attempting to get Keycloak username');
+    this.settingsForm = this.fb.group({
+      brute_force: this.fb.group({
+        attempt_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+      }),
+      dos: this.fb.group({
+        packet_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+      }),
+      ddos: this.fb.group({
+        packet_threshold: [0],
+        time_delta: [0],
+        repeat_threshold: [0],
+        min_sources: [0],
+      }),
+    });
   }
+
+  setDashboard(id: string) {
+    this.presetIdService.setPresetId(id);
+    console.log('PresetId gesetzt auf:', id);
+  }
+
 
   // Initialize username from Keycloak
   private initUsername() {
@@ -81,6 +117,8 @@ export class HeaderComponent implements OnInit {
           // Use preferred_username, full name, or just 'User' if nothing is available
           this.username.set(preferredUsername || name || 'User');
           console.log('Keycloak username set:', this.username());
+          console.log('Keycloak username set:', keycloak.token);
+          //updatefunction(this.username());
         } else {
           // If token isn't parsed yet, get username directly from keycloak instance
           keycloak.loadUserProfile().then(profile => {
@@ -103,7 +141,7 @@ export class HeaderComponent implements OnInit {
 
   // Get count of critical events
   getCriticalEventsCount(): number {
-    return this.eventService.events.filter(event => event.status === 'Kritisch').length;
+    return this.eventService.events.filter(event => event.status === 'Critical').length;
   }
   
   // Check if there are any critical events
@@ -183,4 +221,18 @@ export class HeaderComponent implements OnInit {
       }
     }
   }
-}
+
+  onSettingsClick(){
+    this.showSettingsForm = !this.showSettingsForm;
+  }
+  submitSettings() {
+    this.defaultService.incidentsConfigPost(this.settingsForm.value).subscribe({
+      next: response => {
+        console.log('Einstellungen erfolgreich gesendet:', response);
+        this.showSettingsForm = false;
+        this.updateService.triggerChartUpdate();
+      },
+      error: err => {
+        console.error('Fehler beim Senden der Einstellungen:', err);
+    }});
+  }}
