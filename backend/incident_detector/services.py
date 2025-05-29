@@ -322,7 +322,7 @@ def detect_critical_config_change():
             timestamp=config_change.timestamp,
             username=config_change.terminal,
             src_ip_address=src_ip_address,
-            incident_type="config_change"
+            incident_type="configchange"
         ).exists():
             incident = ConfigIncident.objects.create(
                 timestamp=config_change.timestamp,
