@@ -220,8 +220,29 @@ button:hover {
 
 
 .settings-form label {
-  display: block;
-  margin: 0.5em 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+details {
+    padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  
+
+}
+
+input[type="number"] {
+  width: 60px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: right;
+  margin-left: 1rem;
 }
 
 .formdesc:hover {
