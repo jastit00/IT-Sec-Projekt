@@ -28,7 +28,7 @@ class DDosIncident(models.Model):
     reason = models.TextField()
     sources = models.TextField()
     def __str__(self):
-        return f"{self.reason} to {self.dst_ip_address} at {self.timestamp} from sources: {self.sources}"
+     return f"[{self.timestamp}] DDoS on {self.dst_ip_address} ({self.protocol})"
 
 class ConcurrentLoginIncident(models.Model):
     timestamp = models.DateTimeField()

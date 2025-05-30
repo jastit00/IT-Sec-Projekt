@@ -33,13 +33,13 @@ BRUTE_FORCE_DEFAULT = {
 
 DOS_DEFAULT = {
     'packet_threshold': 100,
-    'time_delta': 10,
+    'time_delta': 30,
     'repeat_threshold': 120,
 }
 
 DDOS_DEFAULT = {
-    'packet_threshold': 10,
-    'time_delta': 2,
+    'packet_threshold': 30,
+    'time_delta': 3,
     'repeat_threshold': 60,
     'min_sources': 2,
 }
@@ -339,11 +339,14 @@ def detect_critical_config_change():
     return {"critical_config_change": incidents_created, "incidents": new_incidents}
 
 
+
 def detect_dos_attack(config):
     """
-    Detects potential DoS attacks based on aggregated packet counts in time windows.
-    Assumes each NetfilterPackets entry already represents a 30s window with 'count' value.
+    Detects potential DoS attacks based on aggregated Netfilter packet data.
+    Each NetfilterPackets entry represents a 30s window with a 'count' value.
+    Uses a sliding window to detect high traffic within a configured time delta.
     """
+
     DOS_PACKET_THRESHOLD = config['packet_threshold']
     DOS_TIME_DELTA = config['time_delta']
     DOS_REPEAT_THRESHOLD = config['repeat_threshold']
@@ -353,6 +356,7 @@ def detect_dos_attack(config):
     last_incident_time = {}
     incidents_created = 0
     new_incidents = []
+
 
     for window in all_windows:
         key = (window.src_ip_address, window.dst_ip_address, window.protocol)
@@ -364,18 +368,19 @@ def detect_dos_attack(config):
             window_start = windows[i].timestamp
             window_end = window_start + DOS_TIME_DELTA
 
-            # Aggregiere alle Fenster innerhalb des Zeitraums
-            relevant_windows = [w for w in windows[i:] if w.timestamp <= window_end]
+            
+            relevant_windows = [w for w in windows if window_start <= w.timestamp <= window_end]
             total_packets = sum(w.count for w in relevant_windows)
 
             if total_packets >= DOS_PACKET_THRESHOLD:
-                last_time = last_incident_time.get((src_ip, dst_ip))
+                last_time = last_incident_time.get((src_ip, dst_ip, protocol))
                 reason = f"{total_packets} packets in {format_timedelta(DOS_TIME_DELTA)}"
 
                 existing_incident = DosIncident.objects.filter(
                     src_ip_address=src_ip,
                     dst_ip_address=dst_ip,
-                    timestamp__range=(window_start, window_end),
+                    timestamp__gte=relevant_windows[-1].timestamp - DOS_REPEAT_THRESHOLD,
+                    timestamp__lte=relevant_windows[-1].timestamp + DOS_REPEAT_THRESHOLD,
                     incident_type="dos",
                 ).exists()
 
@@ -387,20 +392,21 @@ def detect_dos_attack(config):
                         reason=reason,
                         incident_type="dos",
                         severity="high",
-                        packets=str(total_packets),
+                        packets=total_packets,
                         timeDelta=format_timedelta(DOS_TIME_DELTA),
                         protocol=protocol,
                     )
-                    last_incident_time[(src_ip, dst_ip)] = relevant_windows[-1].timestamp
+                    last_incident_time[(src_ip, dst_ip, protocol)] = relevant_windows[-1].timestamp
                     incidents_created += 1
                     new_incidents.append(incident)
 
-                # i um alle Fenster innerhalb dieses Zeitraums weiterschieben
-                i += len(relevant_windows)
-            else:
-                i += 1
+            
+            i += 1
 
-    return {"dos": incidents_created, "incidents": new_incidents}
+    return {
+        "dos": incidents_created,
+        "incidents": new_incidents
+    }
 
 
 
