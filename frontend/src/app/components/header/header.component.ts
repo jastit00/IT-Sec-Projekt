@@ -6,10 +6,11 @@ import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
+import { ConfigpopupComponent } from '../configpopup/configpopup.component';
 import { BadgeModule } from 'primeng/badge';
 import { EventService } from '../../services/event-service';
 import { ChartUpdateService } from '../../services/chart-update.service';
-import { ReactiveFormsModule, FormGroup, FormBuilder  } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormBuilder, Validators  } from '@angular/forms';
 import { PresetIdService } from '../../services/preset-id.service';
 
 
@@ -79,20 +80,20 @@ export class HeaderComponent implements OnInit {
     console.log('HeaderComponent initialized, attempting to get Keycloak username');
     this.settingsForm = this.fb.group({
       brute_force: this.fb.group({
-        attempt_threshold: [0],
-        time_delta: [0],
-        repeat_threshold: [0],
+        attempt_threshold: [10, [Validators.required, Validators.min(1)]],
+        time_delta: [120, [Validators.required, Validators.min(1)]],
+        repeat_threshold: [600, [Validators.required, Validators.min(1)]],
       }),
       dos: this.fb.group({
-        packet_threshold: [0],
-        time_delta: [0],
-        repeat_threshold: [0],
+        packet_threshold: [100, [Validators.required, Validators.min(1)]],
+        time_delta: [10, [Validators.required, Validators.min(1)]],
+        repeat_threshold: [120, [Validators.required, Validators.min(1)]],
       }),
       ddos: this.fb.group({
-        packet_threshold: [0],
-        time_delta: [0],
-        repeat_threshold: [0],
-        min_sources: [0],
+        packet_threshold: [10, [Validators.required, Validators.min(1)]],
+        time_delta: [2, [Validators.required, Validators.min(1)]],
+        repeat_threshold: [60, [Validators.required, Validators.min(1)]],
+        min_sources: [2, [Validators.required, Validators.min(1)]],
       }),
     });
   }
@@ -226,13 +227,45 @@ export class HeaderComponent implements OnInit {
     this.showSettingsForm = !this.showSettingsForm;
   }
   submitSettings() {
+
+
+    if (this.settingsForm.valid){
     this.defaultService.incidentsConfigPost(this.settingsForm.value).subscribe({
       next: response => {
-        console.log('Einstellungen erfolgreich gesendet:', response);
+
+        this.dialog.open(ConfigpopupComponent, {
+          data: response
+        })
+
+        if (response.result) {
+        
+        this.settingsForm.patchValue({
+          brute_force: {
+            attempt_threshold: response.config?.brute_force?.attempt_threshold,
+            time_delta: response.config?.brute_force?.time_delta,
+            repeat_threshold: response.config?.brute_force?.repeat_threshold,
+          },
+          dos: {
+            packet_threshold: response.config?.dos?.packet_threshold,
+            time_delta: response.config?.dos?.time_delta,
+            repeat_threshold: response.config?.dos?.repeat_threshold,
+          },
+          ddos: {
+            packet_threshold: response.config?.ddos?.packet_threshold,
+            time_delta: response.config?.ddos?.time_delta,
+            repeat_threshold: response.config?.ddos?.repeat_threshold,
+            min_sources: response.config?.ddos?.min_sources,
+          }
+        });
+        }
         this.showSettingsForm = false;
         this.updateService.triggerChartUpdate();
       },
       error: err => {
         console.error('Fehler beim Senden der Einstellungen:', err);
     }});
+  }
+  else {
+    console.error('Not validated');
   }}
+}

@@ -81,13 +81,13 @@
       <details>
         <summary class="formdesc"><strong>Brute Force</strong></summary>
         <label>Attempt Threshold:
-          <input type="number" formControlName="attempt_threshold" />
+          <input type="number" formControlName="attempt_threshold" min="1" />
         </label>
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" />
+          <input type="number" formControlName="time_delta" min="1"  />
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" />
+          <input type="number" formControlName="repeat_threshold" min="1" />
         </label>
       </details>
     </div>
@@ -96,13 +96,13 @@
       <details>
         <summary class="formdesc"><strong>DoS</strong></summary>
         <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" />
+          <input type="number" formControlName="packet_threshold" min="1" />
         </label>
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" />
+          <input type="number" formControlName="time_delta" min="1" />
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" />
+          <input type="number" formControlName="repeat_threshold" min="1" />
         </label>
       </details>
     </div>
@@ -111,16 +111,16 @@
       <details>
         <summary class="formdesc"><strong>DDoS</strong></summary>
         <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" />
+          <input type="number" formControlName="packet_threshold" min="1" />
         </label>
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" />
+          <input type="number" formControlName="time_delta" min="1" />
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" />
+          <input type="number" formControlName="repeat_threshold" min="1" />
         </label>
         <label>Min Sources:
-          <input type="number" formControlName="min_sources" />
+          <input type="number" formControlName="min_sources" min="1" />
         </label>
       </details>
     </div>
