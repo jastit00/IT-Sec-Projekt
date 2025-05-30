@@ -34,7 +34,7 @@ jobs:
       - name: Build and push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: /frontend/
+          context: frontend/
           push: true
           tags: |
             ghcr.io/${{ env.IMAGE_REPOSITORY }}:frontend-latest
@@ -43,7 +43,7 @@ jobs:
       - name: Build and push Backend
         uses: docker/build-push-action@v5
         with:
-          context: /backend/
+          context: backend/
           push: true
           tags: |
             ghcr.io/${{ env.IMAGE_REPOSITORY }}:backend-latest
