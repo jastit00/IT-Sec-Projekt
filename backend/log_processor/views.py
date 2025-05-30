@@ -1,6 +1,5 @@
 import logging
 
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -22,6 +21,11 @@ from incident_detector.serializers import (
     DosIncidentSerializer,
     IncidentDetectorConfigSerializer,
 )
+from incident_detector.services import (
+    get_current_config,
+    save_new_config,
+    update_config,
+)
 
 from log_processor.models import (
     NetfilterPackets,
@@ -29,26 +33,18 @@ from log_processor.models import (
     UserLogin,
     UserLogout,
 )
-
 from log_processor.serializers import (
-     LogFileSerializer,
-     NetfilterPacketsSerializer,
-     UsysConfigSerializer,
-     UserLoginSerializer,
-     UserLogoutSerializer,
-     
+    LogFileSerializer,
+    NetfilterPacketsSerializer,
+    UsysConfigSerializer,
+    UserLoginSerializer,
+    UserLogoutSerializer,
 )
-from incident_detector.services import update_config
 from log_processor.services import handle_uploaded_log_file
+
 logger = logging.getLogger(__name__)
 
-# Default-Werte für Config
 
-
-
-
-from incident_detector.services import get_current_config, save_new_config
-from incident_detector.serializers import IncidentDetectorConfigSerializer
 
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -95,6 +91,22 @@ class LogFileUploadView(APIView):
 
 class IncidentConfigAPIView(APIView):
     def post(self, request):
+      
+        dos_config = request.data.get('dos', {})
+        
+        dos_time_delta = dos_config.get('time_delta')
+        
+
+        errors = {}
+
+        if dos_time_delta is not None and dos_time_delta < 30:
+            errors['dos.time_delta'] = "Must be at least 30 seconds due to 30s packet window."
+
+      
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = IncidentDetectorConfigSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -106,7 +118,6 @@ class IncidentConfigAPIView(APIView):
         if current_config == new_config:
             return Response({"message": "Config unchanged"}, status=status.HTTP_200_OK)
 
-       
         result = update_config(new_config)
 
         last_updated = save_new_config(new_config)  
@@ -119,7 +130,6 @@ class IncidentConfigAPIView(APIView):
             "result": result.get("result", {}),
             "config": result.get("config", {}),
         }, status=status.HTTP_200_OK)
-
 
 
 @api_view(['GET'])

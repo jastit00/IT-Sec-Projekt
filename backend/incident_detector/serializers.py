@@ -68,7 +68,7 @@ class IncidentDetectorConfigSerializer(serializers.Serializer):
     })
     dos = DoSConfigSerializer(required=False, default={
         'packet_threshold': 100,
-        'time_delta': 10,
+        'time_delta': 30,
         'repeat_threshold': 120,
     })
     ddos = DDoSConfigSerializer(required=False, default={

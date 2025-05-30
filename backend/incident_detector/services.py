@@ -33,7 +33,7 @@ BRUTE_FORCE_DEFAULT = {
 
 DOS_DEFAULT = {
     'packet_threshold': 100,
-    'time_delta': 10,
+    'time_delta': 30,
     'repeat_threshold': 120,
 }
 
