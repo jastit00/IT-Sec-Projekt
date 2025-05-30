@@ -105,7 +105,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogFile'
+                $ref: '#/components/schemas/Config'
     
         '401':
           description: nicht authentifiziert
@@ -507,6 +507,76 @@ components:
           
         Sources:
           type: string
+    
+    Config:
+      type: object
+      properties:
+        message:
+          type: string
+          
+        last_updated:
+          type: string
+          format: date-time
+          
+        changed:
+          type: boolean
+        
+        total_incidents:
+          type: integer
+          
+        result:
+          type: object
+          properties:
+          
+            counts:
+              type: object
+              properties: 
+              
+                brute.force:
+                  type: integer
+                critical_config_change:
+                  type: integer
+                concurrent_logins:
+                  type: integer
+                dos:
+                  type: integer
+                ddos:
+                  type: integer
+        
+        
+        config:
+          type: object
+          properties:
+            brute_force:
+                  type: object
+                  properties:
+                    attempt_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+            dos:
+                  type: object
+                  properties:
+                    packet_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+            ddos:
+                  type: object
+                  properties:
+                    packet_threshold:
+                      type: integer
+                    time_delta:
+                      type: integer
+                    repeat_threshold:
+                      type: integer
+                    min_sources:
+                      type: integer
+        
           
           
         

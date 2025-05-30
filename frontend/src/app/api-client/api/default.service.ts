@@ -17,6 +17,8 @@ import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
+import { Config } from '../model/config';
+// @ts-ignore
 import { DdosPackets } from '../model/ddosPackets';
 // @ts-ignore
 import { DosPackets } from '../model/dosPackets';
@@ -56,9 +58,9 @@ export class DefaultService extends BaseService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<LogFile>;
-    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<LogFile>>;
-    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<LogFile>>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Config>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Config>>;
+    public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Config>>;
     public incidentsConfigPost(incidentsConfigPostRequest: IncidentsConfigPostRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (incidentsConfigPostRequest === null || incidentsConfigPostRequest === undefined) {
             throw new Error('Required parameter incidentsConfigPostRequest was null or undefined when calling incidentsConfigPost.');
@@ -100,7 +102,7 @@ export class DefaultService extends BaseService {
 
         let localVarPath = `/incidents-config/`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<LogFile>('post', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Config>('post', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: incidentsConfigPostRequest,

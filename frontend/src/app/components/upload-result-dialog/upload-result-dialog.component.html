@@ -1,10 +1,10 @@
 <h2 mat-dialog-title [ngClass]="{ 'error-title': data.status === 'error' }">
-      {{ data.status === 'error' ? 'Fehler beim Upload' : 'Upload erfolgreich' }}
+      {{ data.status === 'error' ? 'Error' : 'Upload successful' }}
     </h2>
 
     <div mat-dialog-content>
       <ng-container *ngIf="data.status === 'error'; else successContent">
-        <p><strong>Fehlermeldung:</strong> {{ data.message }}</p>
+        <p><strong>Error:</strong> {{ data.message }}</p>
       </ng-container>
 
       <ng-template #successContent>
