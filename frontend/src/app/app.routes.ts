@@ -13,6 +13,6 @@ export const routes: Routes = [
     { path: 'not-found', component: NotFoundComponent },
     { path: 'hidden-backdoor', component: TeapotComponent },
     { path: 'dashboard', redirectTo: 'dashboard/1', pathMatch: 'full' },
-    { path: '', redirectTo: 'dashboard', pathMatch: 'full'},
+    { path: '', redirectTo: 'dashboard/1', pathMatch: 'full'},
     { path: '**', redirectTo: 'not-found' }
 ];
