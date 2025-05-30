@@ -1,8 +1,9 @@
 
 import Keycloak from 'keycloak-js';
+import { environment } from '../../environments/environment.development';
 
 export const keycloak = new Keycloak({
-    url: 'http://localhost:8080',
+    url: environment.keycloakUrl,
     realm: 'FinalRealm',
     clientId: 'my-security-client'
 });
@@ -16,13 +17,13 @@ export function initKeycloak(): Promise<boolean> {
 
 export function logout(): void {
   keycloak.logout({
-    redirectUri: 'http://localhost:4200/dashboard'
+    redirectUri: environment.redirectUri
   });
 }
 
 export function updatefunction(userId: string){
   
-    fetch('http://localhost:8080/dashboard/auth/admin/realms/FinalRealm/users/5bff8e57-8cbd-4ddd-acbf-932eef0944a4', {
+    fetch(`${environment.keycloakUrl}/realms/FinalRealm/users/${userId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
