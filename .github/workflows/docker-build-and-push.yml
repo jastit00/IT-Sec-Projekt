@@ -6,9 +6,6 @@ on:
       - '*'
   workflow_dispatch:
 
-env:
-  IMAGE_REPOSITORY: ghcr.io/jastit00/IT-Sec-Projekt
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -16,6 +13,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Prepare repository name
+        run: |
+          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Set up Docker image tags
         id: vars
@@ -35,8 +36,8 @@ jobs:
           context: frontend/
           push: true
           tags: |
-            ${{ env.IMAGE_REPOSITORY }}:frontend-latest
-            ${{ env.IMAGE_REPOSITORY }}:frontend-${{ env.BRANCH_NAME }}
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:frontend-latest
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:frontend-${{ env.BRANCH_NAME }}
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
@@ -44,5 +45,5 @@ jobs:
           context: backend/
           push: true
           tags: |
-            ${{ env.IMAGE_REPOSITORY }}:backend-latest
-            ${{ env.IMAGE_REPOSITORY }}:backend-${{ env.BRANCH_NAME }}
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:backend-latest
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:backend-${{ env.BRANCH_NAME }}
