@@ -80,29 +80,33 @@
     <div formGroupName="brute_force">
       <details>
         <summary class="formdesc"><strong>Brute Force</strong></summary>
+          
         <label>Attempt Threshold:
-          <input type="number" formControlName="attempt_threshold" min="1" />
+          <input type="number" formControlName="attempt_threshold" min="1" matTooltip="Minimum number of attempts for brute-force detection within a time window."matTooltipPosition="left" />
         </label>
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1"  />
+          <input type="number" formControlName="time_delta" min="1" matTooltip=" Time window in which attempts are counted and evaluated." matTooltipPosition="left" />
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" />
+          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum time between similar incidents to avoid duplicates." matTooltipPosition="left"/>
         </label>
+        
       </details>
     </div>
 
     <div formGroupName="dos">
       <details>
         <summary class="formdesc"><strong>DoS</strong></summary>
+        
         <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" min="1" />
-        </label>
+          <input type="number" formControlName="packet_threshold" min="1" matTooltip="Number of packets at which a DoS incident is assumed." matTooltipPosition="left"/>
+        </label> 
+       
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1" />
+          <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which the total packet count is evaluated." matTooltipPosition="left"/>
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" />
+          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum interval between incidents to avoid duplicates.S" matTooltipPosition="left"/>
         </label>
       </details>
     </div>
@@ -111,16 +115,16 @@
       <details>
         <summary class="formdesc"><strong>DDoS</strong></summary>
         <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" min="1" />
+          <input type="number" formControlName="packet_threshold" min="1" matTooltip="Minimum packets per source to be counted in a DDoS." matTooltipPosition="left"/>
         </label>
         <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1" />
+          <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which traffic data is analyzed." matTooltipPosition="left"/>
         </label>
         <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" />
+          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Interval between detections to prevent duplicate DDoS incidents." matTooltipPosition="left"/>
         </label>
         <label>Min Sources:
-          <input type="number" formControlName="min_sources" min="1" />
+          <input type="number" formControlName="min_sources" min="1" matTooltip="Minimum number of sources to classify traffic as a DDoS" matTooltipPosition="left"/>
         </label>
       </details>
     </div>
