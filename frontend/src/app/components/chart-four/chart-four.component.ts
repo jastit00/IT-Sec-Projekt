@@ -51,22 +51,26 @@ ngOnInit(): void {
 
  loadData(start?: string, end?: string) {
 
-    const observe = 'body';
-    const reportProgress = false;
-  
-    const call = (start && end)
     
+    const call =  this.defaultService.logfilesUnifiedEventsGet();
+    const typeCountMap: { [type: string]: number } = {};
 
-    ? this.defaultService.logfilesIncidentsGet(start, end, observe, reportProgress)
-    : this.defaultService.logfilesIncidentsGet();
+
+    call.subscribe((events: any[]) => {
 
 
-    call.subscribe((logins: any[]) => {
-      const typeCountMap: { [type: string]: number } = {};
-  
-      logins.forEach(entry => {
-        const type = entry.incident_type;
+    const startDate = start ? new Date(start) : null;
+    const endDate = end ? new Date(end) : null;
+
+    events.forEach(event => {
+     const isIncident = event.event_type === 'incident';
+      const eventTime = new Date(event.timestamp);
+      const inRange = (!startDate || eventTime >= startDate) && (!endDate || eventTime <= endDate);
+
+      if (isIncident && inRange) {
+        const type = event.incident_type;
         typeCountMap[type] = (typeCountMap[type] || 0) + 1;
+      }
       });
 
       if(Object.values(typeCountMap).length ===0){
