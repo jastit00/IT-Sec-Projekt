@@ -5,6 +5,8 @@ import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 import { UploadResultDialogComponent } from '../upload-result-dialog/upload-result-dialog.component';
 import { ConfigpopupComponent } from '../configpopup/configpopup.component';
 import { BadgeModule } from 'primeng/badge';
@@ -16,7 +18,7 @@ import { PresetIdService } from '../../services/preset-id.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule],
+  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule, MatTooltipModule, MatIconModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })

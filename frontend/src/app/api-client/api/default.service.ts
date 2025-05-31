@@ -536,7 +536,7 @@ export class DefaultService extends BaseService {
             }
         }
 
-        let localVarPath = `/logfiles/unified-events`;
+        let localVarPath = `/logfiles/unified-event-log`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<Events>>('get', `${basePath}${localVarPath}`,
             {
