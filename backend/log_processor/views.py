@@ -150,14 +150,14 @@ def processed_logins(request):
 def processed_config_changes(request):
     start = request.query_params.get('start')
     end = request.query_params.get('end')
-    queryset = UsysConfig.objects.all()
-    if start:
-      queryset = queryset.filter(timestamp__gte=start)
-    if end:
-        queryset = queryset.filter(timestamp__lte=end)
 
-    serializer = UsysConfigSerializer(queryset, many=True)
-    return Response(serializer.data)
+    data = get_filtered_queryset(
+        model=UsysConfig,
+        serializer_class=UsysConfigSerializer,
+        start=start,
+        end=end
+    )
+    return Response(data)
 
 
 
