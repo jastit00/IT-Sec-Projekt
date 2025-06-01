@@ -2,7 +2,7 @@ import os
 import requests
 
 # Pfad zum Ordner mit den Log-Dateien
-log_dir = r"tmp"  # anpassen
+log_dir = r"C:\IT-Security\logs"  # anpassen
 
 upload_url = "http://localhost:8000/api/logfiles/"
 
@@ -23,10 +23,10 @@ for filename in os.listdir(log_dir):
             try:
                 resp_json = response.json()
                 print(f" Erfolgreich hochgeladen: {filename}")
-                print(f"   ID: {resp_json.get('id')}")
-                print(f"   Status: {resp_json.get('status')}")
-                print(f"   Entries created: {resp_json.get('entries_created')}")
-                print(f"   Incidents created: {resp_json.get('incidents_created_total')}") 
+                print(f" ID: {resp_json.get('id')}")
+                print(f" Status: {resp_json.get('status')}")
+                print(f" Entries created: {resp_json.get('entries_created')}")
+                print(f" Incidents created: {resp_json.get('incidents_created_total')}") 
         
                 print(f"   incident_counts: {resp_json.get('incident_counts')}") 
             except Exception as e:

@@ -1,13 +1,15 @@
 from rest_framework import serializers
-from .models import Incident,DosIncident,DDosIncident,ConfigIncident,ConcurrentLoginIncident,BruteforceIncident
+
+from .models import (
+    DosIncident,
+    DDosIncident,
+    ConfigIncident,
+    ConcurrentLoginIncident,
+    BruteforceIncident,
+)
+
 from log_processor.serializers import UserLoginSerializer
 
-class IncidentSerializer(serializers.ModelSerializer):
-    related_logs = UserLoginSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Incident
-        fields = '__all__'
 
 class DosIncidentSerializer(serializers.ModelSerializer):
     
@@ -66,7 +68,7 @@ class IncidentDetectorConfigSerializer(serializers.Serializer):
     })
     dos = DoSConfigSerializer(required=False, default={
         'packet_threshold': 100,
-        'time_delta': 10,
+        'time_delta': 30,
         'repeat_threshold': 120,
     })
     ddos = DDoSConfigSerializer(required=False, default={
