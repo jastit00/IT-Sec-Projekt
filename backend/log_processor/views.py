@@ -152,9 +152,10 @@ def processed_config_changes(request):
     end = request.query_params.get('end')
     queryset = UsysConfig.objects.all()
     if start:
-        queryset = queryset.filter(timestampgte=start)
+      queryset = queryset.filter(timestamp__gte=start)
     if end:
-        queryset = queryset.filter(timestamplte=end)
+        queryset = queryset.filter(timestamp__lte=end)
+
     serializer = UsysConfigSerializer(queryset, many=True)
     return Response(serializer.data)
 

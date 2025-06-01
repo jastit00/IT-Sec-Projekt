@@ -63,11 +63,17 @@ class BruteforceIncident(models.Model):
     event_type = models.CharField(max_length=16, default='incident')  
     severity = models.CharField(max_length=16, default='critical') 
     incident_type = models.CharField(max_length=16, default='bruteforce')
+    #source_file = models.ForeignKey(UploadedLogFile, on_delete=models.SET_NULL, null=True, blank=True)
+
+
     def __str__(self):
         return f"{self.reason} from {self.src_ip_address} at {self.timestamp} with {self.username} ({self.attempts} attempts, {self.successful} successful)"
 
 
 class RelatedLog(models.Model):
+
+   # source_file = models.ForeignKey(UploadedLogFile, on_delete=models.SET_NULL, null=True, blank=True)
+
     # Point to one specific incident model (only one per row)
     dos_incident = models.ForeignKey('DosIncident', on_delete=models.CASCADE, null=True)
     ddos_incident = models.ForeignKey('DDosIncident', on_delete=models.CASCADE, null=True)
