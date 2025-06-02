@@ -3,10 +3,20 @@ import re
 import tempfile
 import hashlib
 from datetime import datetime
-from django.utils import timezone
 from collections import defaultdict
-from log_processor.models import UploadedLogFile, UserLogin, UserLogout, UsysConfig, NetfilterPackets
+
+from django.utils import timezone
+
+from log_processor.models import (
+    UploadedLogFile,
+    UserLogin,
+    UserLogout,
+    UsysConfig,
+    NetfilterPackets,
+)
+
 from incident_detector.services import detect_incidents
+
 
 def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
     """
@@ -83,7 +93,6 @@ def process_log_file(file_path):
             for line in log_file:
                 line = line.strip()
 
-                # USER_LOGIN
                 if "type=USER_LOGIN" in line:
                     timestamp = extract_timestamp(line)
                     if not timestamp:
@@ -111,7 +120,6 @@ def process_log_file(file_path):
                         )
                         entries_created += 1
 
-                # USER_LOGOUT or USER_END
                 elif "type=USER_LOGOUT" in line or "type=USER_END" in line:
                     timestamp = extract_timestamp(line)
                     if not timestamp:
@@ -136,7 +144,6 @@ def process_log_file(file_path):
                         )
                         entries_created += 1
 
-                # USYS_CONFIG
                 elif "type=USYS_CONFIG" in line:
                     timestamp = extract_timestamp(line)
                     if not timestamp:
@@ -173,15 +180,14 @@ def process_log_file(file_path):
                         )
                         entries_created += 1
 
-                # NETFILTER_PACKET
                 elif "type=NETFILTER_PKT" in line:
                     timestamp = extract_timestamp(line)
                     if not timestamp:
                         continue
                     
-                    # maybe tweak later (30s timeframe for packets)
+                    # 30s timeframe for packets
                     second = 0 if timestamp.second < 30 else 30
-                    timestamp_minute = timestamp.replace(second=second, microsecond=0)
+                    rounded_timestamp = timestamp.replace(second=second, microsecond=0)
                     
                     src_ip_address = extract_match(r'saddr=([^\s]*)', line)
                     dst_ip_address = extract_match(r'daddr=([^\s]*)', line)
@@ -197,12 +203,12 @@ def process_log_file(file_path):
                         case _:
                             protocol = f"not defined ({protocol_number})" if protocol_number else "not defined"
                     
-                    key = (timestamp_minute, src_ip_address, dst_ip_address, protocol)
+                    key = (rounded_timestamp, src_ip_address, dst_ip_address, protocol)
                     packet_counts[key] += 1
         
-        for (timestamp_minute, src_ip_address, dst_ip_address, protocol), count in packet_counts.items():
+        for (rounded_timestamp, src_ip_address, dst_ip_address, protocol), count in packet_counts.items():
             NetfilterPackets.objects.create(
-                timestamp=timestamp_minute,
+                timestamp=rounded_timestamp,
                 src_ip_address=src_ip_address,
                 dst_ip_address=dst_ip_address,
                 protocol=protocol,

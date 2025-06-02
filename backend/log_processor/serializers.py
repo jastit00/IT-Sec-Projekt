@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import UserLogin, UserLogout, UsysConfig, NetfilterPackets,UploadedLogFile,DetectionConfig
+from .models import (
+    NetfilterPackets,
+    UploadedLogFile,
+    UsysConfig,
+    UserLogin,
+    UserLogout,
+)
 
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:

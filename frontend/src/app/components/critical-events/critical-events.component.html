@@ -1,0 +1,47 @@
+<div class="events-container">
+  <div class="controls">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search events...</mat-label>
+      <input matInput [(ngModel)]="searchTerm" (input)="filterEvents()"
+             placeholder="Search by date, event, status, IP, description">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="sort-direction-field">
+      <mat-label>Order by</mat-label>
+      <mat-select [(ngModel)]="sortDirection" (selectionChange)="sortEvents()">
+        <mat-option value="asc">Ascending</mat-option>
+        <mat-option value="desc">Descending</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <table class="events-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Event</th>
+        <th>Status</th>
+        <th>IPs</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (event of filteredEvents; track event.id) {
+        <tr>
+          <td class="event-date">{{ event.date }}</td>
+          <td>{{ event.event }}</td>
+          <td><span class="status {{ event.status }}">{{ event.status }}</span></td>
+          <td>
+            @if (event.ips && event.ips.length > 0) {
+              @for(ip of event.ips; track ip) {
+                <span class="ip-badge">{{ ip }}</span>
+              }
+            } @else {
+              <span class="no-ips">No IPs</span>
+            }
+          </td>
+          <td>{{ event.description }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

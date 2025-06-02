@@ -1,0 +1,270 @@
+openapi: 3.0.0
+info:
+  title: Logfile API
+  version: 1.0.3
+  description: API zum Abrufen von Logdateien aus der Datenbank
+servers:
+  - url: http://localhost:5432/api
+
+
+paths:
+  /logfiles/:
+    post:
+      summary: Upload einer Logdatei
+      description: |
+        Upload einer Auditlogdatei
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Die Logdatei, die hochgeladen werden soll.
+                source:
+                  type: string
+                  description: Quelle des Logs (Welche Firewall?)
+                
+      responses:
+        '200':
+          description: Datei erfolgreich hochgeladen 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogFile'
+    
+        '401':
+          description: nicht authentifiziert
+          
+        '500' :
+          description: server kaputt
+          
+          
+  
+                
+  /logfiles/processed-logins:
+    get:
+      summary: Liste von Einträgen aus Logdatei speziell für Login
+      parameters:
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+            
+        
+      responses:
+        '200':
+          description: Liste von Datenbankeinträgen zu Login für eine Logfile
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntryLogin'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt
+  
+  
+
+  /logfiles/processed-incidents:
+    get:
+      summary: Liste ausgewerteter Incidents aus Datenbank
+      parameters:
+      
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe
+          
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Liste von Datenbankeinträgen zu Incidents für eine Logfile
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/LogEntryIncidents'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt
+        
+  /logfiles/processed-configuration-changes:
+    get:
+      summary: Liste ausgewerteter Konfigurationsänderungen aus Datenbank
+      parameters:
+        
+        - name: start
+          in: query
+          description: Start of the timeframe 
+          
+          schema:
+            type: string
+            format: date-time
+            
+        - name: end
+          in: query
+          description: End of the timeframe 
+        
+          schema:
+            type: string
+            format: date-time
+        
+      responses:
+        '200':
+          description: Liste Datenbankeinträgen zu Konfigurationsänderungen für eine Logfile
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntryConfigChanges'
+                
+        '401':
+          description: nicht authentifiziert
+          
+        '404':
+          description: nicht vorhanden
+          
+        '500' :
+          description: server kaputt
+  
+components:
+  schemas:
+    LogFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          
+        filename:
+          type: string
+          
+        source:
+          type: string
+        
+        uploaded_by:
+          type: string
+          
+        uploaded_at:
+          type: string
+          format: date-time
+          
+        status:
+          type: string
+          enum: [success, error]
+      
+    LogEntryLogin:
+      type: object
+      properties:
+        id:
+          type: integer
+          
+        log_type:
+          type: string
+          
+        timestamp:
+          type: string
+          format: date-time
+          
+        username:
+          type: string
+          format: date-time
+          
+        ipAddress:
+          type: string
+          format: ipv4 
+          
+        result:
+          type: string
+          enum: [successful, failed]  
+        
+    LogEntryIncidents:
+      type: object
+      properties:
+        id:
+          type: integer
+          
+        timestamp:
+          type: string
+          format: date-time
+          
+        username:
+          type: string
+          
+        ipAddress:
+          type: string
+          format: ipv4 
+          
+        reason: 
+          type: string
+          
+    LogEntryConfigChanges:
+      type: object
+      properties:
+        id:
+          type: integer
+          
+        timestamp:
+          type: string
+          format: date-time
+          
+        username:
+          type: string
+          
+        ipAddress:
+          type: string
+          format: ipv4
+          
+        changedSettings:
+          type: array
+          items: 
+            type: string
+          
+        result: 
+          type: string
+          enum: [successful, failed] 
+    
+          
+          
+          
+    

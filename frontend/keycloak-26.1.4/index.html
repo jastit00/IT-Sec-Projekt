@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keycloak Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js"></script>
+</head>
+<body>
+
+<h1>Willkommen bei Keycloak Login Test</h1>
+
+<div id="loginSection">
+    <button onclick="login()">Einloggen</button>
+</div>
+
+<div id="logoutSection" style="display: none;">
+    <button onclick="logout()">Ausloggen</button>
+</div>
+
+<div id="userInfo" style="display: none;">
+    <p>Willkommen, <span id="userName"></span>!</p>
+</div>
+
+<script>
+    // Initialisiere Keycloak
+    var keycloak = new Keycloak({
+        url: 'http://localhost:8080/auth', 
+        realm: 'TestRealm',                
+        clientId: 'test-client'            
+    });
+
+    // Keycloak-Login
+    function login() {
+        keycloak.init({ onLoad: 'login-required' }).then(function(authenticated) {
+            if (authenticated) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('logoutSection').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userName').textContent = keycloak.tokenParsed.preferred_username;
+            }
+        }).catch(function() {
+            alert('Fehler beim Authentifizieren!');
+        });
+    }
+
+    // Keycloak-Logout
+    function logout() {
+        keycloak.logout().then(function() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('logoutSection').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
+

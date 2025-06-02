@@ -1,0 +1,33 @@
+<div
+  cdkDropList
+  [cdkDropListData]="chartIds"
+  class="chart-grid"
+  (cdkDropListDropped)="drop($event)"
+>
+  @for (id of chartIds; track id) {
+    <div class="chart-box" cdkDrag [cdkDragDisabled]="resizing">
+      <!-- Dynamische Auswahl des Chart-Komponenten-Typ -->
+      @if (isChart(id, 'chart1')) {
+        <app-chart-one />
+      } @else if (isChart(id, 'chart2')) {
+        <app-chart-two />
+      } @else if (isChart(id, 'chart3')) {
+        <app-chart-three />
+      } @else if (isChart(id, 'chart4')) {
+        <app-chart-four/>
+      }@else if (isChart(id, 'chart5')) {
+        <app-chart-five/>
+      } @else if (isChart(id, 'chart6')) {
+        <app-chart-six/>
+      } @else if (isChart(id, 'config-changes')) {
+        <app-config-changes />
+      } @else if (isChart(id, 'chart8')) {
+        <app-chart-eight />
+      } 
+      <!-- Resize -->
+      <div class="resize-handle resize-e" (mousedown)="onResizeStart($event, 'horizontal')"></div>
+      <div class="resize-handle resize-s" (mousedown)="onResizeStart($event, 'vertical')"></div>
+      <div class="resize-handle resize-se" (mousedown)="onResizeStart($event, 'both')"></div>
+    </div>
+  }
+</div>
