@@ -11,8 +11,8 @@ export interface Chart {
 @Injectable({
   providedIn: 'root'
 })
-export class ChartVisibilityService {
 
+export class ChartVisibilityService {
   private readonly MAX_VISIBLE_CHARTS = 4;
 
   private defaultCharts: Chart[] = [
@@ -20,7 +20,7 @@ export class ChartVisibilityService {
     { id: 'chart2', name: 'Failed Logins', visible: true },
     { id: 'chart3', name: 'Forwarded Packets', visible: true },
     { id: 'chart4', name: 'Incidents', visible: true },
-    { id: 'chart5', name: 'DOS Packets', visible: true },
+    { id: 'chart5', name: 'DOS Packets', visible: false },
     { id: 'chart6', name: 'DDOS Packets', visible: false },
     { id: 'config-changes', name: 'Configuration Changes (Table)', visible: false },
     { id: 'chart8', name: 'Configuration Changes', visible: false }, // Default auf false gesetzt, da Max = 4

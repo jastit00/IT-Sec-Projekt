@@ -1,6 +1,6 @@
 import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { keycloak, logout, updatefunction } from '../../auth/keycloak.service';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
 import { NgIf, NgFor } from '@angular/common';
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
@@ -29,10 +29,8 @@ export class HeaderComponent implements OnInit {
   showDashboard1Menu = false;
   showDashboard2Menu = false;
   showDashboard3Menu = false;
-   // default
-  // Chart configuration
+
   charts: Chart[] = [];
-  // Flag to track if max charts are reached
   isMaxChartsReached = false;
   
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
@@ -43,41 +41,23 @@ export class HeaderComponent implements OnInit {
   private eventService = inject(EventService);
   private updateService = inject(ChartUpdateService);
   private fb = inject(FormBuilder);
-  /*private route = inject(ActivatedRoute);
-  private router = inject(Router);*/
 
   showSettingsForm = false;
   settingsForm!: FormGroup;
 
   constructor(private presetIdService: PresetIdService) {
-    // Initialize charts from the service
+
     this.charts = this.chartVisibilityService.getAllCharts();
-    
-    // Check if max charts are reached initially
     this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
     
-    // Manually ensure Chart 6 exists
-    if (!this.charts.some(chart => chart.id === 'chart6')) {
-      this.chartVisibilityService.addChart({
-        id: 'chart6',
-        name: 'Diagramm 6',
-        visible: false
-      });
-      // Reload charts
-      this.charts = this.chartVisibilityService.getAllCharts();
-    }
-    
-    // Subscribe to chart changes
     this.chartVisibilityService.charts$.subscribe(updatedCharts => {
       this.charts = updatedCharts;
-      // Update max charts reached status
       this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
       console.log('Charts im Header aktualisiert:', this.charts, 'Max reached:', this.isMaxChartsReached);
     });
   }
 
   ngOnInit(): void {
-    // Set username from Keycloak when component initializes
     this.initUsername();
     console.log('HeaderComponent initialized, attempting to get Keycloak username');
     this.settingsForm = this.fb.group({
@@ -104,7 +84,6 @@ export class HeaderComponent implements OnInit {
     this.presetIdService.setPresetId(id);
     console.log('PresetId gesetzt auf:', id);
   }
-
 
   // Initialize username from Keycloak
   private initUsername() {
@@ -142,12 +121,10 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  // Get count of critical events
   getCriticalEventsCount(): number {
     return this.eventService.events.filter(event => event.status === 'Critical').length;
   }
   
-  // Check if there are any critical events
   hasCriticalEvents(): boolean {
     return this.getCriticalEventsCount() > 0;
   }
@@ -172,9 +149,7 @@ export class HeaderComponent implements OnInit {
     console.log('LocalStorage zurückgesetzt');
   }
 
-  // Method called when file is selected
   onFileSelected($event: Event) {
-    // Extract files from the event
     const input = $event.target as HTMLInputElement;
     const files = input.files;
     if (files && files.length > 0) {
@@ -212,7 +187,6 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  // Method that opens the file selection dialog
   openFileUpload() {
     if (this.fileInput) {
       this.fileInput.nativeElement.click();
@@ -228,37 +202,34 @@ export class HeaderComponent implements OnInit {
   onSettingsClick(){
     this.showSettingsForm = !this.showSettingsForm;
   }
+
   submitSettings() {
-
-
     if (this.settingsForm.valid){
     this.defaultService.incidentsConfigPost(this.settingsForm.value).subscribe({
       next: response => {
-
         this.dialog.open(ConfigpopupComponent, {
           data: response
         })
 
         if (response.result) {
-        
-        this.settingsForm.patchValue({
-          brute_force: {
-            attempt_threshold: response.config?.brute_force?.attempt_threshold,
-            time_delta: response.config?.brute_force?.time_delta,
-            repeat_threshold: response.config?.brute_force?.repeat_threshold,
-          },
-          dos: {
-            packet_threshold: response.config?.dos?.packet_threshold,
-            time_delta: response.config?.dos?.time_delta,
-            repeat_threshold: response.config?.dos?.repeat_threshold,
-          },
-          ddos: {
-            packet_threshold: response.config?.ddos?.packet_threshold,
-            time_delta: response.config?.ddos?.time_delta,
-            repeat_threshold: response.config?.ddos?.repeat_threshold,
-            min_sources: response.config?.ddos?.min_sources,
-          }
-        });
+          this.settingsForm.patchValue({
+            brute_force: {
+              attempt_threshold: response.config?.brute_force?.attempt_threshold,
+              time_delta: response.config?.brute_force?.time_delta,
+              repeat_threshold: response.config?.brute_force?.repeat_threshold,
+            },
+            dos: {
+              packet_threshold: response.config?.dos?.packet_threshold,
+              time_delta: response.config?.dos?.time_delta,
+              repeat_threshold: response.config?.dos?.repeat_threshold,
+            },
+            ddos: {
+              packet_threshold: response.config?.ddos?.packet_threshold,
+              time_delta: response.config?.ddos?.time_delta,
+              repeat_threshold: response.config?.ddos?.repeat_threshold,
+              min_sources: response.config?.ddos?.min_sources,
+            }
+          });
         }
         this.showSettingsForm = false;
         this.updateService.triggerChartUpdate();
