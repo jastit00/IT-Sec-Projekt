@@ -1,5 +1,12 @@
 from django.db import models
-from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPackets, UploadedLogFile
+from log_processor.models import (
+    UserLogin,
+    UserLogout,
+    UsysConfig,
+    NetfilterPackets,
+    UploadedLogFile,
+)
+
 
 
 class DosIncident(models.Model):
@@ -28,7 +35,7 @@ class DDosIncident(models.Model):
     reason = models.TextField()
     sources = models.TextField()
     def __str__(self):
-     return f"[{self.timestamp}] DDoS on {self.dst_ip_address} ({self.protocol})"
+        return f"[{self.timestamp}] DDoS on {self.dst_ip_address} ({self.protocol})"
 
 class ConcurrentLoginIncident(models.Model):
     timestamp = models.DateTimeField()
@@ -43,7 +50,7 @@ class ConcurrentLoginIncident(models.Model):
 
 class ConfigIncident(models.Model):
     timestamp = models.DateTimeField()
-    src_ip_address = models.GenericIPAddressField()
+    src_ip_address = models.GenericIPAddressField(null=True)
     username = models.CharField(max_length=32)
     reason = models.TextField()
     event_type = models.CharField(max_length=16, default='incident')  

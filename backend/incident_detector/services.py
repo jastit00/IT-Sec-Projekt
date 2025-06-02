@@ -311,6 +311,7 @@ def detect_critical_config_change():
 
         login = UserLogin.objects.filter(
             username=config_change.terminal,
+            result="success",
             timestamp__lte=config_change.timestamp
         ).order_by('-timestamp').first()
         src_ip_address = login.src_ip_address if login else None
@@ -321,6 +322,7 @@ def detect_critical_config_change():
         if not ConfigIncident.objects.filter(
             timestamp=config_change.timestamp,
             username=config_change.terminal,
+            reason=reason,
             src_ip_address=src_ip_address,
             incident_type="configchange"
         ).exists():

@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class UserLogin(models.Model):
     timestamp = models.DateTimeField()
@@ -64,8 +64,8 @@ class NetfilterPackets(models.Model):
 
 class DetectionConfig(models.Model):
     key = models.CharField(max_length=100, unique=True)
-    data = models.JSONField()   # oder TextField mit JSON, je nach DB
-    updated_at = models.DateTimeField(auto_now=True)  # speichert automatisch die letzte Änderung
+    data = models.JSONField()   
+    updated_at = models.DateTimeField(auto_now=True)  
 
     def __str__(self):
         return f"{self.key} updated at {self.updated_at}"
