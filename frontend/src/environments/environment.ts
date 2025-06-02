@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    keycloakUrl: 'https://auth.example.com',  // Traefik SSL-Endpoint
-    redirectUri: 'https://app.example.com/dashboard'
+    keycloakUrl: 'https://ads-logs.hs-esslingen.com:8088',  // Traefik SSL-Endpoint
+    redirectUri: 'https://ads-logs.hs-esslingen.com'
 };
