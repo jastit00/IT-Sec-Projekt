@@ -6,6 +6,7 @@ import { DefaultService } from '../api-client';
 import { ChartUpdateService } from './chart-update.service';
 //and Events interface
 import { Events } from '../models/events.model';
+import { environment } from '../../environments/environment';
 
 //frontend interface for security events
 export interface SecurityEvent {
@@ -25,7 +26,7 @@ export class EventService {
   private defaultService = inject(DefaultService);
   private httpClient = inject(HttpClient);
   private updateService = inject(ChartUpdateService);
-  private apiBaseUrl = 'http://localhost:8000/api'; // base URL
+  private apiBaseUrl = `${environment.backendUrl}/api`; // base URL
   
   //current events from API call
   events: SecurityEvent[] = [];
