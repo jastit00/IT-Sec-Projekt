@@ -1,0 +1,4 @@
+type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=139.108.108.10 terminal=cdj8 res=success'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=201.168.10.10 terminal=cdc8 res=success'UID="root" AUID="unset"
+type=USER_LOGOUT msg=audit(1743072873.900:25): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-logout acct="admin" exe="web" hostname=? addr=? terminal=cdc8 res=success'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1743072594.508:45): pid=5148 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=109.108.107.20 terminal=cdi5 res=success'UID="root" AUID="unset"

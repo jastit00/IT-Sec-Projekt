@@ -1,0 +1,15 @@
+type=USER_LOGIN msg=audit(1725545178.400:27): pid=5161 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="secretary" exe="web" hostname=? addr=192.168.0.41 terminal=a765 res=success'UID="root" AUID="unset"
+type=USER_LOGIN msg=audit(1725545178.400:27): pid=5161 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="admin" exe="web" hostname=? addr=192.168.0.40 terminal=a765 res=success'UID="root" AUID="unset"
+
+type=USYS_CONFIG msg=audit(1725545178.468:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="config" action="update" key="password_policy" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=testuser res=success'UID="root" AUID="unset"
+type=USYS_CONFIG msg=audit(1725545178.470:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="users" action="update" key="password_changetime" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=testuser res=success'UID="root" AUID="unset"
+
+type=USER_LOGIN msg=audit(1725545178.480:27): pid=5161 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="testuser" exe="web" hostname=? addr=192.168.0.42 terminal=a765 res=success'UID="root" AUID="unset"
+
+type=USYS_CONFIG msg=audit(1725545178.482:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="config" action="update" key="password_policy" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=secretary res=success'UID="root" AUID="unset"
+type=USYS_CONFIG msg=audit(1725545178.483:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="users" action="update" key="password_changetime" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=admin res=success'UID="root" AUID="unset"
+type=USYS_CONFIG msg=audit(1725545178.484:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="config" action="update" key="password_policy" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=testuser res=success'UID="root" AUID="unset"
+
+type=USER_LOGIN msg=audit(1725545178.490:27): pid=5161 uid=0 auid=4294967295 ses=4294967295 msg='op=user-login acct="anotherone" exe="web" hostname=? addr=192.168.0.43 terminal=a765 res=success'UID="root" AUID="unset"
+
+type=USYS_CONFIG msg=audit(1725545178.491:27): pid=5179 uid=0 auid=4294967295 ses=4294967295 msg='table="config" action="update" key="password_policy" value="" condition="" exe="/usr/sbin/systemd" hostname=? addr=? terminal=badguy res=success'UID="root" AUID="unset"
