@@ -80,6 +80,11 @@ button:hover,
     position: relative;
 }
 
+.dropdown-item {
+    position: relative;
+}
+
+
 .dropdown-content,
 .submenu {
     display: none;
@@ -88,18 +93,23 @@ button:hover,
     min-width: 160px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.5);
     border-radius: 4px;
-    z-index: 5;
+
+    z-index: 10;
+
 }
 
 .dropdown-content {
     top: 100%;
     left: 0;
+    z-index: 5;
 }
 
 .submenu {
     left: 100%;
     top: 0;
-    z-index: 2;
+
+    z-index: 20;
+
 }
 
 .dropdown-content a,
