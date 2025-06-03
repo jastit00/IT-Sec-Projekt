@@ -102,12 +102,14 @@ button:hover,
     top: 100%;
     left: 0;
     z-index: 5;
+    
 }
 
 .submenu {
     left: 100%;
     top: 0;
-
+    display: block;
+    position: absolute;
     z-index: 20;
 
 }
@@ -128,7 +130,7 @@ button:hover,
 .chart-toggle-item:hover {
     background-color: #555;
     color: orange;
-    text-decoration: underline;
+    //text-decoration: underline;
     text-underline-offset: 5px;
     text-decoration-thickness: 2px;
 }
