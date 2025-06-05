@@ -17,7 +17,7 @@
         <input type="datetime-local" formControlName="end">
         
 
-        <div *ngIf="showTargetIpSelect">
+        <div class="ipselect" *ngIf="showTargetIpSelect">
         <label for="targetDstIp">destination:</label>
         <select class ="ip-select" id="targetDstIp" formControlName="targetDstIp">
         <option [value]="null">Choose the address</option>
@@ -35,7 +35,7 @@
         <details>
         <summary>Color Scheme:</summary>
         <label for="colorScheme">Color Scheme:</label>
-        <select (change)="onColorSchemeChange($event)" [value]="currentColorScheme" id="colorScheme">
+        <select class="colorselect"(change)="onColorSchemeChange($event)" [value]="currentColorScheme" id="colorScheme">
           <option *ngFor="let scheme of colorSchemes; let i = index" [value]="i">
             {{scheme.name}}
           </option>

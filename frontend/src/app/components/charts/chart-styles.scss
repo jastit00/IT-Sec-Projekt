@@ -79,45 +79,59 @@
   margin-top: 0.5rem;
   z-index: 100;
   width: 300px;
- }
+ 
+  
+  .ipselect,
   
   form {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
-    label {
-      font-weight: 500;
-      font-size: 0.9rem;
-      
-    }
 
-    input[type="datetime-local"] {
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    .ip-select {
-    display: flex;
-    }
   
-    select {
+
+  label {
+      font-weight: 500;
+      font-size: 0.9rem; 
+  }
+
+  details {
+    font-weight: 1000;
+    font-size: 0.9rem;
+  }
+
+  select {
       padding: 0.4rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 0.9rem;
       background-color: white;
-      cursor: pointer;
+      cursor: pointer; 
+  }
+
+  .colorselect {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: white;
+    cursor: pointer; 
+    display: flex;
+    min-width: 100%;
     
-      &:focus {
-        outline: none;
-        border-color: #36A2EB;
-        box-shadow: 0 0 0 2px rgba(54, 162, 235, 0.2);
-      }}
     
-  
+      
+  }
+
+  input[type="datetime-local"] {
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+  }
+   
+      
 
     button[type="submit"] {
       min-width: 100px;
@@ -151,10 +165,10 @@
         color: orange;
       }
     }
-  
+ }
 
 
-  
+
 
 .placeholder-overlay {
   position: absolute;
