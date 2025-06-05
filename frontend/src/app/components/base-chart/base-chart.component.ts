@@ -13,6 +13,9 @@ export abstract class BaseChartComponent implements OnInit {
   chartVisible = true;
   hasData = false;
 
+  showTargetIpSelect = false;
+  availableDstIps: string[] = [];
+
   data: any = { labels: [], datasets: [] };
   options: any = defaultChartOptions;
 

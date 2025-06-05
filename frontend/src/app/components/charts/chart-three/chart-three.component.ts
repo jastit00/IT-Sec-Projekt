@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 import { DefaultService } from '../../../api-client';
@@ -10,14 +10,15 @@ import { BaseChartComponent } from '../../base-chart/base-chart.component';
   selector: 'app-chart-three',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-three.component.html',
-  styleUrls: ['./chart-three.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartThreeComponent extends BaseChartComponent {
+  override  showTargetIpSelect = true;
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
-  protected updateService = inject(ChartUpdateService)
-  availableDstIps: string[] = [];
+  protected updateService = inject(ChartUpdateService);
+  chartTitle = "Forwarded packets by source IP";
 
 
   loadData(start?: string, end?: string) {

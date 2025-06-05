@@ -10,13 +10,14 @@ import { BaseChartComponent } from '../../base-chart/base-chart.component';
   selector: 'app-chart-four',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-four.component.html',
-  styleUrls: ['./chart-four.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartFourComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
-  protected updateService = inject(ChartUpdateService)
+  protected updateService = inject(ChartUpdateService);
+  chartTitle = "Incidents by type";
 
 
   loadData(start?: string, end?: string) {

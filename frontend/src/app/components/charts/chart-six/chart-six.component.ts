@@ -10,13 +10,14 @@ import { ChartUpdateService } from '../../../services/chart-update.service';
   selector: 'app-chart-six',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-six.component.html',
-  styleUrls: ['./chart-six.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartSixComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
-  protected updateService = inject(ChartUpdateService)
+  protected updateService = inject(ChartUpdateService);
+  chartTitle ="Potential DDOS connections";
 
   loadData(start?: string, end?: string) {
     

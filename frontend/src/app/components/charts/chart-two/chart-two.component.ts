@@ -10,13 +10,14 @@ import { ChartUpdateService } from '../../../services/chart-update.service';
   selector: 'app-chart-two',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-two.component.html',
-  styleUrls: ['./chart-two.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartTwoComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
   protected updateService = inject(ChartUpdateService)
+  chartTitle = "Failed Logins";
 
   loadData(): void {
     const startDate = this.dateForm.get('start')?.value;

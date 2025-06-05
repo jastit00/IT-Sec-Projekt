@@ -10,13 +10,14 @@ import { BaseChartComponent } from '../../base-chart/base-chart.component';
   selector: 'app-chart-one',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-one.component.html',
-  styleUrls: ['./chart-one.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartOneComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
   protected updateService = inject(ChartUpdateService)
+  chartTitle = "Login attempts by IP-address";
 
 
   loadData(start?: string, end?: string): void {

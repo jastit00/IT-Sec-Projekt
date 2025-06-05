@@ -10,13 +10,14 @@ import { ChartUpdateService } from '../../../services/chart-update.service';
   selector: 'app-chart-eight',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-eight.component.html',
-  styleUrls: ['./chart-eight.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartEightComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
-  protected updateService = inject(ChartUpdateService)
+  protected updateService = inject(ChartUpdateService);
+  chartTitle = "Configurationchanges by type";
 
   loadData(start?: string, end?: string) {
 

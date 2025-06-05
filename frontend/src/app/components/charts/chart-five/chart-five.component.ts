@@ -10,13 +10,14 @@ import { BaseChartComponent } from '../../base-chart/base-chart.component';
   selector: 'app-chart-five',
   standalone: true,
   imports: [CommonModule, ChartModule, ReactiveFormsModule],
-  templateUrl: './chart-five.component.html',
-  styleUrls: ['./chart-five.component.scss']
+  templateUrl: './../chart-template.html',
+  styleUrls: ['./../chart-styles.scss']
 })
 export class ChartFiveComponent extends BaseChartComponent {
   protected defaultService = inject(DefaultService);
   protected fb = inject(FormBuilder);
-  protected updateService = inject(ChartUpdateService)
+  protected updateService = inject(ChartUpdateService);
+  chartTitle = "Potential DOS connections";
 
 
    loadData(start?: string, end?: string) {
