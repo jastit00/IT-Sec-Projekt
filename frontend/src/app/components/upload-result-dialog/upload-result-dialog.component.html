@@ -1,52 +1,51 @@
 <h2 mat-dialog-title [ngClass]="{ 'error-title': data.status === 'error' }">
-      {{ data.status === 'error' ? 'Error' : 'Upload successful' }}
-    </h2>
+  {{ data.status === 'error' ? 'Error' : 'Upload successful' }}
+</h2>
 
-    <div mat-dialog-content>
-      <ng-container *ngIf="data.status === 'error'; else successContent">
-        <p><strong>Error:</strong> {{ data.message }}</p>
-      </ng-container>
-
-      <ng-template #successContent>
-        <table>
-          <tr>
-            <td><strong>ID:</strong></td>
-            <td>{{ data.id }}</td>
-          </tr>
-          <tr>
-            <td><strong>Status:</strong></td>
-            <td>{{ data.status }}</td>
-          </tr>
-          <tr NgIf="data.filename !== null; else noFilename">
-            <td><strong>name:</strong></td>
-            <td>{{ data.filename }}</td>
-          </tr>
-          <tr>
-            <td><strong>created entries:</strong></td>
-            <td>{{ data.entries_created }}</td>
-          </tr>
-          <tr>
+<div mat-dialog-content>
+  @if (data.status === 'error') {
+    <p><strong>Error:</strong> {{ data.message }}</p>
+  } @else {
+    <table>
+      <tr>
+        <td><strong>ID:</strong></td>
+        <td>{{ data.id }}</td>
+      </tr>
+      <tr>
+        <td><strong>Status:</strong></td>
+        <td>{{ data.status }}</td>
+      </tr>
+      <tr NgIf="data.filename !== null; else noFilename">
+        <td><strong>name:</strong></td>
+        <td>{{ data.filename }}</td>
+      </tr>
+      <tr>
+        <td><strong>created entries:</strong></td>
+        <td>{{ data.entries_created }}</td>
+      </tr>
+      <tr>
         <td><strong>total incidents:</strong></td>
         <td>{{ data.incidents_created_total }}</td>
+      </tr>
+      @for (key of getIncidentKeys(data.incident_counts); track key) {
+        @if (data.incident_counts[key] > 0) {
+          <tr>
+            <td>- {{ key }}:</td>
+            <td>{{ data.incident_counts[key] }}</td>
+          </tr>
+        }
+      }
+      <ng-template #noFilename>
+        <tr>
+          <td><strong>name:</strong></td>
+          <td><em>no filename given</em></td>
         </tr>
-
-        <ng-container *ngFor="let key of getIncidentKeys(data.incident_counts)">
-        <tr *ngIf="data.incident_counts[key] > 0">
-          <td>- {{ key }}:</td>
-          <td>{{ data.incident_counts[key] }}</td>
-        </tr>
-        </ng-container>
-
-          <ng-template #noFilename>
-            <tr>
-              <td><strong>name:</strong></td>
-              <td><em>no filename given</em></td>
-            </tr>
-          </ng-template>
-        </table>
       </ng-template>
-    </div>
+    </table>
+  }
 
-    <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>OK</button>
-    </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>OK</button>
+</div>

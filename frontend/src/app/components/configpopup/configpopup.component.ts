@@ -1,11 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { NgClass, NgIf, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-configpopup',
-  imports: [MatDialogModule, MatButtonModule,  NgClass, NgIf, NgFor ],
+  imports: [MatDialogModule, MatButtonModule, NgClass],
   templateUrl: './configpopup.component.html',
   styleUrl: './configpopup.component.scss'
 })

@@ -8,7 +8,7 @@ import { ChartFiveComponent } from '../components/charts/chart-five/chart-five.c
 import { ChartSixComponent } from '../components/charts/chart-six/chart-six.component'; // Neue Komponente importieren
 import { ConfigChangesComponent } from '../components/charts/config-changes/config-changes.component';
 import { ChartEightComponent } from '../components/charts/chart-eight/chart-eight.component';
-import { CommonModule } from '@angular/common';
+
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChartVisibilityService } from '../services/chart-visibility.service';
 import { Subscription } from 'rxjs';
@@ -22,7 +22,6 @@ import { PresetIdService } from '../services/preset-id.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   imports: [
-    CommonModule,
     DragDropModule,
     ChartOneComponent,
     ChartTwoComponent,
@@ -30,9 +29,9 @@ import { PresetIdService } from '../services/preset-id.service';
     ChartFourComponent,
     ChartFiveComponent,
     ChartSixComponent,
-    ConfigChangesComponent, // ChartSixComponent zu den Imports hinzufügen
-    ChartEightComponent,
-  ]
+    ConfigChangesComponent,
+    ChartEightComponent
+]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   chartIds: string[] = [];

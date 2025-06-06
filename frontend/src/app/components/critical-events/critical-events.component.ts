@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { EventService, SecurityEvent } from '../../services/event-service';
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,13 +11,12 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-critical-events',
   standalone: true,
   imports: [
-    CommonModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatIconModule,
     FormsModule
-  ],
+],
   templateUrl: './critical-events.component.html',
   styleUrls: ['./critical-events.component.scss']
 })

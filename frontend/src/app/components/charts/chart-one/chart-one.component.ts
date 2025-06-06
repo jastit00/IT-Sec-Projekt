@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
-import { CommonModule } from '@angular/common';
+
 import { DefaultService } from '../../../api-client';
 import { ChartUpdateService } from '../../../services/chart-update.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -9,7 +9,7 @@ import { BaseChartComponent } from '../../base-chart/base-chart.component';
 @Component({
   selector: 'app-chart-one',
   standalone: true,
-  imports: [CommonModule, ChartModule, ReactiveFormsModule],
+  imports: [ChartModule, ReactiveFormsModule],
   templateUrl: './../chart-template.html',
   styleUrls: ['./../chart-styles.scss']
 })

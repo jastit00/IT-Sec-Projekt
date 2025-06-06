@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTableModule } from '@angular/material/table';
 import { DefaultService } from '../../../api-client';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -8,7 +8,7 @@ import { ChartUpdateService } from '../../../services/chart-update.service';
 @Component({
   selector: 'app-config-changes',
   standalone: true,
-  imports: [CommonModule, MatTableModule, ReactiveFormsModule],
+  imports: [MatTableModule, ReactiveFormsModule],
   templateUrl: './config-changes.component.html',
   styleUrl: './config-changes.component.scss'
 })
