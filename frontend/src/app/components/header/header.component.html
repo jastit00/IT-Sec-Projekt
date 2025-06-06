@@ -4,68 +4,41 @@
       <div class="logo-test"></div>
     </div>
     <button class="title" routerLink="/dashboard">{{ title() }}</button>
-    <div class="dropdown">
-      <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">Dashboard</button>
-      <div class="dropdown-content">
-        <div class="dropdown-item"
-          (mouseenter)="setDashboard('1'); showDashboard1Menu = true"
-          (mouseleave)="showDashboard1Menu = false">
-          <a routerLink="/dashboard/1" [class.disabled-link]="isMaxChartsReached">Dashboard 1</a>
-          @if (showDashboard1Menu) {
-            <div class="submenu">
-              @for (chart of charts; track chart) {
-                <div class="chart-toggle-item">
-                  <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                    <input type="checkbox" [checked]="chart.visible"
-                      (change)="toggleChart(chart.id)"
-                      [disabled]="!chart.visible && isMaxChartsReached">
-                      <span class="chart-label">{{ chart.name }}</span>
-                    </label>
-                  </div>
-                }
+<div class="dropdown">
+  <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">
+    Dashboard
+  </button>
+
+  <div class="dropdown-content">
+    @for (dash of dashboards; track dash) {
+      <div class="dropdown-item"
+           (mouseenter)="setDashboard(dash.id); dash.menuVisible = true"
+           (mouseleave)="dash.menuVisible = false">
+           
+        <a [routerLink]="'/dashboard/' + dash.id" [class.disabled-link]="isMaxChartsReached">
+          {{ dash.label }}
+        </a>
+
+        @if (dash.menuVisible) {
+          <div class="submenu">
+            @for (chart of charts; track chart) {
+              <div class="chart-toggle-item">
+                <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
+                  <input type="checkbox"
+                         [checked]="chart.visible"
+                         (change)="toggleChart(chart.id)"
+                         [disabled]="!chart.visible && isMaxChartsReached">
+                  <span class="chart-label">{{ chart.name }}</span>
+                </label>
               </div>
             }
           </div>
-          <div class="dropdown-item"
-            (mouseenter)="setDashboard('2'); showDashboard2Menu = true"
-            (mouseleave)="showDashboard2Menu = false">
-            <a routerLink="/dashboard/2" [class.disabled-link]="isMaxChartsReached">Dashboard 2</a>
-            @if (showDashboard2Menu) {
-              <div class="submenu">
-                @for (chart of charts; track chart) {
-                  <div class="chart-toggle-item">
-                    <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                      <input type="checkbox" [checked]="chart.visible"
-                        (change)="toggleChart(chart.id)"
-                        [disabled]="!chart.visible && isMaxChartsReached">
-                        <span class="chart-label">{{ chart.name }}</span>
-                      </label>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-            <div class="dropdown-item"
-              (mouseenter)="setDashboard('3'); showDashboard3Menu = true"
-              (mouseleave)="showDashboard3Menu = false">
-              <a routerLink="/dashboard/3" [class.disabled-link]="isMaxChartsReached">Dashboard 3</a>
-              @if (showDashboard3Menu) {
-                <div class="submenu">
-                  @for (chart of charts; track chart) {
-                    <div class="chart-toggle-item">
-                      <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                        <input type="checkbox" [checked]="chart.visible"
-                          (change)="toggleChart(chart.id)"
-                          [disabled]="!chart.visible && isMaxChartsReached">
-                          <span class="chart-label">{{ chart.name }}</span>
-                        </label>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
+        }
+      </div>
+    }
+    </div>
+  </div>
+
           <button routerLink="/all-events">All Events</button>
           <button class="critical-events-btn" routerLink="/critical-events">
             <span class="badge-container">

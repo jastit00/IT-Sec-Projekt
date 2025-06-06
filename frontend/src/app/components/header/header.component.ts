@@ -47,6 +47,12 @@ export class HeaderComponent implements OnInit {
   settingsForm!: FormGroup;
   visibilitySubscription!: Subscription;
 
+  dashboards = [
+  { id: '1', label: 'Dashboard 1', menuVisible: false },
+  { id: '2', label: 'Dashboard 2', menuVisible: false },
+  { id: '3', label: 'Dashboard 3', menuVisible: false }
+  ];
+
   constructor(private presetIdService: PresetIdService) {
 
     this.charts = this.chartVisibilityService.getAllCharts();
