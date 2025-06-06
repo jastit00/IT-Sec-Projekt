@@ -2,7 +2,7 @@ import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angul
 import { keycloak, logout } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
-import { NgIf, NgFor } from '@angular/common';
+
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -19,7 +19,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule, MatTooltipModule, MatIconModule],
+  imports: [RouterLink, MatDialogModule, BadgeModule, ReactiveFormsModule, MatTooltipModule, MatIconModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
