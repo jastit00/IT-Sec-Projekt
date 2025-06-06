@@ -1,6 +1,7 @@
 import { OnInit, ViewChild, Component } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { defaultChartOptions } from '../charts/chart-options';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-base-chart',
@@ -38,6 +39,8 @@ export abstract class BaseChartComponent implements OnInit {
 
   private readonly COLOR_SCHEME_KEY = 'chart-two-color-scheme';
   private readonly CHART_SETTINGS_KEY = 'chart-two-settings';
+  private chartSubscription!: Subscription;
+  
 
   ngOnInit(): void {
     this.dateForm = this.fb.group({
@@ -57,10 +60,16 @@ export abstract class BaseChartComponent implements OnInit {
 
     this.loadData();
 
-    this.updateService.updateChart$.subscribe(() => {
+    this.chartSubscription = this.updateService.updateChart$.subscribe(() => {
       this.loadData();
     })
     
+  }
+
+  ngOnDestroy(): void {
+    if (this.chartSubscription) {
+      this.chartSubscription.unsubscribe();
+    }
   }
 
   
