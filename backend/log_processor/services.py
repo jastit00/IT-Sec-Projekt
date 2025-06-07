@@ -2,9 +2,9 @@ import os
 import re
 import tempfile
 import hashlib
+
 from datetime import datetime
 from collections import defaultdict
-
 from django.utils import timezone
 
 from log_processor.models import (
@@ -15,8 +15,7 @@ from log_processor.models import (
     NetfilterPackets,
 )
 
-from incident_detector.services import detect_incidents
-
+from incident_detector.services.detection import detect_incidents
 
 def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
     """
