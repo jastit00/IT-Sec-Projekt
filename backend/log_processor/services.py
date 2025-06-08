@@ -17,7 +17,7 @@ from log_processor.models import (
 
 from incident_detector.services.detection import detect_incidents
 
-def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user,keycloak_user):
+def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user):
     """
     Handles a newly uploaded log file by saving it temporarily, calculating its SHA-256 hash,
     checking for duplicates, processing its contents, and storing metadata in the database.
@@ -56,7 +56,6 @@ def handle_uploaded_log_file(uploaded_file, source, uploaded_by_user,keycloak_us
         file_hash=file_hash,
         source=source,
         uploaded_by=uploaded_by_user,
-        keycloakUser=keycloak_user,
         uploaded_at=timezone.now(),
         status='success' if result.get('status') != 'error' else 'error',
         entries_created=(result.get('entries_created', 0)+result.get('incidents_created_total', 0)),

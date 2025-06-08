@@ -30,7 +30,7 @@ class LogFileUploadView(APIView):
             return Response({"status": "error", "message": "Only .log files are allowed."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            result = handle_uploaded_log_file(uploaded_file, source, uploaded_by_user,keycloak_user)
+            result = handle_uploaded_log_file(uploaded_file, source, uploaded_by_user)
         except Exception as e:
             logger.exception("Error while processing log file.")
             return Response({"status": "error", "message": "Failed to process audit log file."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
