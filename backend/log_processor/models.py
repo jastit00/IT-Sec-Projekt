@@ -47,6 +47,7 @@ class UploadedLogFile(models.Model):
     entries_created = models.IntegerField(default=0)
     incidents_created_total = models.IntegerField(default=0)
     incident_counts = models.JSONField(default=dict, null=True)
+    keycloakUser= models.CharField(max_length=150, null=True)
     def __str__(self):
         return f"{self.filename} uploaded by {self.uploaded_by} at {self.uploaded_at}"
     

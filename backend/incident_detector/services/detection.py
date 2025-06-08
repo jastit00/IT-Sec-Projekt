@@ -31,7 +31,7 @@ DOS_DEFAULT = {
 
 DDOS_DEFAULT = {
     'packet_threshold': 30,
-    'time_delta': 3,
+    'time_delta': 30,
     'repeat_threshold': 60,
     'min_sources': 2,
 }
