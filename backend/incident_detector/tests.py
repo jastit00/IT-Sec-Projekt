@@ -338,3 +338,44 @@ class DoSDetectionTest(TestCase):
         self.assertEqual(result["dos_attacks"],2)
         self.assertEqual(NetfilterPackets.objects.count(),8)
         # from first entry till lats enry there is approx. 3 minutes and 42 seconds-> 3min = 6*30sec; 42 = 30sec+rest
+
+class DDosDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_alternating_src_ip_detected(self):
+        # creating the specific entries from file alternating_ip.log
+        self.entry_creator.make_entries("alternating_ip.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],1)
+    
+    def test_incident_detected_w_many_single_ip(self):
+        # creating the specific entries from file many_single_ip.log
+        self.entry_creator.make_entries("many_single_ip.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],1)
+        self.assertEqual(NetfilterPackets.objects.count(),159)
+    
+    def test_very_long_ddos_attack_two_incidents_generated(self):
+        # creating the specific entries from file very_long_ddos_attack.log
+        self.entry_creator.make_entries("very_long_ddos_attack.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],2)
+        
+    def test_change_of_config_no_attack_detected(self):
+        # creating the specific entries from file alternating_ip.log
+        self.entry_creator.make_entries("alternating_ip.log")
+        ddos_new_config={'packet_threshold': 30,'time_delta': 3,'repeat_threshold': 60,'min_sources': 3}
+        # test
+        result=detect_incidents(ddos_new_config)
+        self.assertEqual(result["counts"]["ddos"],0)
+    
+    def test_several_attacks_by_same_attack_group(self):
+        # creating the specific entries from file double_ddos.log
+        self.entry_creator.make_entries("double_ddos.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],2)
+        self.assertEqual(DDosIncident.objects.all()[0].dst_ip_address,"192.168.0.88")
+        self.assertEqual(DDosIncident.objects.all()[1].dst_ip_address,"192.168.7.9")
