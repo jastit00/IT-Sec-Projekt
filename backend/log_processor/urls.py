@@ -6,7 +6,7 @@ from log_processor.views.unified_log import unified_event_log
 
 urlpatterns = [
     path('logfiles/', LogFileUploadView.as_view(), name='upload-log-file'),
-    path('logfiles/incidents-config/', IncidentConfigAPIView.as_view(), name='incidents-config'),
+    path('incidents-config/', IncidentConfigAPIView.as_view(), name='incidents-config'),
     path('logfiles/processed-logins/', processed_logins, name='processed-logins'),
     path('logfiles/config-changes/', processed_config_changes, name='processed-config-changes'),
     path('logfiles/unified-event-log/', unified_event_log, name='unified-event-log'),

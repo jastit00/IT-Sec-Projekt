@@ -1,6 +1,5 @@
 import copy
 from django.forms.models import model_to_dict
-
 from incident_detector.services.dos import detect_dos_attack
 from incident_detector.services.critical_config import  detect_critical_config_change
 from incident_detector.services.bruteforce import detect_bruteforce
@@ -12,8 +11,7 @@ from datetime import timedelta
 from incident_detector.models import (
     BruteforceIncident,
     DDosIncident,
-    DosIncident,
-    
+    DosIncident,   
 )
 from log_processor.models import (
     DetectionConfig
