@@ -54,7 +54,7 @@ def save_new_config(new_config):
         key="current",
         defaults={"data": new_config}
     )
-    # Optional: hier Incidents löschen / neu erzeugen
+    
     return obj.updated_at
 
 def convert_if_needed(value):

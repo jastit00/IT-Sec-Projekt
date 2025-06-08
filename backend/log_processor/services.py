@@ -141,7 +141,6 @@ def process_log_file(file_path):
                         result = extract_match(r'res=([^\'\s]*)', line)
                         terminal = extract_match(r'terminal=([^\s]*)', line)
 
-                        # Skip invalid IP addresses
                         if src_ip_address and not is_valid_ip(src_ip_address):
                             src_ip_address = None
 

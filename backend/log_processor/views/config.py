@@ -21,20 +21,25 @@ class IncidentConfigAPIView(APIView):
         dos_config = request.data.get('dos', {})
         dos_time_delta = dos_config.get('time_delta')
 
-        errors = {}
-
-        if dos_time_delta is not None and dos_time_delta < 30:
-            errors['dos.time_delta'] = "Must be at least 30 seconds due to 30s packet window."
-
-        if errors:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        if dos_time_delta is not None:
+            try:
+                if int(dos_time_delta) < 30:
+                    return Response({
+                        "status": "error",
+                        "message": "Must be at least 30 seconds due to 30s packet window."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            except (ValueError, TypeError):
+                return Response({
+                    "status": "error",
+                    "message": "dos_time_delta must be an integer."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = IncidentDetectorConfigSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         new_config = serializer.validated_data
-
         current_config, _ = get_current_config()
 
         if current_config == new_config:
