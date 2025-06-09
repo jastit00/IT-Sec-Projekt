@@ -1,148 +1,126 @@
 <header>
   <div class="left-section">
-     <div class="icon-placeholder">
-       <div class="logo-test"></div>
-     </div>
-     <button class="title" routerLink="/dashboard">{{ title() }}</button>
-     <div class="dropdown">
-       <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">Dashboard</button>
-       <div class="dropdown-content">
-         <div class="dropdown-item" 
-              (mouseenter)="setDashboard('1'); showDashboard1Menu = true"
-              (mouseleave)="showDashboard1Menu = false">
-           <a routerLink="/dashboard/1" [class.disabled-link]="isMaxChartsReached">Dashboard 1</a>
-           <div class="submenu" *ngIf="showDashboard1Menu">
-             <div class="chart-toggle-item" *ngFor="let chart of charts">
-               <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                 <input type="checkbox" [checked]="chart.visible"
-                        (change)="toggleChart(chart.id)"
-                        [disabled]="!chart.visible && isMaxChartsReached">
-                 <span class="chart-label">{{ chart.name }}</span>
-               </label>
-             </div>
-           </div>
-         </div>
-         <div class="dropdown-item" 
-              (mouseenter)="setDashboard('2'); showDashboard2Menu = true"
-              (mouseleave)="showDashboard2Menu = false">
-           <a routerLink="/dashboard/2" [class.disabled-link]="isMaxChartsReached">Dashboard 2</a>
-           <div class="submenu" *ngIf="showDashboard2Menu">
-             <div class="chart-toggle-item" *ngFor="let chart of charts">
-               <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                 <input type="checkbox" [checked]="chart.visible"
-                        (change)="toggleChart(chart.id)"
-                        [disabled]="!chart.visible && isMaxChartsReached">
-                 <span class="chart-label">{{ chart.name }}</span>
-               </label>
-             </div>
-           </div>
-         </div>
-         <div class="dropdown-item" 
-              (mouseenter)="setDashboard('3'); showDashboard3Menu = true"
-              (mouseleave)="showDashboard3Menu = false">
-           <a routerLink="/dashboard/3" [class.disabled-link]="isMaxChartsReached">Dashboard 3</a>
-           <div class="submenu" *ngIf="showDashboard3Menu">
-             <div class="chart-toggle-item" *ngFor="let chart of charts">
-               <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
-                 <input type="checkbox" [checked]="chart.visible"
-                        (change)="toggleChart(chart.id)"
-                        [disabled]="!chart.visible && isMaxChartsReached">
-                 <span class="chart-label">{{ chart.name }}</span>
-               </label>
-             </div>
-           </div>
-         </div>
-       </div>
-     </div>
-     <button routerLink="/all-events">All Events</button>
-     <button class="critical-events-btn" routerLink="/critical-events">
-       <span class="badge-container">
-         <p-badge *ngIf="hasCriticalEvents()" [value]="getCriticalEventsCount().toString()" severity="danger"></p-badge>
-       </span>
-       Critical Events
-     </button>
-   </div>
-   <div class="right-section">
-     <button class="settings-button" (click)="onSettingsClick()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor"> <!-- SVG Zahnrad von w3-->
-          <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94s-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.4,0.12-0.61l-1.92-3.32 c-0.11-0.2-0.35-0.28-0.57-0.22l-2.39,0.96c-0.5-0.38-1.04-0.7-1.64-0.94L14.96,2.5C14.92,2.22,14.7,2,14.42,2h-4.84 c-0.28,0-0.5,0.22-0.54,0.5l-0.36,2.48c-0.6,0.24-1.14,0.56-1.64,0.94l-2.39-0.96c-0.22-0.09-0.46,0.02-0.57,0.22l-1.92,3.32 c-0.11,0.2-0.06,0.46,0.12,0.61l2.03,1.58C4.88,11.36,4.86,11.67,4.86,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.4-0.12,0.61l1.92,3.32c0.11,0.2,0.35,0.28,0.57,0.22l2.39-0.96c0.5,0.38,1.04,0.7,1.64,0.94l0.36,2.48 c0.04,0.28,0.26,0.5,0.54,0.5h4.84c0.28,0,0.5-0.22,0.54-0.5l0.36-2.48c0.6-0.24,1.14-0.56,1.64-0.94l2.39,0.96 c0.22,0.09,0.46-0.02,0.57-0.22l1.92-3.32c0.11-0.2,0.06-0.46-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5 s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
-        </svg>
-      </button>
-     
-     <button class="upload-btn" (click)="openFileUpload()">Upload File</button>
-
-     <div *ngIf="showSettingsForm" class="settings-form"><strong>Configure Incidents</strong>
-
-
-
-  <form [formGroup]="settingsForm" (ngSubmit)="submitSettings()">
-
-    <div formGroupName="brute_force">
-      <details>
-        <summary class="formdesc"><strong>Brute Force</strong></summary>
-          
-        <label>Attempt Threshold:
-          <input type="number" formControlName="attempt_threshold" min="1" matTooltip="Minimum number of attempts for brute-force detection within a time window."matTooltipPosition="left" />
-        </label>
-        <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1" matTooltip=" Time window in which attempts are counted and evaluated." matTooltipPosition="left" />
-        </label>
-        <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum time between similar incidents to avoid duplicates." matTooltipPosition="left"/>
-        </label>
-        
-      </details>
+    <div class="icon-placeholder">
+      <div class="logo-test"></div>
     </div>
+    <button class="title" routerLink="/dashboard">{{ title() }}</button>
+<div class="dropdown">
+  <button class="dropdown-btn" routerLink="/dashboard" [class.disabled-link]="isMaxChartsReached">
+    Dashboard
+  </button>
 
-    <div formGroupName="dos">
-      <details>
-        <summary class="formdesc"><strong>DoS</strong></summary>
-        
-        <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" min="1" matTooltip="Number of packets at which a DoS incident is assumed." matTooltipPosition="left"/>
-        </label> 
-       
-        <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which the total packet count is evaluated." matTooltipPosition="left"/>
-        </label>
-        <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum interval between incidents to avoid duplicates.S" matTooltipPosition="left"/>
-        </label>
-      </details>
+  <div class="dropdown-content">
+    @for (dash of dashboards; track dash) {
+      <div class="dropdown-item"
+           (mouseenter)="setDashboard(dash.id); dash.menuVisible = true"
+           (mouseleave)="dash.menuVisible = false">
+           
+        <a [routerLink]="'/dashboard/' + dash.id" [class.disabled-link]="isMaxChartsReached">
+          {{ dash.label }}
+        </a>
+
+        @if (dash.menuVisible) {
+          <div class="submenu">
+            @for (chart of charts; track chart) {
+              <div class="chart-toggle-item">
+                <label class="chart-toggle" [class.disabled]="!chart.visible && isMaxChartsReached">
+                  <input type="checkbox"
+                         [checked]="chart.visible"
+                         (change)="toggleChart(chart.id)"
+                         [disabled]="!chart.visible && isMaxChartsReached">
+                  <span class="chart-label">{{ chart.name }}</span>
+                </label>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
     </div>
+  </div>
 
-    <div formGroupName="ddos">
-      <details>
-        <summary class="formdesc"><strong>DDoS</strong></summary>
-        <label>Packet Threshold:
-          <input type="number" formControlName="packet_threshold" min="1" matTooltip="Minimum packets per source to be counted in a DDoS." matTooltipPosition="left"/>
-        </label>
-        <label>Time Delta:
-          <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which traffic data is analyzed." matTooltipPosition="left"/>
-        </label>
-        <label>Repeat Threshold:
-          <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Interval between detections to prevent duplicate DDoS incidents." matTooltipPosition="left"/>
-        </label>
-        <label>Min Sources:
-          <input type="number" formControlName="min_sources" min="1" matTooltip="Minimum number of sources to classify traffic as a DDoS" matTooltipPosition="left"/>
-        </label>
-      </details>
-    </div>
+          <button routerLink="/all-events">All Events</button>
+          <button class="critical-events-btn" routerLink="/critical-events">
+            <span class="badge-container">
+              @if (hasCriticalEvents()) {
+                <p-badge [value]="getCriticalEventsCount().toString()" severity="danger"></p-badge>
+              }
+            </span>
+            Critical Events
+          </button>
+        </div>
+        <div class="right-section">
+          <button class="settings-button" (click)="onSettingsClick()">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor"> <!-- SVG Zahnrad von w3-->
+              <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94s-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.4,0.12-0.61l-1.92-3.32 c-0.11-0.2-0.35-0.28-0.57-0.22l-2.39,0.96c-0.5-0.38-1.04-0.7-1.64-0.94L14.96,2.5C14.92,2.22,14.7,2,14.42,2h-4.84 c-0.28,0-0.5,0.22-0.54,0.5l-0.36,2.48c-0.6,0.24-1.14,0.56-1.64,0.94l-2.39-0.96c-0.22-0.09-0.46,0.02-0.57,0.22l-1.92,3.32 c-0.11,0.2-0.06,0.46,0.12,0.61l2.03,1.58C4.88,11.36,4.86,11.67,4.86,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.4-0.12,0.61l1.92,3.32c0.11,0.2,0.35,0.28,0.57,0.22l2.39-0.96c0.5,0.38,1.04,0.7,1.64,0.94l0.36,2.48 c0.04,0.28,0.26,0.5,0.54,0.5h4.84c0.28,0,0.5-0.22,0.54-0.5l0.36-2.48c0.6-0.24,1.14-0.56,1.64-0.94l2.39,0.96 c0.22,0.09,0.46-0.02,0.57-0.22l1.92-3.32c0.11-0.2,0.06-0.46-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5 s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
+            </svg>
+          </button>
 
-    <button type="submit">Change Settings</button>
-    </form>
-    </div>
+          <button class="upload-btn" (click)="openFileUpload()">Upload File</button>
+
+          @if (showSettingsForm) {
+            <div class="settings-form"><strong>Configure Incidents</strong>
+            <form [formGroup]="settingsForm" (ngSubmit)="submitSettings()">
+              <div formGroupName="brute_force">
+                <details>
+                  <summary class="formdesc"><strong>Brute Force</strong></summary>
+                  <label>Attempt Threshold:
+                    <input type="number" formControlName="attempt_threshold" min="1" matTooltip="Minimum number of attempts for brute-force detection within a time window."matTooltipPosition="left" />
+                  </label>
+                  <label>Time Delta:
+                    <input type="number" formControlName="time_delta" min="1" matTooltip=" Time window in which attempts are counted and evaluated." matTooltipPosition="left" />
+                  </label>
+                  <label>Repeat Threshold:
+                    <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum time between similar incidents to avoid duplicates." matTooltipPosition="left"/>
+                  </label>
+                </details>
+              </div>
+              <div formGroupName="dos">
+                <details>
+                  <summary class="formdesc"><strong>DoS</strong></summary>
+                  <label>Packet Threshold:
+                    <input type="number" formControlName="packet_threshold" min="1" matTooltip="Number of packets at which a DoS incident is assumed." matTooltipPosition="left"/>
+                  </label>
+                  <label>Time Delta:
+                    <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which the total packet count is evaluated." matTooltipPosition="left"/>
+                  </label>
+                  <label>Repeat Threshold:
+                    <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Minimum interval between incidents to avoid duplicates.S" matTooltipPosition="left"/>
+                  </label>
+                </details>
+              </div>
+              <div formGroupName="ddos">
+                <details>
+                  <summary class="formdesc"><strong>DDoS</strong></summary>
+                  <label>Packet Threshold:
+                    <input type="number" formControlName="packet_threshold" min="1" matTooltip="Minimum packets per source to be counted in a DDoS." matTooltipPosition="left"/>
+                  </label>
+                  <label>Time Delta:
+                    <input type="number" formControlName="time_delta" min="1" matTooltip="Time span in which traffic data is analyzed." matTooltipPosition="left"/>
+                  </label>
+                  <label>Repeat Threshold:
+                    <input type="number" formControlName="repeat_threshold" min="1" matTooltip="Interval between detections to prevent duplicate DDoS incidents." matTooltipPosition="left"/>
+                  </label>
+                  <label>Min Sources:
+                    <input type="number" formControlName="min_sources" min="1" matTooltip="Minimum number of sources to classify traffic as a DDoS" matTooltipPosition="left"/>
+                  </label>
+                </details>
+              </div>
+              <button type="submit">Change Settings</button>
+            </form>
+          </div>
+        }
 
 
-     <input
-       type="file"
-       #fileInput
-       accept=".log"
-       style="display: none"
-       (change)="onFileSelected($event)"
-       multiple
-     />
-     <div class="user-btn">{{ username() }}</div>
-     <button class="logout-btn" (click)="logout()">Logout</button>
-   </div>
- </header>
+        <input
+          type="file"
+          #fileInput
+          accept=".log"
+          style="display: none"
+          (change)="onFileSelected($event)"
+          multiple
+          />
+          <div class="user-btn">{{ username() }}</div>
+          <button class="logout-btn" (click)="logout()">Logout</button>
+        </div>
+      </header>

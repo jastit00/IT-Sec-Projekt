@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { PresetIdService } from './preset-id.service';
 
 export interface Chart {
@@ -14,6 +14,7 @@ export interface Chart {
 
 export class ChartVisibilityService {
   private readonly MAX_VISIBLE_CHARTS = 4;
+  presetSubscription!: Subscription;
 
   private defaultCharts: Chart[] = [
     { id: 'chart1', name: 'Attempted Logins', visible: true },
@@ -36,9 +37,15 @@ export class ChartVisibilityService {
 
   constructor(private presetIdService: PresetIdService) {
     this.loadSavedConfiguration();
-    this.presetIdService.presetId$.subscribe(() => {
+    this.presetSubscription = this.presetIdService.presetId$.subscribe(() => {
       this.updateChartsForCurrentPreset();
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.presetSubscription) {
+      this.presetSubscription.unsubscribe();
+    }
   }
 
   private get currentPresetId(): string {

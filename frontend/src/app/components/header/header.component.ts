@@ -1,8 +1,8 @@
 import { Component, signal, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { keycloak, logout, updatefunction } from '../../auth/keycloak.service';
+import { keycloak, logout } from '../../auth/keycloak.service';
 import { RouterLink } from '@angular/router';
 import { DefaultService } from '../../api-client';
-import { NgIf, NgFor } from '@angular/common';
+
 import { ChartVisibilityService, Chart } from '../../services/chart-visibility.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -14,11 +14,12 @@ import { EventService } from '../../services/event-service';
 import { ChartUpdateService } from '../../services/chart-update.service';
 import { ReactiveFormsModule, FormGroup, FormBuilder, Validators  } from '@angular/forms';
 import { PresetIdService } from '../../services/preset-id.service';
+import { Subscription } from 'rxjs';
 
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIf, NgFor, MatDialogModule, BadgeModule, ReactiveFormsModule, MatTooltipModule, MatIconModule],
+  imports: [RouterLink, MatDialogModule, BadgeModule, ReactiveFormsModule, MatTooltipModule, MatIconModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -44,16 +45,23 @@ export class HeaderComponent implements OnInit {
 
   showSettingsForm = false;
   settingsForm!: FormGroup;
+  visibilitySubscription!: Subscription;
+
+  dashboards = [
+  { id: '1', label: 'Dashboard 1', menuVisible: false },
+  { id: '2', label: 'Dashboard 2', menuVisible: false },
+  { id: '3', label: 'Dashboard 3', menuVisible: false }
+  ];
 
   constructor(private presetIdService: PresetIdService) {
 
     this.charts = this.chartVisibilityService.getAllCharts();
     this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
     
-    this.chartVisibilityService.charts$.subscribe(updatedCharts => {
+    this.visibilitySubscription = this.chartVisibilityService.charts$.subscribe(updatedCharts => {
       this.charts = updatedCharts;
       this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
-      console.log('Charts im Header aktualisiert:', this.charts, 'Max reached:', this.isMaxChartsReached);
+      console.log('Charts refreshed:', this.charts, 'Max reached:', this.isMaxChartsReached);
     });
   }
 
@@ -68,7 +76,7 @@ export class HeaderComponent implements OnInit {
       }),
       dos: this.fb.group({
         packet_threshold: [100, [Validators.required, Validators.min(1)]],
-        time_delta: [10, [Validators.required, Validators.min(1)]],
+        time_delta: [30, [Validators.required, Validators.min(1)]],
         repeat_threshold: [120, [Validators.required, Validators.min(1)]],
       }),
       ddos: this.fb.group({
@@ -78,6 +86,12 @@ export class HeaderComponent implements OnInit {
         min_sources: [2, [Validators.required, Validators.min(1)]],
       }),
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.visibilitySubscription) {
+      this.visibilitySubscription.unsubscribe();
+    }
   }
 
   setDashboard(id: string) {

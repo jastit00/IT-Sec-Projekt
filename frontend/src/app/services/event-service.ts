@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError, of, tap, finalize } from 'rxjs';
+import { Observable, map, catchError, of, tap, finalize, Subscription } from 'rxjs';
 //Import API
 import { DefaultService } from '../api-client';
 import { ChartUpdateService } from './chart-update.service';
 //and Events interface
 import { Events } from '../models/events.model';
+
 import { environment } from '../../environments/environment';
 
 //frontend interface for security events
@@ -27,6 +28,8 @@ export class EventService {
   private httpClient = inject(HttpClient);
   private updateService = inject(ChartUpdateService);
   private apiBaseUrl = `${environment.backendUrl}/api`; // base URL
+  updateSubscription!: Subscription;
+  eventSubscription!: Subscription;
   
   //current events from API call
   events: SecurityEvent[] = [];
@@ -34,12 +37,17 @@ export class EventService {
 
   constructor() {
     // Load data on initialization
-    this.loadEventsFromBackend().subscribe(); // Direct subscribe, otherwise it won't load
+    this.eventSubscription = this.loadEventsFromBackend().subscribe(); // Direct subscribe, otherwise it won't load
 
-    this.updateService.updateChart$.subscribe(() => {
+    this. updateSubscription = this.updateService.updateChart$.subscribe(() => {
     this.refreshEvents()
     
   });
+  }
+
+  ngOnDestroy(): void {
+    this.eventSubscription.unsubscribe();
+    this.updateSubscription.unsubscribe();
   }
 
   //method to load data from backend

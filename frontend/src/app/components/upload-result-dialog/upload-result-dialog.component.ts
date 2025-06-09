@@ -1,12 +1,12 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { NgClass, NgIf, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-upload-result-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule,  NgClass, NgIf, NgFor],
+  imports: [MatDialogModule, MatButtonModule, NgClass],
   templateUrl: './upload-result-dialog.component.html',
   styleUrl: './upload-result-dialog.component.scss'
   
