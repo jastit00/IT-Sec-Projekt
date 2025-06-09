@@ -20,7 +20,7 @@ if (environment.production) {
 
 export function createApiConfiguration(): Configuration {
   return new Configuration({
-    basePath: ${environment.backendUrl}/api`
+    basePath: `${environment.backendUrl}/api`,
     accessToken: () => keycloak.token || ''
   });
 }
@@ -32,7 +32,7 @@ initKeycloak().then(() => {
       provideRouter(routes),
       provideHttpClient(),
 
-      provideLogfileApi({ rootUrl: ${environment.backendUrl}/api` }),
+      provideLogfileApi({ rootUrl: `${environment.backendUrl}/api` }),
       {
         provide: Configuration,
         useFactory: createApiConfiguration

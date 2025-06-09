@@ -6,6 +6,7 @@ import { DefaultService } from '../api-client';
 import { ChartUpdateService } from './chart-update.service';
 //and Events interface
 import { Events } from '../models/events.model';
+
 import { environment } from '../../environments/environment';
 
 //frontend interface for security events
