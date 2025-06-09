@@ -10,9 +10,10 @@
 import { HttpHeaders, HttpParams, HttpParameterCodec } from '@angular/common/http';
 import { CustomHttpParameterCodec } from './encoder';
 import { Configuration } from './configuration';
+import { environment } from '../../environments/environment';
 
 export class BaseService {
-    protected basePath = 'http://localhost:8000/api';
+    protected basePath = `${environment.backendUrl}/api`;
     public defaultHeaders = new HttpHeaders();
     public configuration: Configuration;
     public encoder: HttpParameterCodec;

@@ -25,7 +25,7 @@
 <script>
     // Initialisiere Keycloak
     var keycloak = new Keycloak({
-        url: 'http://localhost:8080/auth', 
+        url: `${environment.keycloakUrl}/auth`,
         realm: 'TestRealm',                
         clientId: 'test-client'            
     });
