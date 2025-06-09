@@ -76,7 +76,7 @@ export class HeaderComponent implements OnInit {
       }),
       dos: this.fb.group({
         packet_threshold: [100, [Validators.required, Validators.min(1)]],
-        time_delta: [10, [Validators.required, Validators.min(1)]],
+        time_delta: [30, [Validators.required, Validators.min(1)]],
         repeat_threshold: [120, [Validators.required, Validators.min(1)]],
       }),
       ddos: this.fb.group({

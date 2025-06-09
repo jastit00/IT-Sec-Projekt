@@ -5,7 +5,10 @@ info:
   description: API zum Abrufen von Logdateien aus der Datenbank
 servers:
   - url: http://localhost:8000/api
+    description: Changed by environment variable
 
+
+  
 
 paths:
   /logfiles/:
@@ -155,45 +158,6 @@ paths:
   
   
 
-  /logfiles/incidents:
-    get:
-      summary: Liste ausgewerteter Incidents aus Datenbank
-      parameters:
-      
-        - name: start
-          in: query
-          description: Start of the timeframe 
-          
-          schema:
-            type: string
-            format: date-time
-            
-        - name: end
-          in: query
-          description: End of the timeframe
-          
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: Liste von Datenbankeinträgen zu Incidents für eine Logfile
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/LogEntryIncidents'
-                
-        '401':
-          description: nicht authentifiziert
-          
-        '404':
-          description: nicht vorhanden
-          
-        '500' :
-          description: server kaputt
-        
   /logfiles/config-changes:
     get:
       summary: Liste ausgewerteter Konfigurationsänderungen aus Datenbank
@@ -234,7 +198,7 @@ paths:
         '500' :
           description: server kaputt
           
-  /logfiles/unified-events:
+  /logfiles/unified-event-log:
     get:
       summary: Liste aller Events
         
@@ -576,7 +540,14 @@ components:
                       type: integer
                     min_sources:
                       type: integer
-        
+  securitySchemes:
+    bearerAuth: 
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+      
+security:
+  - bearerAuth: []
           
           
         

@@ -23,7 +23,7 @@ export class ChartFourComponent extends BaseChartComponent {
   loadData(start?: string, end?: string) {
 
     
-    const call =  this.defaultService.logfilesUnifiedEventsGet();
+    const call =  this.defaultService.logfilesUnifiedEventLogGet();
     const typeCountMap: { [type: string]: number } = {};
 
 
