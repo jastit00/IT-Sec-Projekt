@@ -1,8 +1,9 @@
 import os
 from django.test import TestCase
+from django.conf import settings
 from rest_framework.test import APIClient
 from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import UsysConfig
+from .models import UsysConfig, UserLogin, UserLogout
 from .services import process_log_file
 
 
@@ -137,3 +138,32 @@ class LogFileUploadAPITest(TestCase):
             response = self.client.post('/api/logfiles/', {'file': log_file}, format='multipart')
             self.assertEqual(response.status_code, 400)
             self.assertIn("Diese Datei wurde bereits hochgeladen.", response.data["message"])
+
+class WronglyFormatedLogs(TestCase):
+    def make_entries(self, file_to_use):
+        # Construct path to log file
+        log_file_path = os.path.join(settings.BASE_DIR,"log_processor","test_logs",file_to_use)
+        # Normalize the path to handle any ../ properly
+        normalized_log_file_path=os.path.normpath(log_file_path)
+        return process_log_file(normalized_log_file_path)
+        
+    def test_unimportant_empty_fields(self):
+        # deleted content from field: UID= AUID=
+        result = self.make_entries("empty_fields_inrelevant.log")
+        self.assertEqual(result["entries_created"],6)
+        
+    def test_important_empyt_fields(self):
+        # deleted content from field: timestamp, username, terminal value
+        result = self.make_entries("empty_fields_important.log")
+        self.assertEqual(result["entries_created"],0)
+        # terminal, username and timestamp ARE A MUST
+    
+    def test_space_between_equal_and_content(self):
+        # normal format: ...=... // format in this log: ...= ...
+        result=self.make_entries("spaced_fields.log")
+        self.assertEqual(result["entries_created"],6)
+    
+    def test_wrong_format_in_fields(self):
+        # timestamp and ip addresses are str
+        result=self.make_entries("wrong_format_fields.log")
+        self.assertEqual(result["status"],"success")
