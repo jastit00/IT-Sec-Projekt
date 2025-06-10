@@ -11,7 +11,7 @@ from log_processor.models import (
 
 from collections import defaultdict
 
-def detect_ddos_incidents(config):
+def detect_ddos_attack(config):
     DDOS_PACKET_THRESHOLD = config['packet_threshold']
     DDOS_TIME_DELTA = config['time_delta']
     DDOS_REPEAT_THRESHOLD = config['repeat_threshold']
