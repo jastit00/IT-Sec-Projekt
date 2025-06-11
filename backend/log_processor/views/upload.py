@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .validation import keycloak_required
 from log_processor.serializers import LogFileSerializer
-from log_processor.services import handle_uploaded_log_file
+from log_processor.services.log_uploader import handle_uploaded_log_file
 import logging
 
 logger = logging.getLogger(__name__)
