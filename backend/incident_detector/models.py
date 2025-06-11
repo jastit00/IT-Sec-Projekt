@@ -4,7 +4,7 @@ from log_processor.models import (
     UserLogout,
     UsysConfig,
     NetfilterPackets,
-    UploadedLogFile,
+ 
 )
 
 

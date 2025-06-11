@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
+
 
 class UserLogin(models.Model):
     timestamp = models.DateTimeField()
@@ -47,6 +47,7 @@ class UploadedLogFile(models.Model):
     entries_created = models.IntegerField(default=0)
     incidents_created_total = models.IntegerField(default=0)
     incident_counts = models.JSONField(default=dict, null=True)
+    
     def __str__(self):
         return f"{self.filename} uploaded by {self.uploaded_by} at {self.uploaded_at}"
     
