@@ -1,6 +1,6 @@
 import logging
 
-from .helpers import get_filtered_queryset
+from log_processor.views.utils import get_filtered_queryset
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 

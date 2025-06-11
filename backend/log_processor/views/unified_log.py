@@ -1,6 +1,6 @@
 import logging
 
-from log_processor.views.helpers import filter_fields
+from log_processor.views.utils import filter_fields
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 

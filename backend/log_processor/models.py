@@ -55,7 +55,7 @@ class NetfilterPackets(models.Model):
     timestamp = models.DateTimeField()
     src_ip_address = models.GenericIPAddressField()
     dst_ip_address = models.GenericIPAddressField()
-    protocol = models.CharField(max_length=8)
+    protocol = models.CharField(max_length=16)
     event_type = models.CharField(max_length=16, default='network packets')
     count = models.IntegerField(default=0)   
     severity = models.CharField(max_length=16, default='normal')

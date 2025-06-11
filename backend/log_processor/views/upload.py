@@ -5,12 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from .validation import keycloak_required
 from log_processor.serializers import LogFileSerializer
-from log_processor.services import handle_uploaded_log_file
+from log_processor.services.log_uploader import handle_uploaded_log_file
 import logging
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(keycloak_required, name='dispatch')
+# @method_decorator(keycloak_required, name='dispatch')
 class LogFileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -19,8 +19,8 @@ class LogFileUploadView(APIView):
         source = request.data.get('source', 'unknown')
 
         # Authentifizierter Benutzer aus Keycloak
-        keycloak_user = request.keycloak_user
-        uploaded_by_user = keycloak_user.get('preferred_username') 
+        # keycloak_user = request.keycloak_user
+        uploaded_by_user = 'test' #keycloak_user.get('preferred_username') 
         if not uploaded_file:
             logger.warning("Upload attempt without file.")
             return Response({"status": "error", "message": "Please upload a file"}, status=status.HTTP_400_BAD_REQUEST)

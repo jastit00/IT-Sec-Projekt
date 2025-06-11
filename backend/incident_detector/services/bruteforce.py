@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-from incident_detector.services.time import format_timedelta
+from incident_detector.services.utils import format_timedelta
 from log_processor.models import (
     UserLogin,
 )
