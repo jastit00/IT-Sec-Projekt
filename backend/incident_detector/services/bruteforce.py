@@ -6,6 +6,7 @@ from log_processor.models import (
 )
 from incident_detector.models import (
     BruteforceIncident,
+    RelatedLog,
 )
 
 def detect_bruteforce(config):
@@ -84,6 +85,9 @@ def detect_bruteforce(config):
 
                     incidents_created += 1
                     new_incidents.append(incident)
+                    related_logs = [ RelatedLog(bruteforce_incident=incident, user_login=login_attempt) for login_attempt in window_attempts ]
+                    RelatedLog.objects.bulk_create(related_logs)
+
                 start = current  # Move to the end of the current window
             else:
                 start += 1  # Not enough attempts — shift window forward

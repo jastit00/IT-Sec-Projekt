@@ -1,7 +1,8 @@
 from incident_detector.services.utils import format_timedelta
 from collections import defaultdict
 from incident_detector.models import (
-    DosIncident, 
+    DosIncident,
+    RelatedLog, 
 )
 from log_processor.models import (
     NetfilterPackets,
@@ -67,7 +68,9 @@ def detect_dos_attack(config):
                     incidents_created += 1
                     new_incidents.append(incident)
 
-            
+                    related_logs = [RelatedLog(dos_incident=incident, netfilter_packet=packet)for packet in relevant_windows]
+                    RelatedLog.objects.bulk_create(related_logs)
+
             i += 1
 
     return {
