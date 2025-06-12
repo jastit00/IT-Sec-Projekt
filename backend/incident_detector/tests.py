@@ -1,8 +1,23 @@
 from django.test import TestCase
 from django.utils import timezone
-from log_processor.models import UserLogin, UserLogout, UsysConfig, NetfilterPackets
-from .models import BruteforceIncident, ConcurrentLoginIncident, ConfigIncident, DosIncident, DDosIncident
-from .services import detect_bruteforce, detect_incidents, detect_concurrent_logins, detect_critical_config_change, detect_dos_attack, detect_ddos_attack
+from log_processor.models import (
+    UserLogin, 
+    UserLogout, 
+    UsysConfig, 
+    NetfilterPackets
+)
+from .models import (
+    BruteforceIncident, 
+    ConcurrentLoginIncident, 
+    ConfigIncident, 
+    DosIncident, 
+    DDosIncident
+)
+
+from .services.detection import detect_incidents
+from .services.concurrent_login import detect_concurrent_logins
+from .services.critical_config import detect_critical_config_change
+
 from datetime import timedelta
 
 from django.conf import settings
@@ -16,7 +31,7 @@ from datetime import datetime
 class CreateEntries():
     def make_entries(self, file_to_use):
         # Construct path to log file
-        log_file_path = os.path.join(settings.BASE_DIR,'incident_detector','tests_logs',file_to_use)
+        log_file_path = os.path.join(settings.BASE_DIR,"incident_detector","tests_logs",file_to_use)
         # Normalize the path to handle any ../ properly
         normalized_log_file_path = os.path.normpath(log_file_path)
         self.process_log_file(normalized_log_file_path)
@@ -95,56 +110,56 @@ class BruteForceDetectionTests(TestCase):
     entry_creator=CreateEntries()
     def test_no_bruteforce_if_too_few_attempts(self):
         # create the specific entries from file not_enough_tries.log
-        self.entry_creator.make_entries('not_enough_tries.log')
+        self.entry_creator.make_entries("not_enough_tries.log")
         # test
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 0)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["brute_force"], 0)
         self.assertEqual(BruteforceIncident.objects.count(), 0)
         self.assertEqual(UserLogin.objects.count(), 4)
         
     def test_detect_bruteforce_attempt(self):
         # create the specific entries from file clear_simple_bruteforce.log
-        self.entry_creator.make_entries('clear_simple_bruteforce.log')
+        self.entry_creator.make_entries("clear_simple_bruteforce.log")
         # test
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 1)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["brute_force"], 1)
         self.assertEqual(BruteforceIncident.objects.count(), 1)
 
     def test_spaced_attemps_still_detected(self):
         # create the specific entries from file spaced_tries.log
-        self.entry_creator.make_entries('spaced_tries.log')
+        self.entry_creator.make_entries("spaced_tries.log")
         # test
-        result = detect_bruteforce()
-        self.assertEqual(result["bruteforce"], 1)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["brute_force"], 1)
         self.assertEqual(UserLogin.objects.count(),17)
 
     def test_successful_last_attempt_changes_reason(self):
         # create the specific entries from file successful_bruteforce.log
-        self.entry_creator.make_entries('successful_bruteforce.log')
+        self.entry_creator.make_entries("successful_bruteforce.log")
         # test
-        result=detect_bruteforce()
+        result=detect_incidents()
         incident = BruteforceIncident.objects.first()
         self.assertIn("20 attempts in 2 minutes, 1 successful", incident.reason)
-        self.assertEqual(result["bruteforce"],1)
+        self.assertEqual(result["counts"]["brute_force"],1)
 
-    def test_detect_incidents_wrapper(self):
+    def test_detect_several_incidents(self):
         # create the specific entries from file several_clear_bruteforce.log
-        self.entry_creator.make_entries('several_clear_bruteforce.log')
+        self.entry_creator.make_entries("several_clear_bruteforce.log")
         # test
         result = detect_incidents()
         self.assertEqual(result["counts"]["bruteforce"], 2)
     
     def test_duplicate_incident_is_not_created(self):
-        self.entry_creator.make_entries('clear_simple_bruteforce.log')
-        detect_bruteforce()
-        detect_bruteforce()  # call twice
+        self.entry_creator.make_entries("clear_simple_bruteforce.log")
+        detect_incidents()
+        detect_incidents()
         self.assertEqual(BruteforceIncident.objects.count(), 1)
        
 class ConcurrentLoginsDetectionTest(TestCase):
     entry_creator=CreateEntries()
     def test_single_clear_attack_detected(self):
         # create the specific entries from file logins_test.log
-        self.entry_creator.make_entries('logins_test.log')
+        self.entry_creator.make_entries("logins_test.log")
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],1)
@@ -152,7 +167,7 @@ class ConcurrentLoginsDetectionTest(TestCase):
 
     def test_multiple_clear_attack_detected(self):
         # create the specific entries from file many_simultaneous_logins.log
-        self.entry_creator.make_entries('many_simultaneous_logins.log')
+        self.entry_creator.make_entries("many_simultaneous_logins.log")
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],3)
@@ -160,15 +175,15 @@ class ConcurrentLoginsDetectionTest(TestCase):
 
     def test_multiple_attack_mixed_w_logout(self):
         # create the specific entries from file mix_logins.log
-        self.entry_creator.make_entries('mix_logins.log')
+        self.entry_creator.make_entries("mix_logins.log")
         # test
         result=detect_concurrent_logins()
-        self.assertEqual(result["concurrent_logins"],2)
-        self.assertEqual(ConcurrentLoginIncident.objects.count(),2)
+        self.assertEqual(result["concurrent_logins"],3)
+        self.assertEqual(ConcurrentLoginIncident.objects.count(),3)
 
     def test_no_attack_single_pair_login_logout(self):
         # create the specific entries from file valid_login.log
-        self.entry_creator.make_entries('valid_login.log')
+        self.entry_creator.make_entries("valid_login.log")
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],0)
@@ -177,7 +192,7 @@ class ConcurrentLoginsDetectionTest(TestCase):
 
     def test_no_attack_several_pairs_login_logout(self):
         # create the specific entries from file many_valid_logins.log
-        self.entry_creator.make_entries('many_valid_logins.log')
+        self.entry_creator.make_entries("many_valid_logins.log")
         # test
         result=detect_concurrent_logins()
         self.assertEqual(result["concurrent_logins"],0)
@@ -186,10 +201,10 @@ class ConcurrentLoginsDetectionTest(TestCase):
 
     def test_several_attacks_several_pairs_login_logout(self):
         # create the specific entries from file many_mix_logins.log
-        self.entry_creator.make_entries('many_mix_logins.log')
+        self.entry_creator.make_entries("many_mix_logins.log")
         # test
         result=detect_concurrent_logins()
-        self.assertEqual(result["concurrent_logins"],3)
+        self.assertEqual(result["concurrent_logins"],4)
         self.assertEqual(UserLogin.objects.count(),9)
         self.assertEqual(UserLogout.objects.count(),3)
 
@@ -197,7 +212,7 @@ class ConfigChangeDetectionTest(TestCase):
     entry_creator=CreateEntries()
     def test_single_critical_change_w_previous_user_login(self):
         # create the specific entries from file config_change_user_login.log
-        self.entry_creator.make_entries('config_change_user_login.log')
+        self.entry_creator.make_entries("config_change_user_login.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],1)
@@ -205,7 +220,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_multiple_config_change_from_single_user(self):
         # create the specific entries from file many_config_changes_single_login.log
-        self.entry_creator.make_entries('many_config_changes_single_login.log')
+        self.entry_creator.make_entries("many_config_changes_single_login.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],5)
@@ -214,7 +229,7 @@ class ConfigChangeDetectionTest(TestCase):
             self.assertEqual(incident.src_ip_address,UserLogin.objects.first().src_ip_address)
     def test_single_critical_change_no_previous_login(self):
         # create the specific entries from file config_change_alone.log
-        self.entry_creator.make_entries('config_change_alone.log')
+        self.entry_creator.make_entries("config_change_alone.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],1)
@@ -222,7 +237,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_multiple_config_change_from_single_user(self):
         # create the specific entries from file many_config_changes_single_login.log
-        self.entry_creator.make_entries('many_config_changes_single_login.log')
+        self.entry_creator.make_entries("many_config_changes_single_login.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],5)
@@ -232,7 +247,7 @@ class ConfigChangeDetectionTest(TestCase):
             
     def test_multiple_config_changes_from_several_users(self):
         # create the specific entries from file many_config_changes_many_users.log
-        self.entry_creator.make_entries('many_config_changes_many_users.log')
+        self.entry_creator.make_entries("many_config_changes_many_users.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],9)
@@ -242,7 +257,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_multiple_config_change_with_later_login(self):
         # create the specific entries from many_config_changes_no_proper_login.log
-        self.entry_creator.make_entries('many_config_changes_late_login.log')
+        self.entry_creator.make_entries("many_config_changes_late_login.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],6)
@@ -251,7 +266,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_multiple_config_change_with_invalid_login(self):
         # create the specific entries from many_config_changes_no_valid_login.log
-        self.entry_creator.make_entries('many_config_changes_no_valid_login.log')
+        self.entry_creator.make_entries("many_config_changes_no_valid_login.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],6)
@@ -261,7 +276,7 @@ class ConfigChangeDetectionTest(TestCase):
             
     def test_almost_critical_config_change(self):
         # create the specific entries from almost_critical_config_change.log
-        self.entry_creator.make_entries('almost_critical_config_change.log')
+        self.entry_creator.make_entries("almost_critical_config_change.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],0)
@@ -269,7 +284,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_change_of_severity(self):
         # create the specific entries from many_config_changes_mix_severity.log
-        self.entry_creator.make_entries('many_config_changes_mix_severity.log')
+        self.entry_creator.make_entries("many_config_changes_mix_severity.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],4)
@@ -278,7 +293,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_multiple_config_changes_from_different_users_mix_valid_logins(self):
         # create the specific entries from many_config_changes_mix_logins.log
-        self.entry_creator.make_entries('many_config_changes_mix_logins.log')
+        self.entry_creator.make_entries("many_config_changes_mix_logins.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],6)
@@ -287,7 +302,7 @@ class ConfigChangeDetectionTest(TestCase):
 
     def test_no_critical_changes_performed(self):
         # create the specific entries from file valid_config_changes.log
-        self.entry_creator.make_entries('valid_config_changes.log')
+        self.entry_creator.make_entries("valid_config_changes.log")
         # test
         result=detect_critical_config_change()
         self.assertEqual(result["critical_config_change"],0)
@@ -298,43 +313,84 @@ class DoSDetectionTest(TestCase):
     entry_creator=CreateEntries()
     def test_single_clear_dos_attack_detected(self):
         # create the specific entries from file single_clear_dos_attack.log
-        self.entry_creator.make_entries('single_clear_dos_attack.log')
+        self.entry_creator.make_entries("single_clear_dos_attack.log")
         # test
-        result=detect_dos_attack()
-        self.assertEqual(result["dos_attacks"],1)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["dos"],1)
         self.assertEqual(NetfilterPackets.objects.count(),1)
         self.assertEqual(DosIncident.objects.first().src_ip_address,'172.16.0.2')
 
     def test_unrecognized_attack_spaced_in_30s(self):
         # creating the specific entries from file extenden_dos_attack_spaced.log
-        self.entry_creator.make_entries('extenden_dos_attack_spaced.log')
+        self.entry_creator.make_entries("extenden_dos_attack_spaced.log")
         # test
-        result=detect_dos_attack()
-        self.assertEqual(result["dos_attacks"],0)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["dos"],0)
         self.assertEqual(NetfilterPackets.objects.count(),144)
 
     def test_not_enogh_packets_to_recognice_attack(self):
         # creating the specific entries from file dos_attack_not_enough_packets.log
-        self.entry_creator.make_entries('dos_attack_not_enough_packets.log')
+        self.entry_creator.make_entries("dos_attack_not_enough_packets.log")
         # test
-        result=detect_dos_attack()
-        self.assertEqual(result["dos_attacks"],0)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["dos"],0)
         self.assertEqual(NetfilterPackets.objects.count(),1)
 
     def test_multiples_dos_attacks_from_same_ip(self):
         # creating the specific entries from file double_dos_attack_same_ip.log
-        self.entry_creator.make_entries('double_dos_attack_same_ip.log')
+        self.entry_creator.make_entries("double_dos_attack_same_ip.log")
         # test
-        result=detect_dos_attack()
-        self.assertEqual(result["dos_attacks"],2)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["dos"],2)
         self.assertEqual(DosIncident.objects.all()[0].dst_ip_address,'192.168.0.88')
         self.assertEqual(DosIncident.objects.all()[1].dst_ip_address,'192.124.0.59')
 
     def test_very_long_dos_attack_two_incidents_generated(self):
         # creating the specific entries from file very_long_dos_attack.log
-        self.entry_creator.make_entries('very_long_dos_attack.log')
+        self.entry_creator.make_entries("very_long_dos_attack.log")
         # test
-        result=detect_dos_attack()
-        self.assertEqual(result["dos_attacks"],2)
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["dos"],2)
         self.assertEqual(NetfilterPackets.objects.count(),8)
         # from first entry till lats enry there is approx. 3 minutes and 42 seconds-> 3min = 6*30sec; 42 = 30sec+rest
+
+class DDosDetectionTest(TestCase):
+    entry_creator=CreateEntries()
+    def test_alternating_src_ip_detected(self):
+        # creating the specific entries from file alternating_ip.log
+        self.entry_creator.make_entries("alternating_ip.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],1)
+    
+    def test_incident_detected_w_many_single_ip(self):
+        # creating the specific entries from file many_single_ip.log
+        self.entry_creator.make_entries("many_single_ip.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],1)
+        self.assertEqual(NetfilterPackets.objects.count(),159)
+    
+    def test_very_long_ddos_attack_two_incidents_generated(self):
+        # creating the specific entries from file very_long_ddos_attack.log
+        self.entry_creator.make_entries("very_long_ddos_attack.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],2)
+        
+    def test_change_of_config_no_attack_detected(self):
+        # creating the specific entries from file alternating_ip.log
+        self.entry_creator.make_entries("alternating_ip.log")
+        ddos_new_config={'packet_threshold': 30,'time_delta': 3,'repeat_threshold': 60,'min_sources': 3}
+        # test
+        result=detect_incidents(ddos_new_config)
+        self.assertEqual(result["counts"]["ddos"],0)
+    
+    def test_several_attacks_by_same_attack_group(self):
+        # creating the specific entries from file double_ddos.log
+        self.entry_creator.make_entries("double_ddos.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["ddos"],2)
+        self.assertEqual(DDosIncident.objects.all()[0].dst_ip_address,"192.168.0.88")
+        self.assertEqual(DDosIncident.objects.all()[1].dst_ip_address,"192.168.7.9")
