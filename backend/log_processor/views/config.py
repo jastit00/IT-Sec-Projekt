@@ -29,7 +29,7 @@ class IncidentConfigAPIView(APIView):
             if int(dos_time_delta) < 30:
                 return Response({
                     "status": "error",
-                    "message": "Must be at least 30 seconds due to 30s packet window."
+                    "message": " Dos time_delta must be at least 30 seconds due to 30s packet window."
                 }, status=status.HTTP_400_BAD_REQUEST)
         except (ValueError, TypeError):
             return Response({
@@ -42,7 +42,7 @@ class IncidentConfigAPIView(APIView):
             if int(ddos_time_delta) < 30:
                 return Response({
                     "status": "error",
-                    "message": "Must be at least 30 seconds due to 30s packet window."
+                    "message": "DDos time_delta must be at least 30 seconds due to 30s packet window."
                 }, status=status.HTTP_400_BAD_REQUEST)
         except (ValueError, TypeError):
             return Response({
