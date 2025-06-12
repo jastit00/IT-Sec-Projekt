@@ -1,0 +1,41 @@
+<h2 mat-dialog-title [ngClass]="{ 'error-title': data.status === 'error' }">
+  {{ data.status === 'error' ? 'Error' : 'Upload successful' }}
+</h2>
+
+<div mat-dialog-content>
+  @if (data.status === 'error') {
+    <p><strong>Error:</strong> {{ data.message }}</p>
+  } @else {
+    <table>
+      <tr>
+        <td><strong>message:</strong></td>
+        <td>{{ data.message }}</td>
+      </tr>
+      @if (data.last_updated) {
+        <tr>
+          <td><strong>last updated:</strong></td>
+          <td>{{ data.last_updated }}</td>
+        </tr>
+      }
+      @if (data.total_incidents) {
+        <tr>
+          <td><strong>new incidents:</strong></td>
+          <td>{{ data.total_incidents }}</td>
+        </tr>
+      }
+      @for (key of getIncidentKeys(data.result.counts); track key) {
+        @if (data.result.counts[key] > 0) {
+          <tr>
+            <td>- {{ key }}:</td>
+            <td>{{ data.result.counts[key] }}</td>
+          </tr>
+        }
+      }
+    </table>
+  }
+
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>OK</button>
+</div>

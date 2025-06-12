@@ -1,0 +1,400 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px;
+    background-color: #333;
+    color: white;
+    height: 50px;
+    position: relative;
+    flex-wrap: wrap;
+}
+.left-section,
+.right-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.logo-test {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    background: url('/favicon.ico') center/contain no-repeat;
+    left: 0;
+    top: 0;
+}
+
+button,
+.user-btn,
+.dropdown-btn,
+.settings-button {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover,
+.dropdown:hover .dropdown-btn {
+    color: orange;
+    text-decoration: underline;
+    text-underline-offset: 17px;
+    text-decoration-thickness: 2px;
+}
+.title {
+    font-size: 20px;
+    padding-right: 0.7em;
+    font-weight: bold;
+}
+
+.critical-events-btn {
+    padding: 10px 12px 6px;
+    position: relative;
+}
+
+.badge-container {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 10;
+}
+
+:host ::ng-deep .p-badge {
+    border-radius: 50%;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+:host ::ng-deep .p-badge.p-badge-danger {
+    background-color: #dc3545;
+}
+.dropdown {
+    position: relative;
+}
+
+.dropdown-item {
+    position: relative;
+}
+
+
+.dropdown-content,
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: #444;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    border-radius: 4px;
+
+    z-index: 10;
+
+}
+
+.dropdown-content {
+    top: 100%;
+    left: 0;
+    z-index: 5;
+    
+}
+
+.submenu {
+    display: block;
+    position: absolute;
+    left: 100%;
+    top: 0;
+
+    z-index: 20;
+
+}
+
+.dropdown-content a,
+.submenu a,
+.chart-toggle-item {
+    display: block;
+    padding: 12px 16px;
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.dropdown-content a:hover,
+.submenu a:hover,
+.chart-toggle-item:hover {
+    background-color: #555;
+    color: orange;
+    
+    text-underline-offset: 5px;
+    text-decoration-thickness: 2px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+
+
+.chart-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+}
+
+.chart-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.chart-toggle input[type="checkbox"]:checked + .chart-label {
+    color: orange;
+    font-weight: bold;
+}
+
+.chart-toggle.disabled .chart-label {
+    text-decoration: line-through;
+    text-decoration-color: #be0c0c;
+    text-decoration-thickness: 2px;
+    color: #999;
+}
+
+.settings-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+    background-color: #444;
+    color: orange;
+}
+
+.settings-form {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    z-index: 1000;
+    background-color: #444;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: calc(100vw - 40px);
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.settings-form::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 10px;
+    border: 8px solid transparent;
+    border-bottom-color: #444;
+}
+
+.settings-form strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #555;
+}
+
+details {
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    border-radius: 6px;
+    margin: 12px 0;
+    transition: background-color 0.2s ease;
+}
+
+details:hover,
+details[open] {
+    background-color: #404040;
+}
+
+summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    color: white;
+    list-style: none;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+summary::-webkit-details-marker { display: none; }
+
+summary::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.2s ease;
+    color: #ccc;
+    font-size: 10px;
+}
+
+details[open] summary::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+summary:hover {
+    color: orange;
+}
+
+details[open] summary {
+    border-bottom: 1px solid #555;
+}
+.settings-form label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 16px;
+    font-size: 14px;
+    color: #ddd;
+    padding: 6px 0;
+}
+
+input[type="number"] {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    text-align: right;
+    transition: border-color 0.2s ease;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: orange;
+}
+
+input[type="number"]:hover {
+    border-color: #888;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
+    height: 100%;
+    width: 20px;
+    background: #444;
+    border-left: 1px solid #666;
+    cursor: pointer;
+}
+
+
+.number-input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.number-input-wrapper input[type="number"] {
+    padding-right: 25px;
+}
+
+.number-spinner {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    background-color: #444;
+    border-left: 1px solid #666;
+    border-radius: 0 3px 3px 0;
+}
+
+.spinner-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: all 0.1s ease;
+    padding: 0;
+    user-select: none;
+}
+
+.spinner-btn:hover {
+    background-color: #555;
+    color: orange;
+}
+
+.spinner-btn:active {
+    background-color: #666;
+}
+
+.spinner-btn:first-child {
+    border-bottom: 0.5px solid #666;
+    border-radius: 0 3px 0 0;
+}
+
+.spinner-btn:last-child {
+    border-radius: 0 0 3px 0;
+}
+
+.spinner-btn::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+.spinner-btn.up::before {
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-bottom: 4px solid currentColor;
+}
+
+.spinner-btn.down::before {
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid currentColor;
+}
+
+.settings-form button[type="submit"] {
+    width: 100%;
+    padding: 10px 20px;
+    margin-top: 16px;
+    background-color: #555;
+    border: 1px solid #666;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.settings-form button[type="submit"]:hover {
+    background-color: #666;
+    color: orange;
+}
