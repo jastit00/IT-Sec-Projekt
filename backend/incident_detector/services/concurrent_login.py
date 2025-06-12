@@ -1,4 +1,7 @@
-from incident_detector.models import ConcurrentLoginIncident
+from incident_detector.models import (
+    ConcurrentLoginIncident,
+    RelatedLog,
+)
 from log_processor.models import (
     UserLogin,
     UserLogout
@@ -43,8 +46,9 @@ def detect_concurrent_logins():
                     incidents_created += 1
 
                     new_incidents.append(incident)
-                    potential_used_accounts[login.username]=login.terminal
-        else:
-            potential_used_accounts[login.username]=login.terminal
 
-    return {"concurrent_logins": incidents_created, "incidents": new_incidents}
+                    RelatedLog.objects.create(concurrent_login_incident=incident, user_login=login)
+        else:
+            potential_used_accounts.append(login.username)
+    
+    return {"concurrent_logins": len(new_incidents), "incidents": new_incidents}

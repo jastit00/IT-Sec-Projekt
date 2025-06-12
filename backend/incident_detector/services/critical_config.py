@@ -1,7 +1,8 @@
 
 
 from incident_detector.models import (
-    ConfigIncident, 
+    ConfigIncident,
+    RelatedLog, 
 )
 from log_processor.models import (
     UsysConfig,
@@ -75,5 +76,7 @@ def detect_critical_config_change():
             
             new_incidents.append(incident)
             incidents_created += 1
+
+            RelatedLog.objects.create(config_incident=incident, usys_config=config_change)
              
     return {"critical_config_change": incidents_created, "incidents": new_incidents}

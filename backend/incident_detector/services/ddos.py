@@ -1,9 +1,10 @@
 
 from collections import defaultdict
-from incident_detector.services.time import format_timedelta
+from incident_detector.services.utils import format_timedelta
 
 from incident_detector.models import (
     DDosIncident,
+    RelatedLog,
 )
 from log_processor.models import (
     NetfilterPackets,
@@ -84,6 +85,10 @@ def detect_ddos_attack(config):
                     last_incident_time[dst_ip] = relevant_windows[-1].timestamp
                     incidents_created += 1
                     new_incidents.append(incident)
+                    
+                    related_logs = [RelatedLog(ddos_incident=incident, netfilter_packet=packet) for packet in relevant_windows]
+                    RelatedLog.objects.bulk_create(related_logs)
+
 
                 i += len(relevant_windows)
             else:

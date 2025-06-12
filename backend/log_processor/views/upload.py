@@ -1,14 +1,18 @@
-from django.utils.decorators import method_decorator
-from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from rest_framework import status
-from .validation import keycloak_required
-from log_processor.serializers import LogFileSerializer
-from log_processor.services import handle_uploaded_log_file
 import logging
 
+from django.utils.decorators import method_decorator
+from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .validation import keycloak_required
+from log_processor.serializers import LogFileSerializer
+from log_processor.services.log_uploader import handle_uploaded_log_file
+
+
 logger = logging.getLogger(__name__)
+
 
 @method_decorator(keycloak_required, name='dispatch')
 class LogFileUploadView(APIView):

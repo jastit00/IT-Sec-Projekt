@@ -1,8 +1,12 @@
-
 import logging
-
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
+
+def convert_if_needed(value):
+    if not isinstance(value, timedelta):
+        return timedelta(seconds=value)
+    return value
 
 def format_timedelta(delta):
 
@@ -23,3 +27,4 @@ def format_timedelta(delta):
         return f"{minutes} minutes"
     else:
         return f"{seconds} seconds"
+    
