@@ -1,6 +1,6 @@
 
 import Keycloak from 'keycloak-js';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment.development';
 
 export const keycloak = new Keycloak({
     url: environment.keycloakUrl,

@@ -1,6 +1,6 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { keycloak } from './../auth/keycloak.service';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment.development';
 
 export const authGuard: CanActivateFn = async (route, state) => {
 
