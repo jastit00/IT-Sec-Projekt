@@ -86,8 +86,8 @@ def detect_ddos_attack(config):
                     incidents_created += 1
                     new_incidents.append(incident)
                     
-                    #related_logs = [RelatedLog(ddos_incident=incident, netfilter_packet=packet) for packet in relevant_windows]
-                    #RelatedLog.objects.bulk_create(related_logs)
+                    related_logs = [RelatedLog(ddos_incident=incident, netfilter_packet=packet) for packet in relevant_windows]
+                    RelatedLog.objects.bulk_create(related_logs)
 
 
                 i += len(relevant_windows)

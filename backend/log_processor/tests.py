@@ -8,7 +8,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from log_processor.models import UsysConfig
-from log_processor.services.log_uploader import process_log_file
+from log_processor.services.log_parser import process_log_file
+
 
 class LogFileUploadAPITest(TestCase):
     def setUp(self):
