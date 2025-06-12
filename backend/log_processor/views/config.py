@@ -3,7 +3,7 @@ import logging
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.response import Response
-
+from rest_framework.views import APIView
 from incident_detector.serializers import IncidentDetectorConfigSerializer
 from incident_detector.services.detection import (
     get_current_config,
@@ -15,9 +15,9 @@ from .validation import keycloak_required
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(keycloak_required, name='dispatch') 
-
-def post(self, request):
+@method_decorator(keycloak_required, name='dispatch')
+class IncidentConfigAPIView(APIView): 
+ def post(self, request):
     dos_config = request.data.get('dos', {})
     ddos_config = request.data.get('ddos', {})
 

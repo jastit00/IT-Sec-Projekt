@@ -1,8 +1,8 @@
 import jwt
 import requests
 from django.http import JsonResponse
-from functools import wraps
 from jwt.algorithms import RSAAlgorithm
+from functools import wraps
 
 KEYCLOAK_URL = "http://localhost:8080/realms/FinalRealm"
 
