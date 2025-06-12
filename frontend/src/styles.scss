@@ -1,0 +1,38 @@
+@use '@angular/material' as mat;
+
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+*{
+  font-family: 'Arial', sans-serif;
+}
+
+html,body {
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  padding: 16px;
+}
+
+@for $i from 1 through 10{
+  h#{$i} {
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 20px;
+  }
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
