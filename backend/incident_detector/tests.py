@@ -154,6 +154,13 @@ class BruteForceDetectionTests(TestCase):
         detect_incidents()
         detect_incidents()
         self.assertEqual(BruteforceIncident.objects.count(), 1)
+
+    def test_detect_attack_by_different_ip(self):
+        # create the specific entries from file several_ip_bruteforce.log
+        self.entry_creator.make_entries("several_ip_bruteforce.log")
+        # test
+        result=detect_incidents()
+        self.assertEqual(result["counts"]["brute_force"],1)
        
 class ConcurrentLoginsDetectionTest(TestCase):
     entry_creator=CreateEntries()
