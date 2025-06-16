@@ -4,21 +4,31 @@ from incident_detector.services.utils import format_timedelta
 
 from incident_detector.models import (
     DDosIncident,
-    RelatedLog,
+    RelatedLog
 )
-from log_processor.models import (
-    NetfilterPackets,
-)
+from log_processor.models import NetfilterPackets
 
 from collections import defaultdict
 
 def detect_ddos_attack(config):
+    """
+    Purpose:
+    Detects and logs incidents for potential DDoS attacks.
+    
+    How:
+    Counts how many packets were sent to the same destination IP address within a set time window.
+    Each NetfilterPackets entry in the db, represents a 30s window with a 'count' value.
+    
+    Returns:
+    dict {"ddos_attacks": <number of incidents created>, "incidents": <list with all the new created incidents>}
+    """
+    
     DDOS_PACKET_THRESHOLD = config['packet_threshold']
     DDOS_TIME_DELTA = config['time_delta']
     DDOS_REPEAT_THRESHOLD = config['repeat_threshold']
     DDOS_MIN_SOURCES = config['min_sources']
 
-    # implizite Gesamtpaketschwelle
+    # implicit packet threshold
     implied_total_packet_threshold = DDOS_PACKET_THRESHOLD * DDOS_MIN_SOURCES
 
     all_windows = NetfilterPackets.objects.all().order_by('timestamp')
