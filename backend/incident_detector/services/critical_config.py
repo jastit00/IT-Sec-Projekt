@@ -24,10 +24,14 @@ CRITICAL_CONFIG_RULES = [
 
 def detect_critical_config_change():
     """
+    Purpose:
     Detects and logs incidents for critical configuration changes based on predefined rules.
+    
+    How:
+    Cheks whether certain config changes, categorized as critical, were performed.
 
     Returns:
-        dict: Dictionary containing the number of critical config change incidents created.
+    dict {"critical_config_change": <number of incidents created>, "incidents": <list with all the new created incidents>}
     """
     
     all_config_changes = UsysConfig.objects.all().order_by('timestamp')

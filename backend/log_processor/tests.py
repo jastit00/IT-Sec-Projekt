@@ -90,50 +90,33 @@ class UsysConfigLogTest(TestCase):
 
 
 class WronglyFormatedLogs(TestCase):
-    def test_important_empty_fields(self):
-        # Create log with important fields empty (table, action, key)
-        test_file = "empty_important_fields.log"
-        content = (
-            'type=USYS_CONFIG msg=audit(1714035623.123:124): table="" '
-            'action="" key="" value="none" condition="always" '
-            'terminal=tty1 ses=22 res=success\n'
-        )
-        with open(test_file, "w") as f:
-            f.write(content)
-
-        try:
-            result = process_log_file(test_file)
-            expected_entries = result.get("entries_created", 0)
-            if expected_entries > 0:
-                # If entries are created despite empty fields, skip the test or fix validation
-                self.skipTest("Log processor doesn't validate empty important fields")
-            else:
-                self.assertEqual(expected_entries, 0)
-        finally:
-            if os.path.exists(test_file):
-                os.remove(test_file)
-
+    def make_entries(self, file_to_use):
+        # Construct path to log file
+        log_file_path = os.path.join(settings.BASE_DIR,"log_processor","test_logs",file_to_use)
+        # Normalize the path to handle any ../ properly
+        normalized_log_file_path=os.path.normpath(log_file_path)
+        return process_log_file(normalized_log_file_path)
+        
+    def test_unimportant_empty_fields(self):
+        # deleted content from field: UID= AUID=
+        result = self.make_entries("empty_fields_inrelevant.log")
+        self.assertEqual(result["entries_created"],6)
+        
+    def test_important_empyt_fields(self):
+        # deleted content from field: timestamp, username, terminal value
+        result = self.make_entries("empty_fields_important.log")
+        self.assertEqual(result["entries_created"],0)
+        # terminal, username and timestamp ARE A MUST
+    
     def test_space_between_equal_and_content(self):
-        # Test logs with spaces after equal sign in key=value pairs
-        test_file = "spaced_content.log"
-        content = ""
-        for i in range(6):
-            content += (
-                f'type=USYS_CONFIG msg=audit(171403562{i}.123:12{i}): table="system_settings" '
-                f'action="modify" key="test_key_{i}" value= "spaced_value_{i}" condition="always" '
-                f'terminal=tty1 ses=22 res=success\n'
-            )
-        with open(test_file, "w") as f:
-            f.write(content)
-
-        try:
-            # Expect all 6 entries to be created successfully despite spaces
-            result = process_log_file(test_file)
-            self.assertEqual(result.get("entries_created", 0), 6)
-        finally:
-            if os.path.exists(test_file):
-                os.remove(test_file)
-
+        # normal format: ...=... // format in this log: ...= ...
+        result=self.make_entries("spaced_fields.log")
+        self.assertEqual(result["entries_created"],6)
+    
+    def test_wrong_format_in_fields(self):
+        # timestamp and ip addresses are str
+        result=self.make_entries("wrong_format_fields.log")
+        self.assertEqual(result["status"],"success")
 
 TEST_LOG_PATH = "test_sample.log"
 DUMMY_LOG_CONTENT = (
