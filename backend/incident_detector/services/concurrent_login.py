@@ -49,6 +49,6 @@ def detect_concurrent_logins():
 
                     RelatedLog.objects.create(concurrent_login_incident=incident, user_login=login)
         else:
-            potential_used_accounts.append(login.username)
+            potential_used_accounts[login.username]=login.terminal
     
     return {"concurrent_logins": len(new_incidents), "incidents": new_incidents}
