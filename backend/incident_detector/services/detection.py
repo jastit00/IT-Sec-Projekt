@@ -11,11 +11,9 @@ from datetime import timedelta
 from incident_detector.models import (
     BruteforceIncident,
     DDosIncident,
-    DosIncident,   
+    DosIncident   
 )
-from log_processor.models import (
-    DetectionConfig
-)
+from log_processor.models import DetectionConfig
 
 BRUTE_FORCE_DEFAULT = {
     'attempt_threshold': 10,
@@ -37,6 +35,14 @@ DDOS_DEFAULT = {
 }
 
 def get_current_config():
+    """
+    Purpose:
+    Save the new configuration by either creating a DetectionConfig object or by updating it.
+    
+    Returns:
+    dict with all the configurations separated by attack type and timestamp of last time the configuration was modified.
+    """
+    
     try:
         obj = DetectionConfig.objects.get(key="current")
         return obj.data, obj.updated_at
@@ -50,6 +56,14 @@ def get_current_config():
         return obj.data, obj.updated_at
 
 def save_new_config(new_config):
+    """
+    Purpose:
+    Save the new configuration by either creating a DetectionConfig object or by updating it.
+    
+    Returns:
+    timestamp of last time the configuration was modified.
+    """
+    
     obj, created = DetectionConfig.objects.update_or_create(
         key="current",
         defaults={"data": new_config}
@@ -58,15 +72,30 @@ def save_new_config(new_config):
     return obj.updated_at
 
 def convert_if_needed(value):
+    """
+    Purpose:
+    Converts integer into a timedelta object if the given isn't one yet.
+    
+    Returns:
+    timedelta object
+    """
+    
     if not isinstance(value, timedelta):
         return timedelta(seconds=value)
     return value
 
 def load_config(config):
     """
-    Wandelt JSON-konforme Config in passende Typen um.
-    Gibt die fertige Config zurück (kein globaler State mehr).
+    Purpose:
+    Transform JSON compatible configuration into needed types
+    
+    How:
+    Makes a copy of the configuration and changes the time related attributes to timedelta objects, if they aren't already.
+    
+    Return:
+    Modified DetectionConfig object.
     """
+    
     config = copy.deepcopy(config)
 
     config["brute_force"]["time_delta"] = convert_if_needed(config["brute_force"]["time_delta"])
@@ -78,16 +107,26 @@ def load_config(config):
 
     return config
 
-
-
-
-
 def update_config(new_config):
     """
-    Speichert neue Config, löscht bei Änderungen entsprechende Incidents,
-    lädt die Config neu und startet Incident Detection mit der neuen Config.
+    Purpose:
+    Save new configuration if changes were made and re-evaluate logs for incidents with new configuration.
+    
+    How:
+    Get old configuration out of the DB and compare it with the one passed in the arguments.
+    If changes were made, call detect_incidents and re-evaluate DB entries used in specified attack-functions.
+    
+    Return:
+    If different configuration: dict {"message": <string stating that configuration got changed>,
+                                      "changed": True,
+                                      "total_incidents": <number of all created incidents>,
+                                      "result": <dict with attack types as keys and number of detected attacks of that type as values>,
+                                      "config": <used configuration a.k.a new configuration>}
+    If no changes were made: dict {"message": <string stating no changes on the configuration were made>,
+                                   "changed": False}
     """
-    # Alte Config aus DB holen
+    
+    # get old configuration out of DB
     old_config_raw, _ = get_current_config()
     old_config = load_config(old_config_raw)
     new_config_loaded = load_config(new_config)
@@ -101,10 +140,10 @@ def update_config(new_config):
     if not any(changes.values()):
         return {"message": "Config values are the same. No update performed.", "changed": False}
 
-    # Config speichern
+    # configuration saved
     save_new_config(new_config)
 
-    # Lösche Incidents bei geänderten Kategorien
+    # if changes made in specific categories, delete all incidents in DB of that type
     if changes["brute_force"]:
         BruteforceIncident.objects.all().delete()
     if changes["dos"]:
@@ -114,7 +153,7 @@ def update_config(new_config):
 
     changed_categories = [cat for cat, changed in changes.items() if changed]
 
-    # Incident Detection mit neuer Config starten
+    # start detect_incidents with new configuration
     result = detect_incidents(categories=changed_categories, config=new_config_loaded)
 
     return {
@@ -127,9 +166,18 @@ def update_config(new_config):
 
 def detect_incidents(categories=None, config=None):
     """
-    Führt die Incident Detection für gegebene Kategorien und Config aus.
-    Lädt Config falls nicht gegeben.
+    Purpose:
+    Calls attack-related functions to the types given and formats returned dictionaries.
+    
+    How:
+    If attack types were given as an argument, that attack-related function is called using given configuration.
+    If neither attack-type nor configuration is given, all attack-related functions are called and current configuration is used.
+    
+    Return:
+    dict {"counts": <dict with attack types as keys and number of detected attacks of that type as values>,
+          "incidents": <list of all new created incidents serialized>}
     """
+    
     if categories is None:
         categories = ["brute_force", "critical_config_change", "concurrent_logins", "dos", "ddos"]
 
