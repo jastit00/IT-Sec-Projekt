@@ -1,21 +1,22 @@
 
 from collections import defaultdict
 from incident_detector.services.utils import format_timedelta
-from log_processor.models import (
-    UserLogin,
-)
+from log_processor.models import UserLogin
 from incident_detector.models import (
     BruteforceIncident,
-    RelatedLog,
+    RelatedLog
 )
 
 def detect_bruteforce(config):
     """
-    Detects brute force login attempts by identifying repeated login attempts
-    from the same user and IP address within a short time window.
+    Purpose:
+    Detects and logs incidents for brute force attacks.
+    
+    How:
+    Counts number of logins for the same account within a set time window.
 
     Returns:
-        dict: {"bruteforce": <number_of_incidents_created>}
+    dict {"bruteforce": <number of incidents created>, "incidents": <list with all the new created incidents>}
     """
 
     BRUTE_FORCE_ATTEMPT_THRESHOLD = config['attempt_threshold']
