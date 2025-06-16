@@ -2,17 +2,21 @@ from incident_detector.services.utils import format_timedelta
 from collections import defaultdict
 from incident_detector.models import (
     DosIncident,
-    RelatedLog, 
+    RelatedLog 
 )
-from log_processor.models import (
-    NetfilterPackets,
-)
+from log_processor.models import NetfilterPackets
 
 def detect_dos_attack(config):
     """
-    Detects potential DoS attacks based on aggregated Netfilter packet data.
-    Each NetfilterPackets entry represents a 30s window with a 'count' value.
-    Uses a sliding window to detect high traffic within a configured time delta.
+    Purpose:
+    Detects and logs incidents for possible DoS attacks.
+    
+    How:
+    Counts number of packets sent by the same source IP address to same destination IP adddress within a set time window.
+    Each NetfilterPackets entry already represents a 30s window with 'count' value.
+    
+    Returns:
+    dict {"dos_attacks": <number of incidents created>, "incidents": <list with all the new created incidents>}
     """
 
     DOS_PACKET_THRESHOLD = config['packet_threshold']
