@@ -4,7 +4,7 @@ from log_processor.models import (
     UserLogout,
     UsysConfig,
     NetfilterPackets,
-    UploadedLogFile,
+ 
 )
 
 
@@ -78,8 +78,6 @@ class BruteforceIncident(models.Model):
 
 
 class RelatedLog(models.Model):
-
-   # source_file = models.ForeignKey(UploadedLogFile, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Point to one specific incident model (only one per row)
     dos_incident = models.ForeignKey('DosIncident', on_delete=models.CASCADE, null=True)
