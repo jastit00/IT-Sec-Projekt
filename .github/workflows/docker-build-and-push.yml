@@ -1,0 +1,49 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare repository name
+        run: |
+          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
+      - name: Set up Docker image tags
+        id: vars
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Login to Github
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend/
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:frontend-latest
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:frontend-${{ env.BRANCH_NAME }}
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:backend-latest
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}:backend-${{ env.BRANCH_NAME }}

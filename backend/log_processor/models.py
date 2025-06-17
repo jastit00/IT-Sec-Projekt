@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from django.contrib.auth.models import User
 
 class UserLogin(models.Model):
     timestamp = models.DateTimeField()
@@ -47,7 +47,6 @@ class UploadedLogFile(models.Model):
     entries_created = models.IntegerField(default=0)
     incidents_created_total = models.IntegerField(default=0)
     incident_counts = models.JSONField(default=dict, null=True)
-    
     def __str__(self):
         return f"{self.filename} uploaded by {self.uploaded_by} at {self.uploaded_at}"
     
@@ -55,7 +54,7 @@ class NetfilterPackets(models.Model):
     timestamp = models.DateTimeField()
     src_ip_address = models.GenericIPAddressField()
     dst_ip_address = models.GenericIPAddressField()
-    protocol = models.CharField(max_length=16)
+    protocol = models.CharField(max_length=8)
     event_type = models.CharField(max_length=16, default='network packets')
     count = models.IntegerField(default=0)   
     severity = models.CharField(max_length=16, default='normal')

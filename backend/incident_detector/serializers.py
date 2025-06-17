@@ -51,12 +51,12 @@ class BruteForceConfigSerializer(serializers.Serializer):
 
 class DoSConfigSerializer(serializers.Serializer):
     packet_threshold = serializers.IntegerField(default=100)
-    time_delta = serializers.IntegerField(default=30)  # Sekunden
+    time_delta = serializers.IntegerField(default=10)  # Sekunden
     repeat_threshold = serializers.IntegerField(default=120)  # Sekunden
 
 class DDoSConfigSerializer(serializers.Serializer):
     packet_threshold = serializers.IntegerField(default=10)
-    time_delta = serializers.IntegerField(default=30)  # Sekunden
+    time_delta = serializers.IntegerField(default=2)  # Sekunden
     repeat_threshold = serializers.IntegerField(default=60)  # Sekunden
     min_sources = serializers.IntegerField(default=2)
 
@@ -73,7 +73,7 @@ class IncidentDetectorConfigSerializer(serializers.Serializer):
     })
     ddos = DDoSConfigSerializer(required=False, default={
         'packet_threshold': 30,
-        'time_delta': 30,
+        'time_delta': 3,
         'repeat_threshold': 60,
         'min_sources': 2,
     })
