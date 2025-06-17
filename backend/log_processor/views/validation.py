@@ -7,14 +7,14 @@ from functools import wraps
 KEYCLOAK_URL = "http://localhost:8080/realms/FinalRealm"
 
 def validate_keycloak_token(auth_header):
-    """Keycloak Token validieren"""
+    """validate Keycloak Token """
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
     
     token = auth_header.split(' ')[1]
     
     try:
-        # Keycloak public keys holen
+        # fetch keycloak public keys
         response = requests.get(f'{KEYCLOAK_URL}/protocol/openid-connect/certs')
         try:
             keys_data = response.json().get('keys', [])
@@ -25,7 +25,7 @@ def validate_keycloak_token(auth_header):
             print(" Failed to parse certs response:", response.text)
             return None
         
-        # Token Header dekodieren um die kid (key ID) zu bekommen
+        # decode token_header for kid
         unverified_header = jwt.get_unverified_header(token)
         kid = unverified_header.get('kid')
         
@@ -33,7 +33,7 @@ def validate_keycloak_token(auth_header):
             print(" No 'kid' found in token header")
             return None
         
-        # Den passenden Key finden
+        # find fitting key
         key_data = None
         for key in keys_data:
             if key.get('kid') == kid:
@@ -44,10 +44,10 @@ def validate_keycloak_token(auth_header):
             print(f" Key with kid '{kid}' not found")
             return None
         
-        # JWK zu PEM konvertieren
+        # convert
         public_key = RSAAlgorithm.from_jwk(key_data)
         
-        # Token dekodieren und validieren
+        # Decode and validate Token
         decoded = jwt.decode(
             token, 
             public_key, 
@@ -62,7 +62,7 @@ def validate_keycloak_token(auth_header):
         return None
 
 def keycloak_required(view_func):
-    """Decorator für Token-Validierung"""
+    """Decorator for Token-Validation"""
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):  
         auth_header = request.META.get('HTTP_AUTHORIZATION')
@@ -71,7 +71,7 @@ def keycloak_required(view_func):
         if not user_data:
             return JsonResponse({'error': 'Invalid or missing token'}, status=401)
         
-        # User-Daten an Request anhängen
+        # Append User Data
         request.keycloak_user = user_data
         return view_func(request, *args, **kwargs)  
     

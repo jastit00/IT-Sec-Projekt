@@ -61,13 +61,11 @@ export class HeaderComponent implements OnInit {
     this.visibilitySubscription = this.chartVisibilityService.charts$.subscribe(updatedCharts => {
       this.charts = updatedCharts;
       this.isMaxChartsReached = this.chartVisibilityService.isMaxChartsReached();
-      console.log('Charts refreshed:', this.charts, 'Max reached:', this.isMaxChartsReached);
     });
   }
 
   ngOnInit(): void {
     this.initUsername();
-    console.log('HeaderComponent initialized, attempting to get Keycloak username');
     this.settingsForm = this.fb.group({
       brute_force: this.fb.group({
         attempt_threshold: [10, [Validators.required, Validators.min(1)]],
@@ -96,12 +94,10 @@ export class HeaderComponent implements OnInit {
 
   setDashboard(id: string) {
     this.presetIdService.setPresetId(id);
-    console.log('PresetId gesetzt auf:', id);
   }
 
   // Initialize username from Keycloak
   private initUsername() {
-    console.log('Initializing username, Keycloak authenticated:', keycloak.authenticated);
     if (keycloak.authenticated) {
       try {
         // Safely access token information
@@ -112,14 +108,12 @@ export class HeaderComponent implements OnInit {
           
           // Use preferred_username, full name, or just 'User' if nothing is available
           this.username.set(preferredUsername || name || 'User');
-          console.log('Keycloak username set:', this.username());
-          console.log('Keycloak username set:', keycloak.token);
-          //updatefunction(this.username());
+  
         } else {
           // If token isn't parsed yet, get username directly from keycloak instance
           keycloak.loadUserProfile().then(profile => {
             this.username.set(profile.username || 'User');
-            console.log('Username loaded from profile:', profile.username);
+            
           }).catch(error => {
             console.error('Failed to load user profile:', error);
             this.username.set('User');
@@ -152,7 +146,7 @@ export class HeaderComponent implements OnInit {
     const result = this.chartVisibilityService.toggleChartVisibility(chartId);
     if (!result) {
       // Optional: Add notification or show message when toggle failed
-      console.log('Could not toggle chart - maximum visible charts reached');
+      
     }
   }
 
@@ -160,7 +154,7 @@ export class HeaderComponent implements OnInit {
   resetLocalStorage() {
     localStorage.removeItem('chartConfiguration');
     this.chartVisibilityService.resetToDefaults();
-    console.log('LocalStorage zurückgesetzt');
+    
   }
 
   onFileSelected($event: Event) {
@@ -192,7 +186,7 @@ export class HeaderComponent implements OnInit {
           // If server returns JSON with "status" and "message"
           const serverError = err.error?.status === 'error'
             ? err.error
-            : { status: 'error', message: 'Unbekannter Fehler beim Upload.' };
+            : { status: 'error', message: 'Upload Error.' };
           this.dialog.open(UploadResultDialogComponent, {
             data: serverError
           });
@@ -229,18 +223,18 @@ export class HeaderComponent implements OnInit {
           this.settingsForm.patchValue({
             brute_force: {
               attempt_threshold: response.config?.brute_force?.attempt_threshold,
-              time_delta: response.config?.brute_force?.time_delta,
-              repeat_threshold: response.config?.brute_force?.repeat_threshold,
+              time_delta: Number(response.config?.brute_force?.time_delta),
+              repeat_threshold: Number(response.config?.brute_force?.repeat_threshold),
             },
             dos: {
               packet_threshold: response.config?.dos?.packet_threshold,
-              time_delta: response.config?.dos?.time_delta,
-              repeat_threshold: response.config?.dos?.repeat_threshold,
+              time_delta: Number(response.config?.dos?.time_delta),
+              repeat_threshold: Number(response.config?.dos?.repeat_threshold),
             },
             ddos: {
               packet_threshold: response.config?.ddos?.packet_threshold,
-              time_delta: response.config?.ddos?.time_delta,
-              repeat_threshold: response.config?.ddos?.repeat_threshold,
+              time_delta: Number(response.config?.ddos?.time_delta),
+              repeat_threshold: Number(response.config?.ddos?.repeat_threshold),
               min_sources: response.config?.ddos?.min_sources,
             }
           });
@@ -249,7 +243,7 @@ export class HeaderComponent implements OnInit {
         this.updateService.triggerChartUpdate();
       },
       error: err => {
-        console.error('Fehler beim Senden der Einstellungen:', err);
+        console.error('Error while sending configuration:', err);
     }});
   }
   else {

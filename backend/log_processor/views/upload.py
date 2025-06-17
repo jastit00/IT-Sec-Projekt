@@ -22,7 +22,7 @@ class LogFileUploadView(APIView):
         uploaded_file = request.FILES.get('file')
         source = request.data.get('source', 'unknown')
 
-        # Authentifizierter Benutzer aus Keycloak
+        # Authenticated User
         keycloak_user = request.keycloak_user
         uploaded_by_user = keycloak_user.get('preferred_username') 
         if not uploaded_file:
@@ -41,7 +41,7 @@ class LogFileUploadView(APIView):
 
         if result["status"] == "duplicate":
             logger.warning(f"Duplicate file upload attempt: {uploaded_file.name}")
-            return Response({"status": "error", "message": "Diese Datei wurde bereits hochgeladen."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": "error", "message": "This File was already uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = LogFileSerializer(result["uploaded_log_file"])
         data = serializer.data

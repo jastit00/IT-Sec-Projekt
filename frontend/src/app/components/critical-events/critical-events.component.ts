@@ -36,7 +36,7 @@ export class CriticalEventsComponent {
   }
 
   sortEvents() {
-    // Erst nach Suchbegriff filtern (nur Critical Events)
+    // Filter by search 
     const criticalEvents = this.eventService.getCriticalEvents();
     
     if (!this.searchTerm.trim()) {
@@ -47,27 +47,27 @@ export class CriticalEventsComponent {
       );
     }
 
-    // Dann nach sortDirection sortieren (alle Critical Events werden sortiert)
+    // sort by sortDirection
     if (this.sortDirection && this.filteredEvents.length > 0) {
       this.filteredEvents.sort((a, b) => {
         let comparison = 0;
         
-        // Sortierung nach Datum (primär)
+        // sort by date
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
         comparison = dateA.getTime() - dateB.getTime();
         
-        // Falls Datum gleich ist, nach Event-Typ sortieren
+        // sort by event type
         if (comparison === 0) {
           comparison = a.event.toLowerCase().localeCompare(b.event.toLowerCase());
         }
         
-        // Falls Event-Typ auch gleich ist, nach Description sortieren
+        // sort by description
         if (comparison === 0) {
           comparison = a.description.toLowerCase().localeCompare(b.description.toLowerCase());
         }
         
-        // Sortierrichtung anwenden
+        // apply sorting direction
         return this.sortDirection === 'desc' ? -comparison : comparison;
       });
     }

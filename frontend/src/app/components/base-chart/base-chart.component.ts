@@ -87,7 +87,7 @@ export abstract class BaseChartComponent implements OnInit {
       const savedSettings = localStorage.getItem(this.CHART_SETTINGS_KEY);
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        console.log('Geladene Einstellungen:', settings);
+        
         
       }
     } catch {

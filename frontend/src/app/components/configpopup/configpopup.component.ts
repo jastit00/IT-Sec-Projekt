@@ -5,12 +5,14 @@ import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-configpopup',
+  standalone: true, 
   imports: [MatDialogModule, MatButtonModule, NgClass],
   templateUrl: './configpopup.component.html',
   styleUrl: './configpopup.component.scss'
 })
 export class ConfigpopupComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {} 
+  
   getIncidentKeys(obj: Record<string, number>): string[] {
   return Object.keys(obj);
   }

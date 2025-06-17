@@ -27,28 +27,23 @@ class IncidentConfigAPIView(APIView):
     if dos_time_delta is not None:
         try:
             if int(dos_time_delta) < 30:
-                return Response({
-                    "status": "error",
-                    "message": " Dos time_delta must be at least 30 seconds due to 30s packet window."
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"status": "error", "message": " Dos time_delta must be at least 30 seconds due to 30s packet window."}, status=status.HTTP_200_OK)
+                
         except (ValueError, TypeError):
             return Response({
                 "status": "error",
                 "message": "dos_time_delta must be an integer."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
     if ddos_time_delta is not None:
         try:
             if int(ddos_time_delta) < 30:
-                return Response({
-                    "status": "error",
-                    "message": "DDos time_delta must be at least 30 seconds due to 30s packet window."
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"status": "error", "message": " DDos time_delta must be at least 30 seconds due to 30s packet window."}, status=status.HTTP_200_OK)
         except (ValueError, TypeError):
             return Response({
                 "status": "error",
                 "message": "ddos_time_delta must be an integer."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
         serializer = IncidentDetectorConfigSerializer(data=request.data)
         if not serializer.is_valid():

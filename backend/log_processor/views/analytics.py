@@ -23,9 +23,12 @@ from log_processor.serializers import (
     UsysConfigSerializer,
     UserLoginSerializer,
 )
+from .validation import keycloak_required
+from django.utils.decorators import method_decorator
 
 
 logger = logging.getLogger(__name__)
+
 
 @api_view(['GET'])
 def processed_logins(request):

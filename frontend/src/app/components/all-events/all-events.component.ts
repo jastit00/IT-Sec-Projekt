@@ -49,7 +49,7 @@ export class AllEventsComponent {
   sortEvents() {
     const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '');
     
-    // Erst nach sortBy filtern oder alle Events nehmen
+    // filter by sortBy
     if (!this.sortBy) {
       this.filteredEvents = this.events.filter(event =>
         this.matchesSearchTerm(event)
@@ -62,22 +62,22 @@ export class AllEventsComponent {
         return matchesSort && matchesSearch;
       });
     }
-    // Dann nach sortDirection sortieren
+    // sort by SortDirection
     if (this.sortDirection && this.filteredEvents.length > 0) {
       this.filteredEvents.sort((a, b) => {
         let comparison = 0;
         
-        // Sortierung nach Datum (primär)
+        // sort by Date
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
         comparison = dateA.getTime() - dateB.getTime();
         
-        // Falls Datum gleich ist, nach Event-Typ sortieren
+        // sort by Event type
         if (comparison === 0) {
           comparison = a.event.toLowerCase().localeCompare(b.event.toLowerCase());
         }
         
-        // Falls Event-Typ auch gleich ist, nach Status sortieren
+        // sort by Event state
         if (comparison === 0) {
           const statusOrder = { 'Critical': 3, 'Warning': 2, 'Normal': 1 };
           const statusA = statusOrder[a.status] || 0;
@@ -85,7 +85,7 @@ export class AllEventsComponent {
           comparison = statusA - statusB;
         }
         
-        // Sortierrichtung anwenden
+        // Apply Direction
         return this.sortDirection === 'desc' ? -comparison : comparison;
       });
     }
