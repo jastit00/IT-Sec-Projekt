@@ -4,7 +4,10 @@ from django.http import JsonResponse
 from jwt.algorithms import RSAAlgorithm
 from functools import wraps
 
-KEYCLOAK_URL = "http://localhost:8080/realms/FinalRealm"
+import os
+from dotenv import load_dotenv
+
+KEYCLOAK_URL = os.getenv('KEYCLOAK_URL', 'https://api.ads-logs.hs-esslingen.com/realms/FinalRealm')
 
 def validate_keycloak_token(auth_header):
     """validate Keycloak Token """
