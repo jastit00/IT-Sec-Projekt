@@ -118,7 +118,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
-    "http://127.0.0.1:4200",]
+    "http://127.0.0.1:4200",
+    "https://ads-logs.hs-esslingen.com"
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
