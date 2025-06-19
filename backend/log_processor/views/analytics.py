@@ -29,7 +29,7 @@ from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 
-
+@keycloak_required
 @api_view(['GET'])
 def processed_logins(request):
     start = request.query_params.get('start')
@@ -43,7 +43,7 @@ def processed_logins(request):
     return Response(data)
 
 
-
+@keycloak_required
 @api_view(['GET'])
 def processed_config_changes(request):
     start = request.query_params.get('start')
@@ -59,7 +59,7 @@ def processed_config_changes(request):
 
 
 
-
+@keycloak_required
 @api_view(['GET'])
 def ddos_packets(request):
     start = request.query_params.get('start')
@@ -78,7 +78,7 @@ def ddos_packets(request):
 
 
 
-
+@keycloak_required
 @api_view(['GET'])
 def dos_packets(request):
     start = request.query_params.get('start')
