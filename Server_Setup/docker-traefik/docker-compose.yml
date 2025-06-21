@@ -1,0 +1,24 @@
+services:
+  traefik:
+    restart: always
+    image: "traefik:v3.3"
+    ports:
+      - ${APP_IP}:80:80
+      - ${APP_IP}:443:443
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./config/traefik.yml:/etc/traefik/traefik.yml"
+      - "./config/dynamic.yml:/etc/traefik/dynamic.yml"
+      - "./volumes/traefik/acme.json:/acme.json"
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$APP_NAME.entrypoints=websecure"
+      - "traefik.http.routers.$APP_NAME.rule=Host($APP_URL)"
+      - "traefik.http.routers.$APP_NAME.tls.certresolver=letsencrypt"
+      - "traefik.http.services.$APP_NAME.loadbalancer.server.port=$APP_PORT"
+
+networks:
+  traefik:
+    external: true

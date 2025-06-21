@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/postgres_data:/var/lib/postgresql/data
+    networks:
+      - django_network
+
+  backend:
+    image: ghcr.io/jastit00/it-sec-projekt:backend-${BRANCH}
+    restart: always
+    build:
+      context: ./backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$APP_NAME_BACKEND.rule=Host($API_URL)"
+      - "traefik.http.routers.$APP_NAME_BACKEND.entrypoints=websecure"
+      - "traefik.http.routers.$APP_NAME_BACKEND.tls.certresolver=letsencrypt"
+      - "traefik.http.services.$APP_NAME_BACKEND.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+    networks:
+      - django_network
+      - traefik
+
+  frontend:
+    image: ghcr.io/jastit00/it-sec-projekt:frontend-${BRANCH}
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$APP_NAME_FRONTEND.rule=Host($APP_URL)"
+      - "traefik.http.routers.$APP_NAME_FRONTEND.entrypoints=websecure"
+      - "traefik.http.routers.$APP_NAME_FRONTEND.tls.certresolver=letsencrypt"
+      - "traefik.http.services.$APP_NAME_FRONTEND.loadbalancer.server.port=80"
+    networks:
+      - traefik
+
+networks:
+  django_network:
+    external: false
+  traefik:
+    external: true

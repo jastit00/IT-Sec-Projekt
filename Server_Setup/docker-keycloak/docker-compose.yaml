@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.4
+    command: ${KEYCLOAK_START}
+    environment:
+      KC_HTTP_ENABLED: true
+      KC_HTTPS_ENABLED: false
+      KC_HOSTNAME: https://$APP_URL
+      KC_HOSTNAME_STRICT: false
+      PROXY_ADDRESS_FORWARDING: true
+      KC_HEALTH_ENABLED: true
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$APP_NAME.rule=Host(`$APP_URL`)"
+      - "traefik.http.routers.$APP_NAME.entrypoints=websecure"
+      - "traefik.http.routers.$APP_NAME.tls.certresolver=letsencrypt"
+      - "traefik.http.services.$APP_NAME.loadbalancer.server.port=8080"
+    networks:
+      - traefik
+      - keycloak
+    depends_on:
+      - db
+
+networks:
+  keycloak:
+    external: false
+  traefik:
+    external: true
